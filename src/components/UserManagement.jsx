@@ -12,12 +12,36 @@ import {
   Trash2,
   Crown,
   User,
-  ArrowLeft
+  ArrowLeft,
+  Send,
+  Activity,
+  Clock
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 const UserManagement = ({ setActiveTab }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('viewer');
   const { toast } = useToast();
 
   // Dados mockados para demonstração
@@ -30,7 +54,10 @@ const UserManagement = ({ setActiveTab }) => {
       avatar: null,
       lastActive: '2024-01-15',
       projectsCount: 12,
-      status: 'active'
+      status: 'active',
+      joinedAt: '2023-05-15',
+      activityLevel: 'high',
+      departamento: 'Marketing'
     },
     {
       id: 2,
@@ -40,7 +67,10 @@ const UserManagement = ({ setActiveTab }) => {
       avatar: null,
       lastActive: '2024-01-14',
       projectsCount: 8,
-      status: 'active'
+      status: 'active',
+      joinedAt: '2023-08-20',
+      activityLevel: 'medium',
+      departamento: 'Design'
     },
     {
       id: 3,
@@ -48,9 +78,12 @@ const UserManagement = ({ setActiveTab }) => {
       email: 'ana.costa@oklab.com',
       role: 'viewer',
       avatar: null,
-      lastActive: '2024-01-13',
+      lastActive: '2024-01-10',
       projectsCount: 3,
-      status: 'inactive'
+      status: 'inactive',
+      joinedAt: '2023-11-10',
+      activityLevel: 'low',
+      departamento: 'Desenvolvimento'
     },
     {
       id: 4,
@@ -60,7 +93,10 @@ const UserManagement = ({ setActiveTab }) => {
       avatar: null,
       lastActive: '2024-01-12',
       projectsCount: 15,
-      status: 'active'
+      status: 'active',
+      joinedAt: '2023-03-05',
+      activityLevel: 'high',
+      departamento: 'Produção'
     }
   ];
 
@@ -90,11 +126,30 @@ const UserManagement = ({ setActiveTab }) => {
     }
   };
 
-  const handleAddUser = () => {
+  const handleInviteUser = () => {
+    if (!inviteEmail || !inviteRole) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha o email e selecione um papel.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Simulate sending invite
     toast({
-      title: "🚧 Adicionar usuário não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
-      duration: 4000,
+      title: "Convite enviado!",
+      description: `Convite enviado para ${inviteEmail} como ${roleConfig[inviteRole].label}`,
     });
+
+    // Reset form and close modal
+    setInviteEmail('');
+    setInviteRole('viewer');
+    setIsInviteModalOpen(false);
+  };
+
+  const handleAddUser = () => {
+    setIsInviteModalOpen(true);
   };
 
   const handleEditUser = (userId) => {
@@ -114,6 +169,24 @@ const UserManagement = ({ setActiveTab }) => {
   const UserCard = ({ user, index }) => {
     const role = roleConfig[user.role];
     const RoleIcon = role.icon;
+
+    const getActivityColor = (level) => {
+      switch (level) {
+        case 'high': return 'text-green-600';
+        case 'medium': return 'text-yellow-600';
+        case 'low': return 'text-red-600';
+        default: return 'text-gray-600';
+      }
+    };
+
+    const getActivityLabel = (level) => {
+      switch (level) {
+        case 'high': return 'Alta atividade';
+        case 'medium': return 'Atividade moderada';
+        case 'low': return 'Baixa atividade';
+        default: return 'Sem dados';
+      }
+    };
 
     return (
       <motion.div
@@ -138,38 +211,48 @@ const UserManagement = ({ setActiveTab }) => {
                 <Mail className="w-4 h-4" />
                 <span className="text-sm">{user.email}</span>
               </div>
-              <div className="flex items-center space-x-1 text-gray-500">
-                <Calendar className="w-4 h-4" />
-                <span className="text-xs">
-                  Último acesso: {new Date(user.lastActive).toLocaleDateString('pt-BR')}
-                </span>
-              </div>
+              <div className="text-xs text-gray-500">{user.departamento}</div>
             </div>
           </div>
 
-          {/* Status */}
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${
-              user.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
-            }`}></div>
-            <span className={`text-xs font-medium ${
-              user.status === 'active' ? 'text-green-600' : 'text-gray-500'
-            }`}>
-              {user.status === 'active' ? 'Ativo' : 'Inativo'}
-            </span>
-          </div>
+          {/* Status Badge */}
+          <Badge variant={user.status === 'active' ? 'success' : 'secondary'}>
+            {user.status === 'active' ? 'Ativo' : 'Inativo'}
+          </Badge>
         </div>
 
-        {/* Role and Stats */}
+        {/* Role Badge */}
         <div className="flex items-center justify-between mb-4">
-          <div className={`px-3 py-1 rounded-full flex items-center space-x-2 ${role.color} text-white`}>
-            <RoleIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">{role.label}</span>
-          </div>
+          <Badge variant="outline" className="flex items-center space-x-2">
+            <RoleIcon className="w-3 h-3" />
+            <span>{role.label}</span>
+          </Badge>
           
           <div className="text-right">
             <div className="text-lg font-bold text-gray-900">{user.projectsCount}</div>
             <div className="text-xs text-gray-500">Projetos</div>
+          </div>
+        </div>
+
+        {/* Activity Metrics */}
+        <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-gray-500" />
+            <div>
+              <div className="text-xs text-gray-500">Último acesso</div>
+              <div className="text-sm font-medium">
+                {new Date(user.lastActive).toLocaleDateString('pt-BR')}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Activity className={`w-4 h-4 ${getActivityColor(user.activityLevel)}`} />
+            <div>
+              <div className="text-xs text-gray-500">Atividade</div>
+              <div className={`text-sm font-medium ${getActivityColor(user.activityLevel)}`}>
+                {getActivityLabel(user.activityLevel)}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -368,6 +451,91 @@ const UserManagement = ({ setActiveTab }) => {
           )}
         </motion.div>
       )}
+
+      {/* Invite User Modal */}
+      <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Convidar Novo Membro</DialogTitle>
+            <DialogDescription>
+              Envie um convite para um novo membro da equipe. Selecione o papel apropriado para definir suas permissões.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="email" className="text-right text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="usuario@empresa.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="role" className="text-right text-sm font-medium">
+                Papel
+              </label>
+              <Select value={inviteRole} onValueChange={setInviteRole}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione um papel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="viewer">
+                    <div className="flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <div>
+                        <div>Visualizador</div>
+                        <div className="text-xs text-gray-500">Apenas visualização</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="editor">
+                    <div className="flex items-center space-x-2">
+                      <Edit className="w-4 h-4" />
+                      <div>
+                        <div>Editor</div>
+                        <div className="text-xs text-gray-500">Pode editar e aprovar</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    <div className="flex items-center space-x-2">
+                      <Crown className="w-4 h-4" />
+                      <div>
+                        <div>Administrador</div>
+                        <div className="text-xs text-gray-500">Acesso total</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsInviteModalOpen(false)}
+              className="btn-secondary mr-2"
+            >
+              Cancelar
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleInviteUser}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <Send className="w-4 h-4" />
+              <span>Enviar Convite</span>
+            </motion.button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
