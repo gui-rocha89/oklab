@@ -62,7 +62,7 @@ export function Sidebar() {
             <img 
               src={logoWhite} 
               alt="MANUS I.A"
-              className="h-16 w-auto transition-all duration-300 hover:scale-105"
+              className="h-20 w-auto transition-all duration-300 hover:scale-105"
             />
           ) : (
             <img 
