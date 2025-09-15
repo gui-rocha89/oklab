@@ -20,31 +20,107 @@ import {
   AlertTriangle,
   Loader2,
   Eye,
+  Filter,
+  ChevronDown,
+  X,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import ProjectViewerModal from '@/components/ProjectViewerModal';
 
 const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTab }) => {
+  // Task 1: Estados para filtros avançados
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [downloadingId, setDownloadingId] = useState(null);
   const [viewingProject, setViewingProject] = useState(null);
+  
+  // Novos estados para filtros avançados
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  
   const { toast } = useToast();
 
+  // Enhanced filters with counts
   const filters = [
     { id: 'all', label: 'Todos', count: projects.length },
     { id: 'pending', label: 'Pendentes', count: projects.filter(p => p.status === 'pending' || p.status === 'rejected').length },
     { id: 'approved', label: 'Aprovados', count: projects.filter(p => p.status === 'approved').length },
   ];
 
+  // Status options for dropdown
+  const statusOptions = [
+    { value: 'all', label: 'Todos os Status', count: projects.length },
+    { value: 'pending', label: 'Pendente', count: projects.filter(p => p.status === 'pending').length },
+    { value: 'approved', label: 'Aprovado', count: projects.filter(p => p.status === 'approved').length },
+    { value: 'rejected', label: 'Rejeitado', count: projects.filter(p => p.status === 'rejected').length },
+    { value: 'feedback-sent', label: 'Feedback Enviado', count: projects.filter(p => p.status === 'feedback-sent').length },
+  ];
+
+  // Priority options for dropdown 
+  const priorityOptions = [
+    { value: 'all', label: 'Todas as Prioridades', count: projects.length, icon: '📋' },
+    { value: 'urgent', label: 'Urgente', count: projects.filter(p => p.priority === 'urgent').length, icon: '⚠️' },
+    { value: 'high', label: 'Alta', count: projects.filter(p => p.priority === 'high').length, icon: '🔴' },
+    { value: 'medium', label: 'Média', count: projects.filter(p => p.priority === 'medium').length, icon: '🟡' },
+    { value: 'low', label: 'Baixa', count: projects.filter(p => p.priority === 'low').length, icon: '🟢' },
+  ];
+
+  // Utility functions
+  const getStatusConfig = (status) => {
+    const configs = {
+      pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', label: 'Pendente' },
+      approved: { color: 'bg-green-100 text-green-800 border-green-300', label: 'Aprovado' },
+      rejected: { color: 'bg-red-100 text-red-800 border-red-300', label: 'Rejeitado' },
+      'feedback-sent': { color: 'bg-blue-100 text-blue-800 border-blue-300', label: 'Feedback Enviado' },
+      default: { color: 'bg-gray-100 text-gray-600 border-gray-300', label: 'Desconhecido' }
+    };
+    return configs[status] || configs.default;
+  };
+
+  const getPriorityConfig = (priority) => {
+    const configs = {
+      urgent: { color: 'bg-red-200 text-red-900 border-red-400', label: 'Urgente', icon: '⚠️' },
+      high: { color: 'bg-red-100 text-red-800 border-red-300', label: 'Alta', icon: '🔴' },
+      medium: { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', label: 'Média', icon: '🟡' },
+      low: { color: 'bg-emerald-100 text-emerald-800 border-emerald-300', label: 'Baixa', icon: '🟢' },
+      default: { color: 'bg-gray-100 text-gray-600 border-gray-300', label: 'Não definida', icon: '⚪' }
+    };
+    return configs[priority] || configs.default;
+  };
+
+  // Task 2: Lógica de filtragem avançada dos projetos
   const filteredProjects = projects.filter(project => {
-    const matchesFilter = activeFilter === 'all' || 
-                         (activeFilter === 'pending' && (project.status === 'pending' || project.status === 'rejected')) ||
-                         (activeFilter === 'approved' && project.status === 'approved');
+    // Filtro básico (existente)
+    const matchesBasicFilter = activeFilter === 'all' || 
+                              (activeFilter === 'pending' && (project.status === 'pending' || project.status === 'rejected')) ||
+                              (activeFilter === 'approved' && project.status === 'approved');
+    
+    // Filtro por busca
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (project.author && project.author.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesFilter && matchesSearch;
+                         (project.author && project.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    // Filtros avançados
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+    const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
+    
+    return matchesBasicFilter && matchesSearch && matchesStatus && matchesPriority;
   });
+
+  // Clear all filters function
+  const clearAllFilters = () => {
+    setActiveFilter('all');
+    setStatusFilter('all');
+    setPriorityFilter('all');
+    setSearchTerm('');
+  };
+
+  // Check if any advanced filters are active
+  const hasActiveFilters = statusFilter !== 'all' || priorityFilter !== 'all' || searchTerm !== '';
 
   const handleAdjustProject = (projectId) => {
     toast({
@@ -194,7 +270,8 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
     const priorityConfig = {
       high: { color: 'priority-high', label: 'Alta', dot: 'bg-red-500' },
       medium: { color: 'priority-medium', label: 'Média', dot: 'bg-yellow-500' },
-      low: { color: 'priority-low', label: 'Baixa', dot: 'bg-blue-500' },
+      low: { color: 'priority-low', label: 'Baixa', dot: 'bg-emerald-500' },
+      urgent: { color: 'priority-urgent', label: 'Urgente', dot: 'bg-red-600 animate-pulse' },
       default: { color: 'priority-low', label: 'Não definida', dot: 'bg-gray-400' }
     };
 
@@ -246,9 +323,15 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
           <span className="text-xs bg-white bg-opacity-70 text-gray-700 px-3 py-1 rounded-full border">
             {project.type}
           </span>
-          <span className={`text-xs px-3 py-1 rounded-full ${priority.color}`}>
-            Prioridade {priority.label}
-          </span>
+          <Badge className={`${getPriorityConfig(project.priority).color} border text-xs font-medium`}>
+            <span className="flex items-center space-x-1">
+              <span>{getPriorityConfig(project.priority).icon}</span>
+              <span>Prioridade {getPriorityConfig(project.priority).label}</span>
+            </span>
+          </Badge>
+          <Badge className={`${getStatusConfig(project.status).color} border text-xs font-medium`}>
+            {getStatusConfig(project.status).label}
+          </Badge>
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
@@ -376,26 +459,163 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {filters.map((filter) => (
-            <motion.button
-              key={filter.id}
-              id={`filter-${filter.id}`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`tab-button ${activeFilter === filter.id ? 'active' : ''}`}
+        {/* Enhanced Filter Section */}
+        <div className="space-y-4 mb-6">
+          {/* Basic Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            {filters.map((filter) => (
+              <motion.button
+                key={filter.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setActiveFilter(filter.id)}
+                className={`tab-button ${activeFilter === filter.id ? 'active' : ''}`}
+              >
+                {filter.label}
+                <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                  activeFilter === filter.id 
+                    ? 'bg-white bg-opacity-30' 
+                    : 'bg-gray-100'
+                }`}>
+                  {filter.count}
+                </span>
+              </motion.button>
+            ))}
+
+            {/* Advanced Filters Toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="ml-2 h-10"
             >
-              {filter.label}
-              <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                activeFilter === filter.id 
-                  ? 'bg-white bg-opacity-30' 
-                  : 'bg-gray-100'
-              }`}>
-                {filter.count}
-              </span>
-            </motion.button>
-          ))}
+              <Filter className="w-4 h-4 mr-2" />
+              Filtros Avançados
+              <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
+            </Button>
+          </div>
+
+          {/* Task 3: Dropdowns para filtros avançados */}
+          <AnimatePresence>
+            {showAdvancedFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg border"
+              >
+                {/* Status Filter Dropdown */}
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700">Status:</label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="min-w-[160px] justify-between bg-white">
+                        <span className="flex items-center">
+                          {statusFilter === 'all' ? 'Todos os Status' : getStatusConfig(statusFilter).label}
+                        </span>
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 bg-white border shadow-lg z-50">
+                      {statusOptions.map((option) => (
+                        <DropdownMenuItem
+                          key={option.value}
+                          onClick={() => setStatusFilter(option.value)}
+                          className="flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                        >
+                          <span>{option.label}</span>
+                          <Badge variant="secondary" className="ml-2">
+                            {option.count}
+                          </Badge>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Priority Filter Dropdown */}
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700">Prioridade:</label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="min-w-[180px] justify-between bg-white">
+                        <span className="flex items-center space-x-1">
+                          <span>{priorityFilter !== 'all' ? getPriorityConfig(priorityFilter).icon : '📋'}</span>
+                          <span>
+                            {priorityFilter === 'all' ? 'Todas as Prioridades' : getPriorityConfig(priorityFilter).label}
+                          </span>
+                        </span>
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 bg-white border shadow-lg z-50">
+                      {priorityOptions.map((option) => (
+                        <DropdownMenuItem
+                          key={option.value}
+                          onClick={() => setPriorityFilter(option.value)}
+                          className="flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                        >
+                          <span className="flex items-center space-x-2">
+                            <span>{option.icon}</span>
+                            <span>{option.label}</span>
+                          </span>
+                          <Badge variant="secondary" className="ml-2">
+                            {option.count}
+                          </Badge>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Clear Filters Button */}
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Limpar Filtros
+                  </Button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-wrap items-center gap-2"
+            >
+              <span className="text-sm text-gray-500">Filtros ativos:</span>
+              {statusFilter !== 'all' && (
+                <Badge className={`${getStatusConfig(statusFilter).color} border`}>
+                  Status: {getStatusConfig(statusFilter).label}
+                  <button 
+                    onClick={() => setStatusFilter('all')}
+                    className="ml-1 hover:bg-black hover:bg-opacity-20 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {priorityFilter !== 'all' && (
+                <Badge className={`${getPriorityConfig(priorityFilter).color} border`}>
+                  {getPriorityConfig(priorityFilter).icon} {getPriorityConfig(priorityFilter).label}
+                  <button 
+                    onClick={() => setPriorityFilter('all')}
+                    className="ml-1 hover:bg-black hover:bg-opacity-20 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
