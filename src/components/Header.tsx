@@ -84,9 +84,9 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Search Bar - Hidden on mobile */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
+          {/* Centered Search Bar */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <div className="relative w-full max-w-lg">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-orange-200" />
               <input
                 type="text"
