@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Bell, Search, User, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import logoWhite from '@/assets/logo-white-bg.png';
 
 interface HeaderProps {
   title?: string;
@@ -62,18 +63,30 @@ export const Header: React.FC<HeaderProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Mobile menu button */}
-          {setSidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-orange-600 transition-colors"
-            >
-              <Menu className="w-6 h-6 text-white" />
-            </button>
-          )}
+          {/* Logo */}
+          <div className="flex items-center space-x-4">
+            <motion.img
+              src={logoWhite}
+              alt="MANUS I.A Logo"
+              className="h-8 w-auto"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            />
+            
+            {/* Mobile menu button */}
+            {setSidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                <Menu className="w-6 h-6 text-white" />
+              </button>
+            )}
+          </div>
 
           {/* Page Title */}
-          <div className="flex-1">
+          <div className="flex-1 px-4">
             <h1 className="text-xl font-bold text-white">
               {getPageTitle()}
             </h1>
