@@ -5,90 +5,27 @@ import {
   CheckCircle, 
   XCircle, 
   TrendingUp,
+  TrendingDown,
   FileText,
   FolderOpen,
   AlertTriangle,
-  Film
+  Film,
+  DollarSign,
+  Target,
+  Users,
+  BarChart3,
+  Zap,
+  Star
 } from 'lucide-react';
 import logoWhite from '@/assets/logo-white-bg.png';
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard } from "@/components/MetricCard";
+import { useProjects } from "@/contexts/ProjectContext";
 
-// Mock data structure for the platform
-const mockProjects = [
-  {
-    id: 1,
-    shareId: "abc123",
-    title: "Campanha Verão 2024",
-    description: "Vídeo promocional para a campanha de verão",
-    status: "pending",
-    priority: "high",
-    author: "Maria Silva",
-    createdAt: "2024-01-15T10:00:00Z",
-    type: "Vídeo",
-    keyframes: [
-      { id: 1, time: 15.5, comment: "Ajustar cor do texto", timestamp: "2024-01-15T11:30:00Z" },
-      { id: 2, time: 32.2, comment: "Logo muito pequena aqui", timestamp: "2024-01-15T14:20:00Z" }
-    ]
-  },
-  {
-    id: 2,
-    shareId: "def456",
-    title: "Tutorial Produto X",
-    description: "Vídeo explicativo do novo produto",
-    status: "approved",
-    priority: "medium",
-    author: "João Santos",
-    createdAt: "2024-01-14T09:00:00Z",
-    type: "Audiovisual",
-    keyframes: []
-  },
-  {
-    id: 3,
-    shareId: "ghi789",
-    title: "Apresentação Trimestral",
-    description: "Slides para apresentação aos investidores",
-    status: "feedback-sent",
-    priority: "high",
-    author: "Ana Costa",
-    createdAt: "2024-01-13T16:00:00Z",
-    type: "Design",
-    keyframes: [
-      { id: 3, time: 45.1, comment: "Gráfico precisa de mais destaque", timestamp: "2024-01-14T08:15:00Z" }
-    ]
-  }
-];
-
-const StatCard = ({ title, value, icon: Icon, color, trend, description }: any) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    whileHover={{ y: -4 }}
-    className="stats-card hover-lift"
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-        <p className="text-3xl font-bold text-gray-900">{value}</p>
-        {description && (
-          <p className="text-xs text-gray-500">{description}</p>
-        )}
-      </div>
-      <div className={`p-3 rounded-full ${color}`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-    </div>
-    {trend && (
-      <div className="mt-4 flex items-center">
-        <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-        <span className="text-sm text-green-600 font-medium">{trend}</span>
-        <span className="text-sm text-gray-500 ml-1">vs. mês anterior</span>
-      </div>
-    )}
-  </motion.div>
-);
+// ... keep existing code (imports)
 
 const ProjectCard = ({ project, index }: any) => {
   const statusConfig = {
@@ -112,6 +49,16 @@ const ProjectCard = ({ project, index }: any) => {
       icon: AlertTriangle,
       text: 'Feedback Enviado'
     },
+    'in-progress': {
+      color: 'bg-blue-100 text-blue-800',
+      icon: Zap,
+      text: 'Em Progresso'
+    },
+    'archived': {
+      color: 'bg-gray-100 text-gray-600',
+      icon: FolderOpen,
+      text: 'Arquivado'
+    },
     default: {
       color: 'status-unknown',
       icon: AlertTriangle,
@@ -122,48 +69,106 @@ const ProjectCard = ({ project, index }: any) => {
   const config = statusConfig[project.status as keyof typeof statusConfig] || statusConfig.default;
   const StatusIcon = config.icon;
 
+  const priorityColors = {
+    low: 'bg-gray-200',
+    medium: 'bg-yellow-400',
+    high: 'bg-orange-500',
+    urgent: 'bg-red-500'
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="project-card card-hover"
+      className="project-card card-hover bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
-          <p className="text-sm text-gray-600 mb-2">{project.description}</p>
-          <div className="flex items-center space-x-4 text-xs text-gray-500">
-            <span>Por {project.author}</span>
-            <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+          <div className="flex items-center space-x-2 mb-2">
+            <h3 className="font-semibold text-gray-900">{project.title}</h3>
+            <div className={`w-2 h-2 rounded-full ${priorityColors[project.priority as keyof typeof priorityColors]}`}></div>
           </div>
+          <p className="text-sm text-gray-600 mb-3">{project.description}</p>
+          
+          {/* Project metadata */}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
+            <span>Por {project.author}</span>
+            <span>•</span>
+            <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+            {project.client && (
+              <>
+                <span>•</span>
+                <span className="font-medium">{project.client}</span>
+              </>
+            )}
+          </div>
+
+          {/* Enhanced project stats */}
+          {project.budget && (
+            <div className="flex items-center space-x-4 text-xs mb-2">
+              <span className="flex items-center space-x-1">
+                <DollarSign className="w-3 h-3" />
+                <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.budget)}</span>
+              </span>
+              {project.estimatedHours && (
+                <span className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{project.estimatedHours}h est.</span>
+                </span>
+              )}
+              {project.viewCount && (
+                <span className="flex items-center space-x-1">
+                  <Users className="w-3 h-3" />
+                  <span>{project.viewCount} views</span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
+
         <div className={`px-3 py-1 rounded-full flex items-center space-x-1 ${config.color}`}>
           <StatusIcon className="w-3 h-3" />
           <span className="text-xs font-medium">{config.text}</span>
         </div>
       </div>
       
-      <div className="flex items-center space-x-2">
-        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-          {project.type}
-        </span>
-        <div className={`w-2 h-2 rounded-full priority-${project.priority}`}></div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+            {project.type}
+          </span>
+          {project.tags && project.tags.slice(0, 2).map((tag: string) => (
+            <span key={tag} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* Performance indicator */}
+        {project.vsLastMonth !== undefined && (
+          <div className="flex items-center space-x-1">
+            {project.vsLastMonth > 0 ? (
+              <TrendingUp className="w-3 h-3 text-green-500" />
+            ) : project.vsLastMonth < 0 ? (
+              <TrendingDown className="w-3 h-3 text-red-500" />
+            ) : null}
+            <span className={`text-xs font-medium ${
+              project.vsLastMonth > 0 ? 'text-green-600' : 
+              project.vsLastMonth < 0 ? 'text-red-600' : 'text-gray-500'
+            }`}>
+              {project.vsLastMonth > 0 ? '+' : ''}{project.vsLastMonth}%
+            </span>
+          </div>
+        )}
       </div>
     </motion.div>
   );
 };
 
 export default function Dashboard() {
-  const [projects] = useState(mockProjects);
-
-  // Calculate statistics
-  const stats = {
-    total: projects.length,
-    pending: projects.filter(p => p.status === "pending" || p.status === 'rejected').length,
-    approved: projects.filter(p => p.status === "approved").length,
-    feedbacks: projects.reduce((acc, p) => acc + p.keyframes.length, 0),
-  };
+  const { projects, getProjectStats } = useProjects();
+  const stats = getProjectStats();
 
   const recentProjects = projects.slice(0, 3);
 
@@ -207,39 +212,87 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <StatCard
-            title="Pendentes"
+        {/* Enhanced Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <MetricCard
+            title="Projetos Pendentes"
             value={stats.pending}
             icon={Clock}
             color="bg-gradient-to-r from-yellow-500 to-orange-500"
-            trend="+12%"
+            trend={12}
             description="Aguardando aprovação ou revisão"
+            index={0}
           />
-          <StatCard
-            title="Aprovados"
+          <MetricCard
+            title="Projetos Aprovados"
             value={stats.approved}
             icon={CheckCircle}
             color="bg-gradient-to-r from-green-500 to-emerald-500"
-            trend="+8%"
+            trend={8}
             description="Prontos para publicação"
+            index={1}
           />
-          <StatCard
-            title="Total"
+          <MetricCard
+            title="Em Progresso"
+            value={stats.inProgress}
+            icon={Zap}
+            color="bg-gradient-to-r from-blue-500 to-indigo-500"
+            trend={25}
+            description="Sendo desenvolvidos ativamente"
+            index={2}
+          />
+          <MetricCard
+            title="Total de Projetos"
             value={stats.total}
             icon={FileText}
-            color="bg-gradient-to-r from-blue-500 to-purple-500"
-            trend="+15%"
-            description="Projetos este mês"
-          />
-          <StatCard
-            title="Feedbacks"
-            value={stats.feedbacks}
-            icon={Film}
             color="bg-gradient-to-r from-purple-500 to-pink-500"
-            trend="+20%"
-            description="Comentários ativos"
+            trend={15}
+            description="Todos os projetos este mês"
+            index={3}
+          />
+        </div>
+
+        {/* Advanced Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <MetricCard
+            title="Orçamento Total"
+            value={stats.totalBudget}
+            icon={DollarSign}
+            color="bg-gradient-to-r from-emerald-600 to-green-600"
+            trend={22}
+            format="currency"
+            description="Valor total dos projetos"
+            index={4}
+          />
+          <MetricCard
+            title="Tempo Médio de Aprovação"
+            value={stats.avgApprovalTime}
+            icon={Target}
+            color="bg-gradient-to-r from-cyan-500 to-blue-500"
+            trend={-15}
+            format="time"
+            description="Média de horas para aprovação"
+            index={5}
+          />
+          <MetricCard
+            title="Eficiência"
+            value={stats.efficiency}
+            icon={BarChart3}
+            color="bg-gradient-to-r from-violet-500 to-purple-600"
+            trend={5}
+            format="percentage"
+            description="Projetos dentro do prazo"
+            index={6}
+          />
+          <MetricCard
+            title="Satisfação Cliente"
+            value={stats.clientSatisfaction}
+            icon={Star}
+            color="bg-gradient-to-r from-rose-500 to-pink-600"
+            trend={3}
+            format="percentage"
+            description="Avaliação média dos clientes"
+            index={7}
           />
         </div>
 
