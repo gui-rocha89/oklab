@@ -56,19 +56,27 @@ export function Sidebar() {
       isCollapsed ? "w-16" : "w-64"
     }`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!isCollapsed && (
-          <img 
-            src={logoWhite} 
-            alt="OkLab"
-            className="h-8 w-auto"
-          />
-        )}
+      <div className="relative p-6 border-b border-sidebar-border">
+        <div className="flex items-center justify-center w-full mb-2">
+          {!isCollapsed ? (
+            <img 
+              src={logoWhite} 
+              alt="MANUS I.A"
+              className="h-16 w-auto transition-all duration-300 hover:scale-105"
+            />
+          ) : (
+            <img 
+              src={logoWhite} 
+              alt="MANUS I.A"
+              className="h-10 w-auto transition-all duration-300 hover:scale-105"
+            />
+          )}
+        </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-8 w-8 p-0 hover:bg-sidebar-accent"
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-sidebar-accent"
         >
           {isCollapsed ? (
             <Menu className="h-4 w-4" />
