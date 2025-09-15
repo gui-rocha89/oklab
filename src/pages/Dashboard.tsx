@@ -184,7 +184,7 @@ export default function Dashboard() {
             <motion.img
               src={logoWhite}
               alt="MANUS I.A Logo"
-              className="h-12 w-auto"
+              className="h-14 w-auto"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
