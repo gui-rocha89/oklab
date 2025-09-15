@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-// Enhanced project interface with comparison data
+// Enhanced project interface with feedback support
 export interface Project {
   id: number;
   shareId: string;
@@ -18,6 +18,9 @@ export interface Project {
     comment: string;
     timestamp: string;
     resolved?: boolean;
+    response?: string; // Task 3: Campo para resposta da equipe
+    responseDate?: string; // Data da resposta
+    responseAuthor?: string; // Quem respondeu
   }>;
   // New comparison properties
   vsLastMonth?: number; // Percentage change
@@ -101,7 +104,16 @@ const enhancedMockProjects: Project[] = [
     viewCount: 156,
     approvalTime: 8,
     keyframes: [
-      { id: 3, time: 45.1, comment: "Gráfico precisa de mais destaque", timestamp: "2024-01-14T08:15:00Z", resolved: true }
+      { 
+        id: 3, 
+        time: 45.1, 
+        comment: "Gráfico precisa de mais destaque", 
+        timestamp: "2024-01-14T08:15:00Z", 
+        resolved: true,
+        response: "Gráfico reformatado com cores mais vibrantes e aumentado em 25%",
+        responseDate: "2024-01-14T10:30:00Z",
+        responseAuthor: "Designer Principal"
+      }
     ]
   },
   {
@@ -124,7 +136,22 @@ const enhancedMockProjects: Project[] = [
     tags: ["identidade", "visual", "marca", "logo"],
     viewCount: 2340,
     approvalTime: 36,
-    keyframes: []
+    keyframes: [
+      {
+        id: 4,
+        time: 12.3,
+        comment: "As cores não estão alinhadas com o guidelines da marca. Por favor, revisar paleta de cores.",
+        timestamp: "2024-01-12T10:15:00Z",
+        resolved: false
+      },
+      {
+        id: 5,
+        time: 25.7,
+        comment: "O logotipo precisa de mais contraste para funcionar bem em fundos coloridos.",
+        timestamp: "2024-01-12T14:22:00Z",
+        resolved: false
+      }
+    ]
   },
   {
     id: 5,
@@ -155,6 +182,9 @@ interface ProjectContextType {
   addProject: (project: Omit<Project, 'id'>) => void;
   updateProject: (id: number, updates: Partial<Project>) => void;
   deleteProject: (id: number) => void;
+  // Task 3: Função para adicionar resposta aos feedbacks
+  addFeedbackResponse: (projectId: number, keyframeId: number, response: string, author?: string) => void;
+  updateFeedbackStatus: (projectId: number, keyframeId: number, status: 'resolved' | 'pending' | 'rejected') => void;
   getProjectStats: () => {
     total: number;
     pending: number;
@@ -173,6 +203,23 @@ interface ProjectContextType {
   sortByPriority: (projects?: Project[]) => Project[];
   getProjectsByClient: (client: string) => Project[];
   getOverdueProjects: () => Project[];
+  // Task 1: Função para buscar todos os feedbacks
+  getAllFeedbacks: () => Array<{
+    id: string;
+    feedbackId: number;
+    projectId: number;
+    projectTitle: string;
+    shareId: string;
+    comment: string;
+    time: number;
+    timestamp: string;
+    status: 'resolved' | 'pending' | 'rejected';
+    author: string;
+    response?: string;
+    priority: string;
+    type: string;
+    department?: string;
+  }>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -261,6 +308,79 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     return projects.filter(project => project.client === client);
   };
 
+  // Task 3: Função para adicionar resposta aos feedbacks
+  const addFeedbackResponse = (projectId: number, keyframeId: number, response: string, author: string = 'Equipe') => {
+    setProjects(prev => 
+      prev.map(project => 
+        project.id === projectId 
+          ? {
+              ...project, 
+              keyframes: project.keyframes.map(keyframe =>
+                keyframe.id === keyframeId
+                  ? {
+                      ...keyframe,
+                      response,
+                      resolved: true,
+                      responseDate: new Date().toISOString(),
+                      responseAuthor: author
+                    }
+                  : keyframe
+              ),
+              updatedAt: new Date().toISOString()
+            }
+          : project
+      )
+    );
+  };
+
+  const updateFeedbackStatus = (projectId: number, keyframeId: number, status: 'resolved' | 'pending' | 'rejected') => {
+    setProjects(prev => 
+      prev.map(project => 
+        project.id === projectId 
+          ? {
+              ...project, 
+              keyframes: project.keyframes.map(keyframe =>
+                keyframe.id === keyframeId
+                  ? { ...keyframe, resolved: status === 'resolved' }
+                  : keyframe
+              ),
+              updatedAt: new Date().toISOString()
+            }
+          : project
+      )
+    );
+  };
+
+  // Task 1: Função para buscar todos os feedbacks
+  const getAllFeedbacks = () => {
+    const allFeedbacks = [];
+    projects.forEach(project => {
+      if (project.keyframes && project.keyframes.length > 0) {
+        project.keyframes.forEach(keyframe => {
+          allFeedbacks.push({
+            id: `${project.id}-${keyframe.id}`,
+            feedbackId: keyframe.id,
+            projectId: project.id,
+            projectTitle: project.title,
+            shareId: project.shareId,
+            comment: keyframe.comment,
+            time: keyframe.time,
+            timestamp: keyframe.timestamp,
+            status: keyframe.resolved ? 'resolved' : 'pending',
+            author: project.client || project.author || 'Cliente',
+            response: keyframe.response || null,
+            priority: project.priority,
+            type: project.type,
+            department: project.department,
+            responseDate: keyframe.responseDate,
+            responseAuthor: keyframe.responseAuthor
+          });
+        });
+      }
+    });
+    return allFeedbacks.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  };
+
   const getOverdueProjects = (): Project[] => {
     const now = new Date();
     return projects.filter(project => {
@@ -282,7 +402,11 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       filterByStatus,
       sortByPriority,
       getProjectsByClient,
-      getOverdueProjects
+      getOverdueProjects,
+      // Task 3: Novas funções para feedbacks
+      addFeedbackResponse,
+      updateFeedbackStatus,
+      getAllFeedbacks
     }}>
       {children}
     </ProjectContext.Provider>
