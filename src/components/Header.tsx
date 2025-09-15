@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Page Title */}
-          <div className="flex-1">
+          <div className="flex-shrink-0">
             <h1 className="text-xl font-bold text-white">
               {getPageTitle()}
             </h1>
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Centered Search Bar */}
-          <div className="hidden md:flex flex-1 justify-center">
+          <div className="hidden md:flex flex-1 justify-center ml-8 mr-16">
             <div className="relative w-full max-w-lg">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-orange-200" />
               <input
