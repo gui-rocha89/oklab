@@ -229,6 +229,45 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Centralized Search Input */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex justify-center mb-8"
+        >
+          <div className="w-full max-w-2xl">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  <FileText className="w-5 h-5 text-primary" />
+                </motion.div>
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar projetos, equipe, feedbacks... 🔍"
+                className="w-full pl-12 pr-6 py-4 text-lg bg-white border-2 border-gray-200 rounded-2xl shadow-lg hover:border-primary/50 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300 placeholder-gray-500"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                <kbd className="hidden sm:inline-flex items-center px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded">
+                  Ctrl+K
+                </kbd>
+              </div>
+            </div>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-center text-sm text-gray-500 mt-2"
+            >
+              Encontre rapidamente qualquer projeto, membro da equipe ou feedback
+            </motion.p>
+          </div>
+        </motion.div>
+
         {/* Enhanced Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
