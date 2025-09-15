@@ -172,6 +172,23 @@ export default function Dashboard() {
 
   const recentProjects = projects.slice(0, 3);
 
+  // Enhanced metrics with better calculations
+  const enhancedStats = {
+    ...stats,
+    // Calculate additional metrics for better insights
+    avgProjectValue: stats.totalBudget / stats.total || 0,
+    completionRate: (stats.approved / stats.total) * 100 || 0,
+    activeProjects: stats.pending + stats.inProgress,
+    
+    // Mock some advanced metrics (in real app, these would come from analytics)
+    monthlyGrowth: {
+      projects: 15,
+      revenue: 22,
+      efficiency: 5,
+      satisfaction: 3
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -218,8 +235,8 @@ export default function Dashboard() {
             title="Projetos Pendentes"
             value={stats.pending}
             icon={Clock}
-            color="bg-gradient-to-r from-yellow-500 to-orange-500"
-            trend={12}
+            color="bg-gradient-to-br from-amber-500 to-orange-600"
+            trend={enhancedStats.monthlyGrowth.projects}
             description="Aguardando aprovação ou revisão"
             index={0}
           />
@@ -227,7 +244,7 @@ export default function Dashboard() {
             title="Projetos Aprovados"
             value={stats.approved}
             icon={CheckCircle}
-            color="bg-gradient-to-r from-green-500 to-emerald-500"
+            color="bg-gradient-to-br from-emerald-500 to-green-600"
             trend={8}
             description="Prontos para publicação"
             index={1}
@@ -236,7 +253,7 @@ export default function Dashboard() {
             title="Em Progresso"
             value={stats.inProgress}
             icon={Zap}
-            color="bg-gradient-to-r from-blue-500 to-indigo-500"
+            color="bg-gradient-to-br from-blue-500 to-indigo-600"
             trend={25}
             description="Sendo desenvolvidos ativamente"
             index={2}
@@ -245,51 +262,51 @@ export default function Dashboard() {
             title="Total de Projetos"
             value={stats.total}
             icon={FileText}
-            color="bg-gradient-to-r from-purple-500 to-pink-500"
-            trend={15}
+            color="bg-gradient-to-br from-violet-500 to-purple-600"
+            trend={enhancedStats.monthlyGrowth.projects}
             description="Todos os projetos este mês"
             index={3}
           />
         </div>
 
-        {/* Advanced Metrics Grid */}
+        {/* Advanced Business Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Orçamento Total"
+            title="Receita Total"
             value={stats.totalBudget}
             icon={DollarSign}
-            color="bg-gradient-to-r from-emerald-600 to-green-600"
-            trend={22}
+            color="bg-gradient-to-br from-emerald-600 to-teal-600"
+            trend={enhancedStats.monthlyGrowth.revenue}
             format="currency"
-            description="Valor total dos projetos"
+            description="Valor total dos projetos ativos"
             index={4}
           />
           <MetricCard
-            title="Tempo Médio de Aprovação"
+            title="Tempo de Aprovação"
             value={stats.avgApprovalTime}
             icon={Target}
-            color="bg-gradient-to-r from-cyan-500 to-blue-500"
+            color="bg-gradient-to-br from-cyan-500 to-blue-600"
             trend={-15}
             format="time"
             description="Média de horas para aprovação"
             index={5}
           />
           <MetricCard
-            title="Eficiência"
+            title="Taxa de Eficiência"
             value={stats.efficiency}
             icon={BarChart3}
-            color="bg-gradient-to-r from-violet-500 to-purple-600"
-            trend={5}
+            color="bg-gradient-to-br from-indigo-500 to-purple-600"
+            trend={enhancedStats.monthlyGrowth.efficiency}
             format="percentage"
-            description="Projetos dentro do prazo"
+            description="Projetos entregues no prazo"
             index={6}
           />
           <MetricCard
-            title="Satisfação Cliente"
+            title="Satisfação dos Clientes"
             value={stats.clientSatisfaction}
             icon={Star}
-            color="bg-gradient-to-r from-rose-500 to-pink-600"
-            trend={3}
+            color="bg-gradient-to-br from-rose-500 to-pink-600"
+            trend={enhancedStats.monthlyGrowth.satisfaction}
             format="percentage"
             description="Avaliação média dos clientes"
             index={7}
