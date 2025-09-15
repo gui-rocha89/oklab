@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import Feedbacks from "./pages/Feedbacks";
+import Team from "./pages/Team";
+import Settings from "./pages/Settings";
 import AudiovisualApproval from "./pages/AudiovisualApproval";
 import NotFound from "./pages/NotFound";
 
@@ -29,22 +33,22 @@ const App = () => (
           } />
           <Route path="/projetos" element={
             <Layout>
-              <Dashboard />
+              <Projects />
             </Layout>
           } />
           <Route path="/feedbacks" element={
             <Layout>
-              <Dashboard />
+              <Feedbacks />
             </Layout>
           } />
           <Route path="/equipe" element={
             <Layout>
-              <Dashboard />
+              <Team />
             </Layout>
           } />
           <Route path="/configuracoes" element={
             <Layout>
-              <Dashboard />
+              <Settings />
             </Layout>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
