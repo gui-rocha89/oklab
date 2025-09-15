@@ -58,40 +58,50 @@ export const Header: React.FC<HeaderProps> = ({
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="gradient-bg shadow-lg border-b border-border/10"
+      className="sticky top-0 z-40 gradient-bg shadow-lg border-b border-border/10 transition-all duration-300"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between">
           {/* Mobile menu button */}
           {setSidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-orange-600 transition-colors mr-4"
             >
               <Menu className="w-6 h-6 text-white" />
             </button>
           )}
 
-          {/* Page Title */}
-          <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold text-white">
+          {/* Page Title - Left aligned and responsive */}
+          <div className="flex-1 min-w-0">
+            <motion.h1 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-xl font-bold text-white truncate transition-all duration-300"
+            >
               {getPageTitle()}
-            </h1>
+            </motion.h1>
             {subtitle && (
-              <p className="text-sm text-orange-200 mt-1">
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-sm text-orange-200 mt-1 truncate transition-all duration-300"
+              >
                 {subtitle}
-              </p>
+              </motion.p>
             )}
           </div>
 
           {/* Centered Search Bar */}
-          <div className="hidden md:flex flex-1 justify-center ml-8 mr-16">
-            <div className="relative w-full max-w-lg">
+          <div className="hidden md:flex items-center mx-6 flex-1 max-w-md">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-orange-200" />
               <input
                 type="text"
                 placeholder="Buscar projetos..."
-                className="search-input w-full pl-10 pr-4 bg-orange-700 bg-opacity-20 border-orange-500 text-white placeholder-orange-200 focus:border-white focus:ring-0"
+                className="search-input w-full pl-10 pr-4 bg-orange-700 bg-opacity-20 border-orange-500 text-white placeholder-orange-200 focus:border-white focus:ring-0 transition-all duration-200"
               />
             </div>
           </div>
