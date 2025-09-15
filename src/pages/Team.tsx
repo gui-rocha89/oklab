@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Mail, Calendar, Settings, UserPlus, Shield, Eye, Edit } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 const mockTeamMembers = [
   {
@@ -131,7 +131,7 @@ export default function Team() {
     
     toast({
       title: "Convite enviado!",
-      description: `Convite enviado para ${inviteEmail} com a função de ${getRoleText(inviteRole)}.`
+      description: `Convite enviado para ${inviteEmail} com a função de ${getRoleText(inviteRole)}.`,
     });
 
     setIsInviteOpen(false);
