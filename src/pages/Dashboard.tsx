@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Film
 } from 'lucide-react';
+import logoWhite from '@/assets/logo-white-bg.png';
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -179,9 +180,19 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Bem-vindo ao OK LAB! 🚀
-          </h1>
+          <div className="flex items-center space-x-3 mb-2">
+            <motion.img
+              src={logoWhite}
+              alt="MANUS I.A Logo"
+              className="h-12 w-auto"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            />
+            <span className="text-3xl sm:text-4xl font-bold text-gray-900">
+              Bem-vindo! 🚀
+            </span>
+          </div>
           <p className="text-base sm:text-lg text-gray-600">
             Gerencie e aprove conteúdos de forma eficiente com nossa plataforma moderna e intuitiva.
           </p>
