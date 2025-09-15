@@ -167,6 +167,12 @@ interface ProjectContextType {
     efficiency: number;
     clientSatisfaction: number;
   };
+  // Enhanced filtering functions
+  filterByPriority: (priority: Project['priority']) => Project[];
+  filterByStatus: (status: Project['status']) => Project[];
+  sortByPriority: (projects?: Project[]) => Project[];
+  getProjectsByClient: (client: string) => Project[];
+  getOverdueProjects: () => Project[];
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -234,13 +240,49 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
+  const sortByPriority = (projectList: Project[] = projects): Project[] => {
+    const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+    return [...projectList].sort((a, b) => {
+      const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+      const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+      return priorityB - priorityA; // Higher priority first
+    });
+  };
+
+  const filterByPriority = (priority: Project['priority']): Project[] => {
+    return projects.filter(project => project.priority === priority);
+  };
+
+  const filterByStatus = (status: Project['status']): Project[] => {
+    return projects.filter(project => project.status === status);
+  };
+
+  const getProjectsByClient = (client: string): Project[] => {
+    return projects.filter(project => project.client === client);
+  };
+
+  const getOverdueProjects = (): Project[] => {
+    const now = new Date();
+    return projects.filter(project => {
+      // Mock logic: projects older than 30 days and still pending
+      const createdDate = new Date(project.createdAt);
+      const daysDiff = (now.getTime() - createdDate.getTime()) / (1000 * 3600 * 24);
+      return daysDiff > 30 && (project.status === 'pending' || project.status === 'in-progress');
+    });
+  };
+
   return (
     <ProjectContext.Provider value={{
       projects,
       addProject,
       updateProject,
       deleteProject,
-      getProjectStats
+      getProjectStats,
+      filterByPriority,
+      filterByStatus,
+      sortByPriority,
+      getProjectsByClient,
+      getOverdueProjects
     }}>
       {children}
     </ProjectContext.Provider>

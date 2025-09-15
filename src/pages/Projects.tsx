@@ -5,58 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useProjects } from "@/contexts/ProjectContext";
+import { motion } from "framer-motion";
 
-const mockProjects = [
-  {
-    id: 1,
-    shareId: "abc123",
-    title: "Campanha Verão 2024",
-    description: "Vídeo promocional para a nova coleção de verão",
-    status: "pending",
-    priority: "high",
-    author: "Maria Silva",
-    type: "Vídeo",
-    createdAt: "2024-01-15",
-    keyframes: [
-      { id: 1, time: 30, comment: "Ajustar cor do logo", timestamp: "2024-01-15T10:30:00Z" },
-      { id: 2, time: 60, comment: "Música muito alta", timestamp: "2024-01-15T11:00:00Z" }
-    ]
-  },
-  {
-    id: 2,
-    shareId: "def456",
-    title: "Banner Black Friday",
-    description: "Design para banner da promoção Black Friday",
-    status: "approved",
-    priority: "medium",
-    author: "João Santos",
-    type: "Design",
-    createdAt: "2024-01-10",
-    keyframes: []
-  },
-  {
-    id: 3,
-    shareId: "ghi789",
-    title: "Podcast Episódio 12",
-    description: "Edição do episódio sobre marketing digital",
-    status: "feedback-sent",
-    priority: "low",
-    author: "Ana Costa",
-    type: "Audiovisual",
-    createdAt: "2024-01-08",
-    keyframes: [
-      { id: 3, time: 120, comment: "Cortar essa parte", timestamp: "2024-01-08T14:20:00Z" }
-    ]
-  }
-];
+// ... keep existing code (imports)
 
 export default function Projects() {
-  const [projects] = useState(mockProjects);
+  const { projects } = useProjects();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const navigate = useNavigate();
 
@@ -82,22 +44,63 @@ export default function Projects() {
 
   const getPriorityColor = (priority: string): string => {
     switch (priority) {
-      case "high": return "bg-red-100 text-red-800 border-red-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low": return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "high": 
+      case "urgent": 
+        return "bg-red-100 text-red-800 border-red-300 hover:bg-red-200";
+      case "medium": 
+        return "bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200";
+      case "low": 
+        return "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200";
+      default: 
+        return "bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200";
+    }
+  };
+
+  const getPriorityText = (priority: string): string => {
+    switch (priority) {
+      case "high": return "Alta";
+      case "medium": return "Média";
+      case "low": return "Baixa";
+      case "urgent": return "Urgente";
+      default: return "Não definida";
+    }
+  };
+
+  const getPriorityIcon = (priority: string): string => {
+    switch (priority) {
+      case "high": return "🔴";
+      case "urgent": return "⚠️";
+      case "medium": return "🟡";
+      case "low": return "🟢";
+      default: return "⚪";
     }
   };
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.author.toLowerCase().includes(searchTerm.toLowerCase());
+                         project.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (project.client && project.client.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === "all" || project.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || project.priority === priorityFilter;
+    const matchesType = typeFilter === "all" || project.type === typeFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesSearch && matchesStatus && matchesPriority && matchesType;
   });
+
+  // Get unique project types for filter
+  const uniqueTypes = [...new Set(projects.map(p => p.type))];
+
+  // Stats for filter badges
+  const getFilterCount = (filter: string, type: 'status' | 'priority' | 'type') => {
+    if (filter === "all") return projects.length;
+    return projects.filter(p => {
+      if (type === 'status') return p.status === filter;
+      if (type === 'priority') return p.priority === filter;
+      if (type === 'type') return p.type === filter;
+      return false;
+    }).length;
+  };
 
   const handleViewProject = (shareId: string) => {
     navigate(`/aprovacao-audiovisual/${shareId}`);
@@ -111,124 +114,327 @@ export default function Projects() {
       />
       
       <div className="flex-1 overflow-auto p-6 space-y-6">
-        {/* Filtros e Busca */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar projetos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        {/* Enhanced Filtros e Busca */}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full lg:w-auto">
+              {/* Enhanced Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Buscar por título, descrição, autor ou cliente..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-11 shadow-sm border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {/* Status Filter */}
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-44 h-11 bg-white shadow-sm">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border shadow-lg z-50">
+                    <SelectItem value="all">Todos ({getFilterCount("all", "status")})</SelectItem>
+                    <SelectItem value="pending">Pendente ({getFilterCount("pending", "status")})</SelectItem>
+                    <SelectItem value="approved">Aprovado ({getFilterCount("approved", "status")})</SelectItem>
+                    <SelectItem value="in-progress">Em Progresso ({getFilterCount("in-progress", "status")})</SelectItem>
+                    <SelectItem value="rejected">Rejeitado ({getFilterCount("rejected", "status")})</SelectItem>
+                    <SelectItem value="feedback-sent">Feedback Enviado ({getFilterCount("feedback-sent", "status")})</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Enhanced Priority Filter with Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full sm:w-44 h-11 justify-between bg-white shadow-sm hover:bg-gray-50"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>{getPriorityIcon(priorityFilter)}</span>
+                        <span>
+                          {priorityFilter === "all" 
+                            ? "Todas as Prioridades" 
+                            : getPriorityText(priorityFilter)
+                          }
+                        </span>
+                      </span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-white border shadow-lg z-50">
+                    <DropdownMenuItem 
+                      onClick={() => setPriorityFilter("all")}
+                      className="flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>📋</span>
+                        <span>Todas as Prioridades</span>
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        {getFilterCount("all", "priority")}
+                      </Badge>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setPriorityFilter("urgent")}
+                      className="flex items-center justify-between cursor-pointer hover:bg-red-50"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>⚠️</span>
+                        <span>Urgente</span>
+                      </span>
+                      <Badge className="bg-red-100 text-red-800">
+                        {getFilterCount("urgent", "priority")}
+                      </Badge>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setPriorityFilter("high")}
+                      className="flex items-center justify-between cursor-pointer hover:bg-red-50"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>🔴</span>
+                        <span>Alta</span>
+                      </span>
+                      <Badge className="bg-red-100 text-red-800">
+                        {getFilterCount("high", "priority")}
+                      </Badge>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setPriorityFilter("medium")}
+                      className="flex items-center justify-between cursor-pointer hover:bg-yellow-50"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>🟡</span>
+                        <span>Média</span>
+                      </span>
+                      <Badge className="bg-yellow-100 text-yellow-800">
+                        {getFilterCount("medium", "priority")}
+                      </Badge>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setPriorityFilter("low")}
+                      className="flex items-center justify-between cursor-pointer hover:bg-emerald-50"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <span>🟢</span>
+                        <span>Baixa</span>
+                      </span>
+                      <Badge className="bg-emerald-100 text-emerald-800">
+                        {getFilterCount("low", "priority")}
+                      </Badge>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Type Filter */}
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full sm:w-40 h-11 bg-white shadow-sm">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border shadow-lg z-50">
+                    <SelectItem value="all">Todos os Tipos ({getFilterCount("all", "type")})</SelectItem>
+                    {uniqueTypes.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type} ({getFilterCount(type, "type")})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Status</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="approved">Aprovado</SelectItem>
-                <SelectItem value="rejected">Rejeitado</SelectItem>
-                <SelectItem value="feedback-sent">Feedback Enviado</SelectItem>
-              </SelectContent>
-            </Select>
 
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Prioridade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Prioridades</SelectItem>
-                <SelectItem value="high">Alta</SelectItem>
-                <SelectItem value="medium">Média</SelectItem>
-                <SelectItem value="low">Baixa</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("grid")}
+                className="h-11 w-11"
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("list")}
+                className="h-11 w-11"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button className="ml-2 h-11">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Projeto
+              </Button>
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === "grid" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("grid")}
+          {/* Active Filters Display */}
+          {(priorityFilter !== "all" || statusFilter !== "all" || typeFilter !== "all" || searchTerm) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="flex flex-wrap items-center gap-2 pb-2 border-b border-gray-200"
             >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("list")}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button className="ml-2">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Projeto
-            </Button>
-          </div>
+              <span className="text-sm text-muted-foreground">Filtros ativos:</span>
+              {searchTerm && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  Busca: "{searchTerm}"
+                  <button 
+                    onClick={() => setSearchTerm("")} 
+                    className="ml-1 hover:bg-blue-200 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {statusFilter !== "all" && (
+                <Badge variant="secondary" className={getStatusColor(statusFilter)}>
+                  Status: {getStatusText(statusFilter)}
+                  <button 
+                    onClick={() => setStatusFilter("all")} 
+                    className="ml-1 hover:bg-opacity-70 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {priorityFilter !== "all" && (
+                <Badge variant="secondary" className={getPriorityColor(priorityFilter)}>
+                  {getPriorityIcon(priorityFilter)} {getPriorityText(priorityFilter)}
+                  <button 
+                    onClick={() => setPriorityFilter("all")} 
+                    className="ml-1 hover:bg-opacity-70 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {typeFilter !== "all" && (
+                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                  Tipo: {typeFilter}
+                  <button 
+                    onClick={() => setTypeFilter("all")} 
+                    className="ml-1 hover:bg-purple-200 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+            </motion.div>
+          )}
         </div>
 
         {/* Lista/Grid de Projetos */}
         {viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg font-semibold text-foreground line-clamp-2">
-                      {project.title}
-                    </CardTitle>
-                    <Badge className={getPriorityColor(project.priority)}>
-                      {project.priority === "high" ? "Alta" : project.priority === "medium" ? "Média" : "Baixa"}
-                    </Badge>
-                  </div>
-                  <Badge className={getStatusColor(project.status)}>
-                    {getStatusText(project.status)}
-                  </Badge>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground text-sm line-clamp-2">
-                    {project.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{project.author}</span>
-                    <span>{project.type}</span>
-                  </div>
-                  
-                  <div className="text-xs text-muted-foreground">
-                    Criado em {new Date(project.createdAt).toLocaleDateString('pt-BR')}
-                  </div>
-
-                  {project.keyframes.length > 0 && (
-                    <div className="text-xs text-primary">
-                      {project.keyframes.length} comentário{project.keyframes.length !== 1 ? 's' : ''}
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="hover:shadow-lg transition-all duration-300 border-0 shadow-md group">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                        {project.title}
+                      </CardTitle>
+                      <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                        {/* Enhanced Priority Badge */}
+                        <Badge className={`${getPriorityColor(project.priority)} border transition-colors`}>
+                          <span className="flex items-center space-x-1">
+                            <span>{getPriorityIcon(project.priority)}</span>
+                            <span className="font-medium">{getPriorityText(project.priority)}</span>
+                          </span>
+                        </Badge>
+                      </div>
                     </div>
-                  )}
+                    <div className="flex items-center space-x-2">
+                      <Badge className={`${getStatusColor(project.status)} border`}>
+                        {getStatusText(project.status)}
+                      </Badge>
+                      {project.tags && project.tags.slice(0, 2).map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs bg-gray-50 hover:bg-gray-100">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardHeader>
                   
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleViewProject(project.shareId)}
-                      className="flex-1"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Projeto
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  <CardContent className="space-y-4">
+                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+                      {project.description}
+                    </p>
+                    
+                    {/* Enhanced Project Metadata */}
+                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        <span className="font-medium">Autor:</span>
+                        <span>{project.author}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="font-medium">Tipo:</span>
+                        <span>{project.type}</span>
+                      </div>
+                      {project.client && (
+                        <div className="flex items-center space-x-1">
+                          <span className="font-medium">Cliente:</span>
+                          <span className="text-primary">{project.client}</span>
+                        </div>
+                      )}
+                      {project.department && (
+                        <div className="flex items-center space-x-1">
+                          <span className="font-medium">Dept:</span>
+                          <span>{project.department}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between">
+                        <span>Criado em {new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+                        {project.estimatedHours && (
+                          <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full text-xs">
+                            {project.estimatedHours}h estimadas
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {project.keyframes.length > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-amber-600 font-medium">
+                          {project.keyframes.length} comentário{project.keyframes.length !== 1 ? 's' : ''} pendente{project.keyframes.length !== 1 ? 's' : ''}
+                        </span>
+                        {project.budget && (
+                          <span className="text-emerald-600 font-medium">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.budget)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleViewProject(project.shareId)}
+                        className="flex-1"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver Projeto
+                      </Button>
+                      <Button size="sm" variant="outline" className="px-3">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" className="px-3 hover:bg-red-50 hover:border-red-200 hover:text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         ) : (
