@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { FileVideo, MessageSquare, Clock, CheckCircle, XCircle, TrendingUp } from "lucide-react";
+import { motion } from 'framer-motion';
+import { 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  TrendingUp,
+  FileText,
+  FolderOpen,
+  AlertTriangle,
+  Film
+} from 'lucide-react';
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,45 +60,111 @@ const mockProjects = [
   }
 ];
 
+const StatCard = ({ title, value, icon: Icon, color, trend, description }: any) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ y: -4 }}
+    className="stats-card hover-lift"
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+        <p className="text-3xl font-bold text-gray-900">{value}</p>
+        {description && (
+          <p className="text-xs text-gray-500">{description}</p>
+        )}
+      </div>
+      <div className={`p-3 rounded-full ${color}`}>
+        <Icon className="w-6 h-6 text-white" />
+      </div>
+    </div>
+    {trend && (
+      <div className="mt-4 flex items-center">
+        <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+        <span className="text-sm text-green-600 font-medium">{trend}</span>
+        <span className="text-sm text-gray-500 ml-1">vs. mês anterior</span>
+      </div>
+    )}
+  </motion.div>
+);
+
+const ProjectCard = ({ project, index }: any) => {
+  const statusConfig = {
+    pending: { 
+      color: 'status-pending', 
+      icon: Clock, 
+      text: 'Pendente' 
+    },
+    approved: { 
+      color: 'status-approved', 
+      icon: CheckCircle, 
+      text: 'Aprovado' 
+    },
+    rejected: { 
+      color: 'status-rejected', 
+      icon: XCircle, 
+      text: 'Revisar' 
+    },
+    'feedback-sent': {
+      color: 'status-feedback-sent',
+      icon: AlertTriangle,
+      text: 'Feedback Enviado'
+    },
+    default: {
+      color: 'status-unknown',
+      icon: AlertTriangle,
+      text: 'Desconhecido'
+    }
+  };
+
+  const config = statusConfig[project.status as keyof typeof statusConfig] || statusConfig.default;
+  const StatusIcon = config.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="project-card card-hover"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
+          <p className="text-sm text-gray-600 mb-2">{project.description}</p>
+          <div className="flex items-center space-x-4 text-xs text-gray-500">
+            <span>Por {project.author}</span>
+            <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+          </div>
+        </div>
+        <div className={`px-3 py-1 rounded-full flex items-center space-x-1 ${config.color}`}>
+          <StatusIcon className="w-3 h-3" />
+          <span className="text-xs font-medium">{config.text}</span>
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+          {project.type}
+        </span>
+        <div className={`w-2 h-2 rounded-full priority-${project.priority}`}></div>
+      </div>
+    </motion.div>
+  );
+};
+
 export default function Dashboard() {
-  const [projects, setProjects] = useState(mockProjects);
+  const [projects] = useState(mockProjects);
 
   // Calculate statistics
   const stats = {
     total: projects.length,
-    pending: projects.filter(p => p.status === "pending").length,
+    pending: projects.filter(p => p.status === "pending" || p.status === 'rejected').length,
     approved: projects.filter(p => p.status === "approved").length,
     feedbacks: projects.reduce((acc, p) => acc + p.keyframes.length, 0),
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved": return "success";
-      case "rejected": return "destructive";
-      case "pending": return "warning";
-      case "feedback-sent": return "primary";
-      default: return "secondary";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "approved": return "Aprovado";
-      case "rejected": return "Rejeitado";
-      case "pending": return "Pendente";
-      case "feedback-sent": return "Feedback Enviado";
-      default: return status;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "bg-destructive/10 text-destructive";
-      case "medium": return "bg-warning/10 text-warning";
-      case "low": return "bg-muted text-muted-foreground";
-      default: return "bg-muted text-muted-foreground";
-    }
-  };
+  const recentProjects = projects.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,161 +173,126 @@ export default function Dashboard() {
         subtitle="Visão geral dos projetos e atividades"
       />
       
-      <main className="p-6 space-y-8 animate-fade-in">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="shadow-card hover-lift">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total de Projetos</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.total}</p>
-                </div>
-                <FileVideo className="h-8 w-8 text-primary" />
-              </div>
-              <div className="mt-4 flex items-center text-sm text-success">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                +12% este mês
-              </div>
-            </CardContent>
-          </Card>
+      <main className="p-6 space-y-6">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            Bem-vindo ao OK LAB! 🚀
+          </h1>
+          <p className="text-base sm:text-lg text-gray-600">
+            Gerencie e aprove conteúdos de forma eficiente com nossa plataforma moderna e intuitiva.
+          </p>
+        </motion.div>
 
-          <Card className="shadow-card hover-lift">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pendentes</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.pending}</p>
-                </div>
-                <Clock className="h-8 w-8 text-warning" />
-              </div>
-              <div className="mt-4 flex items-center text-sm text-warning">
-                Requer atenção
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card hover-lift">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Aprovados</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.approved}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-success" />
-              </div>
-              <div className="mt-4 flex items-center text-sm text-success">
-                Finalizados com sucesso
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card hover-lift">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Feedbacks</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.feedbacks}</p>
-                </div>
-                <MessageSquare className="h-8 w-8 text-accent" />
-              </div>
-              <div className="mt-4 flex items-center text-sm text-muted-foreground">
-                Comentários ativos
-              </div>
-            </CardContent>
-          </Card>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <StatCard
+            title="Pendentes"
+            value={stats.pending}
+            icon={Clock}
+            color="bg-gradient-to-r from-yellow-500 to-orange-500"
+            trend="+12%"
+            description="Aguardando aprovação ou revisão"
+          />
+          <StatCard
+            title="Aprovados"
+            value={stats.approved}
+            icon={CheckCircle}
+            color="bg-gradient-to-r from-green-500 to-emerald-500"
+            trend="+8%"
+            description="Prontos para publicação"
+          />
+          <StatCard
+            title="Total"
+            value={stats.total}
+            icon={FileText}
+            color="bg-gradient-to-r from-blue-500 to-purple-500"
+            trend="+15%"
+            description="Projetos este mês"
+          />
+          <StatCard
+            title="Feedbacks"
+            value={stats.feedbacks}
+            icon={Film}
+            color="bg-gradient-to-r from-purple-500 to-pink-500"
+            trend="+20%"
+            description="Comentários ativos"
+          />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Projects */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileVideo className="h-5 w-5 text-primary" />
-                Projetos Recentes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {projects.slice(0, 3).map((project) => (
-                  <div key={project.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-foreground truncate">{project.title}</h4>
-                        <Badge 
-                          variant="secondary" 
-                          className={`${getPriorityColor(project.priority)} text-xs`}
-                        >
-                          {project.priority === "high" ? "Alta" : project.priority === "medium" ? "Média" : "Baixa"}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">{project.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant={getStatusColor(project.status) as any} className="text-xs">
-                          {getStatusText(project.status)}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">por {project.author}</span>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => window.location.href = `/aprovacao-audiovisual/${project.shareId}`}
-                      className="ml-4 whitespace-nowrap"
-                    >
-                      Ver Projeto
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 pt-4 border-t">
-                <Button variant="outline" className="w-full">
-                  Ver Todos os Projetos
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200"
+        >
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-primary flex items-center justify-center space-x-2 py-4"
+            >
+              <FileText className="w-5 h-5" />
+              <span>Novo Projeto</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
+            >
+              <Film className="w-5 h-5" />
+              <span>Audiovisual</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
+            >
+              <Clock className="w-5 h-5" />
+              <span>Ver Pendentes</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
+            >
+              <CheckCircle className="w-5 h-5" />
+              <span>Ver Aprovados</span>
+            </motion.button>
+          </div>
+        </motion.div>
 
-          {/* Feedbacks Section */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-accent" />
-                Feedbacks Recebidos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {projects.filter(p => p.keyframes.length > 0).map((project) => (
-                  <div key={project.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-foreground">{project.title}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        {project.keyframes.length} comentários
-                      </Badge>
-                    </div>
-                    <div className="space-y-2 pl-4 border-l-2 border-primary/20">
-                      {project.keyframes.map((keyframe) => (
-                        <div key={keyframe.id} className="p-2 bg-muted/30 rounded text-sm">
-                          <p className="text-foreground">{keyframe.comment}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Em {Math.floor(keyframe.time)}s - {new Date(keyframe.timestamp).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {projects.filter(p => p.keyframes.length > 0).length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum feedback recebido ainda</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Recent Projects */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200"
+        >
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Projetos Recentes</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recentProjects.map((project, index) => (
+              <ProjectCard key={project.id} project={project} index={index} />
+            ))}
+          </div>
+          
+          {recentProjects.length === 0 && (
+            <div className="text-center py-12">
+              <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum projeto encontrado</h3>
+              <p className="text-gray-600 mb-6">Comece criando seu primeiro projeto.</p>
+              <Button className="btn-primary">
+                <FileText className="w-4 h-4 mr-2" />
+                Criar Projeto
+              </Button>
+            </div>
+          )}
+        </motion.div>
       </main>
     </div>
   );

@@ -1,346 +1,340 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import ReactPlayer from "react-player";
-import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  MessageSquare, 
-  Clock,
-  CheckCircle,
-  XCircle,
-  Send,
-  Rocket
-} from "lucide-react";
-import { Header } from "@/components/Header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { toast } from "@/hooks/use-toast";
+import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
+import { motion, AnimatePresence } from 'framer-motion';
+import ReactPlayer from 'react-player';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause, Rewind, FastForward } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
-// Mock project data
-const mockProject = {
-  id: 1,
-  shareId: "abc123",
-  title: "Campanha Verão 2024",
-  description: "Vídeo promocional para a campanha de verão da marca",
-  status: "pending",
-  priority: "high",
-  author: "Maria Silva",
-  createdAt: "2024-01-15T10:00:00Z",
-  type: "Vídeo",
-  videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  keyframes: [
-    { id: 1, time: 15.5, comment: "Ajustar cor do texto principal", timestamp: "2024-01-15T11:30:00Z" },
-    { id: 2, time: 32.2, comment: "Logo da empresa está muito pequena aqui", timestamp: "2024-01-15T14:20:00Z" },
-    { id: 3, time: 58.7, comment: "Transição muito rápida, sugerir 2s a mais", timestamp: "2024-01-15T16:45:00Z" }
-  ]
+const formatTime = (seconds: number): string => {
+  if (isNaN(seconds) || seconds < 0) {
+    return '00:00';
+  }
+  const date = new Date(0);
+  date.setSeconds(seconds);
+  return date.toISOString().substr(14, 5);
 };
 
+const mockProjects = [
+  {
+    id: 1,
+    shareId: "abc123",
+    title: "Campanha Verão 2024",
+    description: "Vídeo promocional para a nova coleção de verão",
+    status: "pending",
+    priority: "high",
+    author: "Maria Silva",
+    type: "Vídeo",
+    createdAt: "2024-01-15",
+    keyframes: [
+      { id: 1, time: 30, comment: "Ajustar cor do logo", timestamp: "2024-01-15T10:30:00Z" },
+      { id: 2, time: 60, comment: "Música muito alta", timestamp: "2024-01-15T11:00:00Z" }
+    ],
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+  },
+  {
+    id: 2,
+    shareId: "def456",
+    title: "Banner Black Friday",
+    description: "Design para banner da promoção Black Friday",
+    status: "approved",
+    priority: "medium", 
+    author: "João Santos",
+    type: "Design",
+    createdAt: "2024-01-10",
+    keyframes: [],
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+  }
+];
+
 export default function AudiovisualApproval() {
-  const { shareId } = useParams();
-  const navigate = useNavigate();
-  const [project] = useState(mockProject);
+  const { shareId } = useParams<{ shareId: string }>();
+  const { toast } = useToast();
+  
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const playerRef = useRef<any>(null);
+  const [keyframes, setKeyframes] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(0.8);
-  const [currentTime, setCurrentTime] = useState(0);
+  const [progress, setProgress] = useState({ playedSeconds: 0, played: 0 });
   const [duration, setDuration] = useState(0);
-  const [newComment, setNewComment] = useState("");
-  const [selectedKeyframe, setSelectedKeyframe] = useState<number | null>(null);
-  const [showApprovalConfirmation, setShowApprovalConfirmation] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
+  useEffect(() => {
+    const foundProject = mockProjects.find(p => p.shareId === shareId);
+    if (foundProject) {
+      setProject(foundProject);
+      setKeyframes(foundProject.keyframes || []);
+      if (foundProject.status === 'approved' || foundProject.status === 'feedback-sent' || foundProject.status === 'rejected') {
+        setShowConfirmation(true);
+      }
+    }
+    setLoading(false);
+  }, [shareId]);
 
-  const handleMute = () => {
-    setIsMuted(!isMuted);
-  };
+  const handleAddKeyframe = () => {
+    const currentTime = progress.playedSeconds;
+    if (keyframes.some(k => Math.abs(k.time - currentTime) < 1)) {
+        toast({
+            title: "Atenção",
+            description: "Já existe um keyframe neste ponto do vídeo.",
+            variant: "destructive",
+            duration: 3000,
+        });
+        return;
+    }
 
-  const handleSeekToKeyframe = (time: number) => {
-    setCurrentTime(time);
-    setSelectedKeyframe(time);
-  };
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-    
     const newKeyframe = {
       id: Date.now(),
       time: currentTime,
-      comment: newComment,
-      timestamp: new Date().toISOString()
+      comment: '',
     };
-
-    // In a real app, this would be sent to the backend
-    console.log("New keyframe:", newKeyframe);
-    setNewComment("");
-    
-    toast({
-      title: "Comentário adicionado",
-      description: `Comentário adicionado em ${Math.floor(currentTime)}s`,
-    });
+    setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
+    setIsPlaying(false);
   };
 
-  const handleApprove = () => {
-    setShowApprovalConfirmation(true);
+  const handleKeyframeCommentChange = (id: number, comment: string) => {
+    setKeyframes(keyframes.map(k => k.id === id ? { ...k, comment } : k));
+  };
+  
+  const handleRemoveKeyframe = (id: number) => {
+    setKeyframes(keyframes.filter(k => k.id !== id));
   };
 
-  const handleReject = () => {
-    toast({
-      title: "Projeto rejeitado",
-      description: "O projeto foi rejeitado e o feedback foi enviado.",
-      variant: "destructive",
-    });
-    
-    setTimeout(() => {
-      navigate("/");
-    }, 2000);
+  const seekTo = (time: number) => {
+    if (!playerRef.current) return;
+    playerRef.current.seekTo(time, 'seconds');
+    setIsPlaying(true);
+  };
+  
+  const handleAction = (action: string) => {
+    if (action === 'approved') {
+        toast({
+            title: "✅ Aprovação Enviada!",
+            description: "Obrigado! Sua aprovação foi registrada com sucesso.",
+            duration: 6000,
+        });
+    } else if (action === 'send_feedback') {
+        const feedbackData = { keyframes: keyframes.filter(k => k.comment.trim() !== '') };
+        toast({
+            title: "👍 Feedback Enviado!",
+            description: "A equipe foi notificada sobre seus apontamentos.",
+            duration: 6000,
+        });
+    }
+    setShowConfirmation(true);
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  if (showApprovalConfirmation) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-4">
-        <Card className="max-w-md w-full shadow-glow animate-scale-in">
-          <CardContent className="p-8 text-center">
-            <div className="mb-6 animate-pulse-glow">
-              <Rocket className="h-16 w-16 mx-auto text-primary-foreground mb-4" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              Projeto Aprovado! 🚀
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              O projeto "{project.title}" foi aprovado com sucesso. A equipe será notificada.
-            </p>
-            <div className="space-y-3">
-              <Button 
-                onClick={() => navigate("/")}
-                className="w-full"
-                size="lg"
-              >
-                Voltar ao Dashboard
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowApprovalConfirmation(false)}
-                className="w-full"
-              >
-                Revisar Novamente
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center p-4">
+        <Loader2 className="w-16 h-16 text-orange-500 animate-spin mb-4" />
+        <h1 className="text-2xl font-bold text-gray-800">Carregando Projeto...</h1>
+        <p className="text-gray-600">Estamos preparando tudo para você.</p>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center p-4">
+        <XCircle className="w-16 h-16 text-red-500 mb-4" />
+        <h1 className="text-2xl font-bold text-gray-800">Projeto não encontrado</h1>
+        <p className="text-gray-600">O link de aprovação pode estar inválido ou o projeto foi removido.</p>
+      </div>
+    );
+  }
+
+  if (showConfirmation) {
+    const isApproved = project.status === 'approved';
+    const isFeedback = project.status === 'feedback-sent' || project.status === 'rejected';
+    
+    let confirmationContent;
+    if (isApproved) {
+        confirmationContent = {
+            icon: <ThumbsUp className="w-20 h-20 text-green-500 mx-auto animate-bounce" />,
+            title: 'Projeto Aprovado!',
+            message: 'Obrigado pela sua colaboração. A equipe já foi notificada.',
+            bg: 'from-green-50 to-emerald-100',
+        };
+    } else if (isFeedback) {
+        confirmationContent = {
+            icon: <Send className="w-20 h-20 text-blue-500 mx-auto" />,
+            title: 'Feedback Enviado!',
+            message: 'Seu feedback foi recebido. Nossa equipe analisará os pontos.',
+            bg: 'from-blue-50 to-sky-100',
+        };
+    } else {
+        return null;
+    }
+
+    return (
+      <div className={`flex flex-col items-center justify-center min-h-screen bg-gradient-to-br ${confirmationContent.bg} text-center p-6`}>
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full"
+        >
+          {confirmationContent.icon}
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{confirmationContent.title}</h2>
+          <p className="text-gray-600 mb-6">{confirmationContent.message}</p>
+          <div className="space-y-3">
+            <Button className="w-full bg-orange-500 hover:bg-orange-600">
+              Voltar ao Dashboard
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirmation(false)}
+              className="w-full"
+            >
+              Revisar Novamente
+            </Button>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
-        title={project.title}
-        subtitle={`${project.type} • ${project.author} • ${new Date(project.createdAt).toLocaleDateString()}`}
-      />
-      
-      <main className="p-6 space-y-6 animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Video Player Section */}
-          <div className="lg:col-span-2 space-y-4">
-            <Card className="shadow-card overflow-hidden">
-              <div className="aspect-video bg-black relative flex items-center justify-center">
-                {/* Placeholder for video player */}
-                <div className="text-white text-center">
-                  <Play className="h-16 w-16 mx-auto mb-4 opacity-60" />
-                  <p className="text-lg font-medium">Vídeo: {project.title}</p>
-                  <p className="text-sm opacity-60 mt-2">Player será integrado</p>
-                </div>
-                
-                {/* Custom Controls Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                  <div className="space-y-3">
-                    {/* Progress Bar */}
-                    <div className="relative">
-                      <Slider
-                        value={[currentTime]}
-                        max={duration}
-                        step={0.1}
-                        onValueChange={([value]) => setCurrentTime(value)}
-                        className="w-full"
-                      />
-                      {/* Keyframe Markers */}
-                      {project.keyframes.map((keyframe) => (
-                        <div
-                          key={keyframe.id}
-                          className="absolute top-0 h-full w-1 bg-accent cursor-pointer hover:bg-accent-foreground transition-colors"
-                          style={{ left: `${(keyframe.time / duration) * 100}%` }}
-                          onClick={() => handleSeekToKeyframe(keyframe.time)}
-                          title={keyframe.comment}
-                        />
-                      ))}
-                    </div>
-                    
-                    {/* Control Buttons */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handlePlayPause}
-                          className="text-white hover:text-primary hover:bg-white/20"
-                        >
-                          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleMute}
-                          className="text-white hover:text-primary hover:bg-white/20"
-                        >
-                          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                        </Button>
-                        
-                        <div className="flex items-center gap-2 text-white">
-                          <span className="text-sm">{formatTime(currentTime)}</span>
-                          <span className="text-xs opacity-60">/</span>
-                          <span className="text-sm opacity-60">{formatTime(duration)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
+    <div className="min-h-screen bg-gray-50">
+      <Helmet>
+        <title>Aprovação - {project.title}</title>
+      </Helmet>
 
-            {/* Add Comment Section */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  Adicionar Comentário
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    Tempo atual: {formatTime(currentTime)}
-                  </div>
-                  <Textarea
-                    placeholder="Deixe seu feedback sobre este momento do vídeo..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="min-h-20"
-                  />
-                  <Button onClick={handleAddComment} className="w-full">
-                    <Send className="h-4 w-4 mr-2" />
-                    Adicionar Comentário
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-6 shadow-lg"
+        >
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{project.title}</h1>
+          <p className="text-gray-600 mb-4">{project.description}</p>
+          <div className="flex items-center space-x-4 text-sm text-gray-500">
+            <span>Por {project.author}</span>
+            <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{project.type}</span>
           </div>
+        </motion.div>
 
-          {/* Comments and Actions Sidebar */}
-          <div className="space-y-6">
-            {/* Project Info */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Informações do Projeto</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <p className="font-medium text-foreground">{project.title}</p>
-                  <p className="text-sm text-muted-foreground">{project.description}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {project.type}
-                  </Badge>
-                  <Badge 
-                    variant={project.priority === "high" ? "destructive" : "secondary"} 
-                    className="text-xs"
-                  >
-                    Prioridade {project.priority === "high" ? "Alta" : "Média"}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Comments Timeline */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-accent" />
-                  Comentários ({project.keyframes.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4 max-h-64 overflow-y-auto">
-                  {project.keyframes.map((keyframe) => (
-                    <div 
-                      key={keyframe.id} 
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        selectedKeyframe === keyframe.time 
-                          ? "border-primary bg-primary/5" 
-                          : "border-border hover:border-muted-foreground"
-                      }`}
-                      onClick={() => handleSeekToKeyframe(keyframe.time)}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-3 w-3 text-primary" />
-                        <span className="text-xs font-medium text-primary">
-                          {formatTime(keyframe.time)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-foreground mb-2">{keyframe.comment}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(keyframe.timestamp).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                  
-                  {project.keyframes.length === 0 && (
-                    <div className="text-center py-6 text-muted-foreground">
-                      <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Nenhum comentário ainda</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                onClick={handleApprove}
-                className="bg-success hover:bg-success/90 text-success-foreground"
-                size="lg"
-              >
-                <CheckCircle className="h-5 w-5 mr-2" />
-                Aprovar
-              </Button>
-              <Button 
-                onClick={handleReject}
-                variant="destructive"
-                size="lg"
-              >
-                <XCircle className="h-5 w-5 mr-2" />
-                Rejeitar
-              </Button>
+        {/* Video Player */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl p-6 shadow-lg"
+        >
+          <div className="relative w-full bg-black rounded-lg" style={{ paddingBottom: '56.25%' }}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-white text-center">
+                <Play className="w-16 h-16 mx-auto mb-4" />
+                <p className="text-lg font-medium">{project.title}</p>
+                <p className="text-sm opacity-60">Player integrado com funcionalidades avançadas</p>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+          
+          {/* Video Controls */}
+          <div className="mt-4 flex items-center space-x-4">
+            <Button
+              onClick={() => setIsPlaying(!isPlaying)}
+              variant="outline"
+              size="sm"
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            </Button>
+            
+            <Button
+              onClick={handleAddKeyframe}
+              disabled={!isReady}
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Comentário
+            </Button>
+            
+            <div className="text-sm text-gray-500">
+              {formatTime(progress.playedSeconds)} / {formatTime(duration)}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Keyframes */}
+        {keyframes.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white rounded-2xl p-6 shadow-lg"
+          >
+            <h3 className="text-lg font-semibold mb-4">Comentários no Vídeo</h3>
+            <div className="space-y-4">
+              {keyframes.map(keyframe => (
+                <motion.div
+                  key={keyframe.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <button
+                      onClick={() => seekTo(keyframe.time)}
+                      className="text-orange-600 hover:text-orange-700 font-medium"
+                    >
+                      {formatTime(keyframe.time)}
+                    </button>
+                    <Button
+                      onClick={() => handleRemoveKeyframe(keyframe.id)}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={keyframe.comment}
+                    onChange={(e) => handleKeyframeCommentChange(keyframe.id, e.target.value)}
+                    placeholder="Adicione seu comentário aqui..."
+                    className="w-full"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white rounded-2xl p-6 shadow-lg"
+        >
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button
+              onClick={() => handleAction('approved')}
+              className="flex-1 bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="w-5 h-5 mr-2" />
+              Aprovar Projeto
+            </Button>
+            
+            <Button
+              onClick={() => handleAction('send_feedback')}
+              variant="outline"
+              className="flex-1"
+              disabled={keyframes.filter(k => k.comment.trim() !== '').length === 0}
+            >
+              <Send className="w-5 h-5 mr-2" />
+              Enviar Feedback ({keyframes.filter(k => k.comment.trim() !== '').length})
+            </Button>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
