@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Bell, Search, User, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import logoWhite from '@/assets/logo-white-bg.png';
+import logoOrange from '@/assets/logo-orange-bg.png';
 
 interface HeaderProps {
   title?: string;
@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <motion.img
-              src={logoWhite}
+              src={logoOrange}
               alt="MANUS I.A Logo"
               className="h-8 w-auto"
               initial={{ opacity: 0, scale: 0.8 }}
