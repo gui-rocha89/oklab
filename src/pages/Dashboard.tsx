@@ -175,27 +175,36 @@ export default function Dashboard() {
       />
       
       <main className="p-6 space-y-6">
-        {/* Welcome Section */}
+        {/* Welcome Section with Logo on Right */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between"
         >
-          <div className="flex items-center space-x-3 mb-2">
+          <div className="flex-1">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+              Bem-vindo! 🚀
+            </h1>
+            <p className="text-base sm:text-lg text-gray-600">
+              Gerencie e aprove conteúdos de forma eficiente com nossa plataforma moderna e intuitiva.
+            </p>
+          </div>
+          
+          <div className="hidden md:flex items-center justify-center ml-8">
             <motion.img
               src={logoWhite}
               alt="MANUS I.A Logo"
-              className="h-14 w-auto"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
+              className="h-32 w-auto opacity-90"
+              initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+              animate={{ opacity: 0.9, scale: 1, rotate: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              whileHover={{ 
+                scale: 1.05, 
+                rotate: 2,
+                transition: { duration: 0.3 }
+              }}
             />
-            <span className="text-3xl sm:text-4xl font-bold text-gray-900">
-              Bem-vindo! 🚀
-            </span>
           </div>
-          <p className="text-base sm:text-lg text-gray-600">
-            Gerencie e aprove conteúdos de forma eficiente com nossa plataforma moderna e intuitiva.
-          </p>
         </motion.div>
 
         {/* Stats Grid */}
