@@ -30,6 +30,11 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
   useEffect(() => {
     if (isOpen) {
+      // Aplicar blur no fundo da página
+      document.body.style.filter = 'blur(2px)';
+      document.body.style.pointerEvents = 'none';
+      
+      // Reset form quando modal abre
       setProjectName('');
       setProjectDescription('');
       setClientName('');
@@ -44,7 +49,17 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
           attachments: [{ id: 1, name: 'Anexo 1', type: 'auto-hosted', file: null }],
         },
       ]);
+    } else {
+      // Remover blur quando modal fecha
+      document.body.style.filter = '';
+      document.body.style.pointerEvents = '';
     }
+
+    // Cleanup ao desmontar
+    return () => {
+      document.body.style.filter = '';
+      document.body.style.pointerEvents = '';
+    };
   }, [isOpen]);
 
   const handleCreativeChange = (creativeId, field, value) => {

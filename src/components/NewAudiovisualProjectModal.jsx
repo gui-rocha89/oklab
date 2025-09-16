@@ -16,10 +16,25 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
   useEffect(() => {
     if (isOpen) {
+      // Aplicar blur no fundo da página
+      document.body.style.filter = 'blur(2px)';
+      document.body.style.pointerEvents = 'none';
+      
+      // Reset form quando modal abre
       setTitle('');
       setComment('');
       setVideoFile(null);
+    } else {
+      // Remover blur quando modal fecha
+      document.body.style.filter = '';
+      document.body.style.pointerEvents = '';
     }
+
+    // Cleanup ao desmontar
+    return () => {
+      document.body.style.filter = '';
+      document.body.style.pointerEvents = '';
+    };
   }, [isOpen]);
 
   const handleFileChange = (e) => {
