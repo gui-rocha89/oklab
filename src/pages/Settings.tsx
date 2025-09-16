@@ -30,10 +30,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { useUser } from "@/contexts/UserContext";
+import { useTheme } from 'next-themes';
 
 export default function Settings() {
   const { user } = useUser();
   const { profile, loading, uploading, updateProfile, uploadAvatar } = useProfile();
+  const { theme, setTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [profileData, setProfileData] = useState({
@@ -53,7 +55,6 @@ export default function Settings() {
   });
 
   const [preferences, setPreferences] = useState({
-    theme: "light",
     language: "pt-BR",
     timezone: "America/Sao_Paulo",
     autoSave: true,
@@ -125,6 +126,14 @@ export default function Settings() {
     toast({
       title: "Preferências atualizadas!",
       description: "Suas configurações foram salvas com sucesso."
+    });
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    toast({
+      title: "Tema alterado!",
+      description: `Tema ${newTheme === 'dark' ? 'escuro' : newTheme === 'light' ? 'claro' : 'automático'} aplicado com sucesso.`,
     });
   };
 
@@ -419,18 +428,19 @@ export default function Settings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="theme">Tema</Label>
-                    <Select value={preferences.theme} onValueChange={(value) => 
-                      setPreferences({...preferences, theme: value})
-                    }>
+                    <Select value={theme || "light"} onValueChange={handleThemeChange}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="light">Claro</SelectItem>
                         <SelectItem value="dark">Escuro</SelectItem>
-                        <SelectItem value="auto">Automático</SelectItem>
+                        <SelectItem value="system">Automático</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-sm text-muted-foreground">
+                      Escolha entre tema claro, escuro ou automático (baseado no sistema)
+                    </p>
                   </div>
 
                   <div className="space-y-2">
