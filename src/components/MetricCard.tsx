@@ -10,7 +10,7 @@ interface MetricCardProps {
   iconGradient: [string, string];
   trend?: number;
   description?: string;
-  format?: 'number' | 'currency' | 'percentage' | 'time';
+  format?: 'number' | 'percentage';
   index?: number;
 }
 
@@ -28,17 +28,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     const numVal = typeof val === 'string' ? parseFloat(val) : val;
     
     switch (format) {
-      case 'currency':
-        return new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        }).format(numVal);
       case 'percentage':
         return `${numVal.toFixed(1)}%`;
-      case 'time':
-        return `${numVal}h`;
       default:
         return numVal.toLocaleString('pt-BR');
     }

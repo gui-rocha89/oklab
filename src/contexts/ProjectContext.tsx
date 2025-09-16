@@ -22,19 +22,11 @@ export interface Project {
     responseDate?: string; // Data da resposta
     responseAuthor?: string; // Quem respondeu
   }>;
-  // New comparison properties
-  vsLastMonth?: number; // Percentage change
-  estimatedHours?: number;
-  actualHours?: number;
-  budget?: number;
   client?: string;
   department?: string;
   tags?: string[];
-  viewCount?: number;
-  approvalTime?: number; // hours to approve
 }
 
-// Enhanced mock data with comparison metrics
 const enhancedMockProjects: Project[] = [
   {
     id: 1,
@@ -47,15 +39,9 @@ const enhancedMockProjects: Project[] = [
     createdAt: "2024-01-15T10:00:00Z",
     updatedAt: "2024-01-16T14:30:00Z",
     type: "Vídeo",
-    vsLastMonth: 25,
-    estimatedHours: 40,
-    actualHours: 35,
-    budget: 15000,
     client: "Loja Fashion",
     department: "Marketing",
     tags: ["campanha", "verão", "promocional"],
-    viewCount: 1250,
-    approvalTime: 24,
     keyframes: [
       { id: 1, time: 15.5, comment: "Ajustar cor do texto", timestamp: "2024-01-15T11:30:00Z", resolved: false },
       { id: 2, time: 32.2, comment: "Logo muito pequena aqui", timestamp: "2024-01-15T14:20:00Z", resolved: false }
@@ -72,15 +58,9 @@ const enhancedMockProjects: Project[] = [
     createdAt: "2024-01-14T09:00:00Z",
     updatedAt: "2024-01-15T16:45:00Z",
     type: "Audiovisual",
-    vsLastMonth: -8,
-    estimatedHours: 20,
-    actualHours: 18,
-    budget: 8000,
     client: "TechCorp",
     department: "Produto",
     tags: ["tutorial", "produto", "explicativo"],
-    viewCount: 890,
-    approvalTime: 12,
     keyframes: []
   },
   {
@@ -94,15 +74,9 @@ const enhancedMockProjects: Project[] = [
     createdAt: "2024-01-13T16:00:00Z",
     updatedAt: "2024-01-14T10:15:00Z",
     type: "Apresentação",
-    vsLastMonth: 45,
-    estimatedHours: 15,
-    actualHours: 22,
-    budget: 12000,
     client: "Investidores",
     department: "Financeiro",
     tags: ["apresentação", "trimestral", "investidores"],
-    viewCount: 156,
-    approvalTime: 8,
     keyframes: [
       { 
         id: 3, 
@@ -127,15 +101,9 @@ const enhancedMockProjects: Project[] = [
     createdAt: "2024-01-12T08:00:00Z",
     updatedAt: "2024-01-16T09:30:00Z",
     type: "Design",
-    vsLastMonth: 15,
-    estimatedHours: 60,
-    actualHours: 45,
-    budget: 25000,
     client: "Empresa ABC",
     department: "Branding",
     tags: ["identidade", "visual", "marca", "logo"],
-    viewCount: 2340,
-    approvalTime: 36,
     keyframes: [
       {
         id: 4,
@@ -164,15 +132,9 @@ const enhancedMockProjects: Project[] = [
     createdAt: "2024-01-11T14:00:00Z",
     updatedAt: "2024-01-13T11:20:00Z",
     type: "Documento",
-    vsLastMonth: -12,
-    estimatedHours: 30,
-    actualHours: 28,
-    budget: 5000,
     client: "Interno",
     department: "RH",
     tags: ["manual", "processos", "documentação"],
-    viewCount: 445,
-    approvalTime: 18,
     keyframes: []
   }
 ];
@@ -192,9 +154,6 @@ interface ProjectContextType {
     inProgress: number;
     archived: number;
     feedbacks: number;
-    avgApprovalTime: number;
-    totalBudget: number;
-    efficiency: number;
     clientSatisfaction: number;
   };
   // Enhanced filtering functions
@@ -257,19 +216,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     const archived = projects.filter(p => p.status === "archived").length;
     const feedbacks = projects.reduce((acc, p) => acc + p.keyframes.length, 0);
     
-    const approvalTimes = projects.filter(p => p.approvalTime).map(p => p.approvalTime!);
-    const avgApprovalTime = approvalTimes.length > 0 
-      ? approvalTimes.reduce((a, b) => a + b, 0) / approvalTimes.length 
-      : 0;
-    
-    const totalBudget = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
-    
-    // Calculate efficiency (actual vs estimated hours)
-    const projectsWithHours = projects.filter(p => p.estimatedHours && p.actualHours);
-    const efficiency = projectsWithHours.length > 0
-      ? projectsWithHours.reduce((acc, p) => acc + ((p.estimatedHours! / p.actualHours!) * 100), 0) / projectsWithHours.length
-      : 100;
-    
     // Mock client satisfaction (in real app, this would come from feedback data)
     const clientSatisfaction = 92;
 
@@ -280,9 +226,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       inProgress,
       archived,
       feedbacks,
-      avgApprovalTime: Math.round(avgApprovalTime),
-      totalBudget,
-      efficiency: Math.round(efficiency),
       clientSatisfaction
     };
   };

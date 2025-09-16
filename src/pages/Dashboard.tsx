@@ -11,10 +11,7 @@ import {
   AlertTriangle,
   Film,
   ClipboardList,
-  DollarSign,
-  Target,
   Users,
-  BarChart3,
   Zap,
   Star
 } from 'lucide-react';
@@ -107,27 +104,6 @@ const ProjectCard = ({ project, index }: any) => {
             )}
           </div>
 
-          {/* Enhanced project stats */}
-          {project.budget && (
-            <div className="flex items-center space-x-4 text-xs mb-2">
-              <span className="flex items-center space-x-1">
-                <DollarSign className="w-3 h-3" />
-                <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.budget)}</span>
-              </span>
-              {project.estimatedHours && (
-                <span className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
-                  <span>{project.estimatedHours}h est.</span>
-                </span>
-              )}
-              {project.viewCount && (
-                <span className="flex items-center space-x-1">
-                  <Users className="w-3 h-3" />
-                  <span>{project.viewCount} views</span>
-                </span>
-              )}
-            </div>
-          )}
         </div>
 
         <div className={`px-3 py-1 rounded-full flex items-center space-x-1 ${config.color}`}>
@@ -148,22 +124,6 @@ const ProjectCard = ({ project, index }: any) => {
           ))}
         </div>
 
-        {/* Performance indicator */}
-        {project.vsLastMonth !== undefined && (
-          <div className="flex items-center space-x-1">
-            {project.vsLastMonth > 0 ? (
-              <TrendingUp className="w-3 h-3 text-green-500" />
-            ) : project.vsLastMonth < 0 ? (
-              <TrendingDown className="w-3 h-3 text-red-500" />
-            ) : null}
-            <span className={`text-xs font-medium ${
-              project.vsLastMonth > 0 ? 'text-green-600' : 
-              project.vsLastMonth < 0 ? 'text-red-600' : 'text-gray-500'
-            }`}>
-              {project.vsLastMonth > 0 ? '+' : ''}{project.vsLastMonth}%
-            </span>
-          </div>
-        )}
       </div>
     </motion.div>
   );
@@ -180,16 +140,12 @@ export default function Dashboard() {
   // Enhanced metrics with better calculations
   const enhancedStats = {
     ...stats,
-    // Calculate additional metrics for better insights
-    avgProjectValue: stats.totalBudget / stats.total || 0,
     completionRate: (stats.approved / stats.total) * 100 || 0,
     activeProjects: stats.pending + stats.inProgress,
     
     // Mock some advanced metrics (in real app, these would come from analytics)
     monthlyGrowth: {
       projects: 15,
-      revenue: 22,
-      efficiency: 5,
       satisfaction: 3
     }
   };
@@ -236,16 +192,25 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Professional Metrics Grid - 3 Column Layout with Enhanced Visual Effects */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 items-stretch">
+        {/* Professional Metrics Grid - 4 Column Layout with Enhanced Visual Effects */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+          <MetricCard
+            title="Total de Projetos"
+            value={stats.total}
+            icon={FileText}
+            iconGradient={['#8E44AD', '#7D3C98']}
+            trend={enhancedStats.monthlyGrowth.projects}
+            description="Todos os projetos este mês"
+            index={0}
+          />
           <MetricCard
             title="Projetos Pendentes"
             value={stats.pending}
             icon={Clock}
             iconGradient={['#E67E22', '#DC7633']}
-            trend={enhancedStats.monthlyGrowth.projects}
+            trend={5}
             description="Aguardando aprovação ou revisão"
-            index={0}
+            index={1}
           />
           <MetricCard
             title="Projetos Aprovados"
@@ -254,36 +219,7 @@ export default function Dashboard() {
             iconGradient={['#27AE60', '#229954']}
             trend={8}
             description="Prontos para publicação"
-            index={1}
-          />
-          <MetricCard
-            title="Total de Projetos"
-            value={stats.total}
-            icon={FileText}
-            iconGradient={['#8E44AD', '#7D3C98']}
-            trend={enhancedStats.monthlyGrowth.projects}
-            description="Todos os projetos este mês"
             index={2}
-          />
-          <MetricCard
-            title="Tempo de Aprovação"
-            value={stats.avgApprovalTime}
-            icon={Target}
-            iconGradient={['#3498DB', '#2980B9']}
-            trend={-15}
-            format="time"
-            description="Média de horas para aprovação"
-            index={3}
-          />
-          <MetricCard
-            title="Taxa de Eficiência"
-            value={stats.efficiency}
-            icon={BarChart3}
-            iconGradient={['#9B59B6', '#8E44AD']}
-            trend={enhancedStats.monthlyGrowth.efficiency}
-            format="percentage"
-            description="Projetos entregues no prazo"
-            index={4}
           />
           <MetricCard
             title="Satisfação dos Clientes"
@@ -293,7 +229,7 @@ export default function Dashboard() {
             trend={enhancedStats.monthlyGrowth.satisfaction}
             format="percentage"
             description="Avaliação média dos clientes"
-            index={5}
+            index={3}
           />
         </div>
 
