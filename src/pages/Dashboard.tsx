@@ -229,13 +229,13 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Professional Metrics Grid - Harmonious Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        {/* Professional Metrics Grid - 3 Column Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
           <MetricCard
             title="Projetos Pendentes"
             value={stats.pending}
             icon={Clock}
-            color="bg-gradient-to-br from-amber-500 to-orange-600"
+            iconGradient={['#FFEDD5', '#FDBA74']}
             trend={enhancedStats.monthlyGrowth.projects}
             description="Aguardando aprovação ou revisão"
             index={0}
@@ -244,7 +244,7 @@ export default function Dashboard() {
             title="Projetos Aprovados"
             value={stats.approved}
             icon={CheckCircle}
-            color="bg-gradient-to-br from-emerald-500 to-green-600"
+            iconGradient={['#D1FAE5', '#34D399']}
             trend={8}
             description="Prontos para publicação"
             index={1}
@@ -253,7 +253,7 @@ export default function Dashboard() {
             title="Total de Projetos"
             value={stats.total}
             icon={FileText}
-            color="bg-gradient-to-br from-violet-500 to-purple-600"
+            iconGradient={['#EDE9FE', '#A78BFA']}
             trend={enhancedStats.monthlyGrowth.projects}
             description="Todos os projetos este mês"
             index={2}
@@ -262,7 +262,7 @@ export default function Dashboard() {
             title="Tempo de Aprovação"
             value={stats.avgApprovalTime}
             icon={Target}
-            color="bg-gradient-to-br from-cyan-500 to-blue-600"
+            iconGradient={['#DBEAFE', '#60A5FA']}
             trend={-15}
             format="time"
             description="Média de horas para aprovação"
@@ -272,7 +272,7 @@ export default function Dashboard() {
             title="Taxa de Eficiência"
             value={stats.efficiency}
             icon={BarChart3}
-            color="bg-gradient-to-br from-indigo-500 to-purple-600"
+            iconGradient={['#E9D5FF', '#A78BFA']}
             trend={enhancedStats.monthlyGrowth.efficiency}
             format="percentage"
             description="Projetos entregues no prazo"
@@ -282,7 +282,7 @@ export default function Dashboard() {
             title="Satisfação dos Clientes"
             value={stats.clientSatisfaction}
             icon={Star}
-            color="bg-gradient-to-br from-rose-500 to-pink-600"
+            iconGradient={['#FFE4E6', '#FB7185']}
             trend={enhancedStats.monthlyGrowth.satisfaction}
             format="percentage"
             description="Avaliação média dos clientes"

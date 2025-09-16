@@ -1,18 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus, LucideIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { TrendingUp, TrendingDown, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
   title: string;
   value: string | number;
   icon: LucideIcon;
-  color: string;
+  iconGradient: [string, string];
   trend?: number;
   description?: string;
-  prefix?: string;
-  suffix?: string;
   format?: 'number' | 'currency' | 'percentage' | 'time';
   index?: number;
 }
@@ -21,11 +18,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   title,
   value,
   icon: Icon,
-  color,
+  iconGradient,
   trend,
   description,
-  prefix = '',
-  suffix = '',
   format = 'number',
   index = 0
 }) => {
@@ -49,117 +44,121 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     }
   };
 
-  const getTrendIcon = () => {
-    if (trend === undefined || trend === 0) return <Minus className="w-4 h-4 text-muted-foreground" />;
-    return trend > 0 
-      ? <TrendingUp className="w-4 h-4 text-emerald-600" />
-      : <TrendingDown className="w-4 h-4 text-red-500" />;
-  };
-
-  const getTrendStyles = () => {
+  const getTrendBadgeClasses = () => {
     if (trend === undefined || trend === 0) {
       return {
-        text: 'text-muted-foreground',
-        bg: 'bg-gray-50',
-        border: 'border-gray-200'
+        bg: 'rgba(107, 114, 128, 0.1)',
+        color: '#6b7280',
+        icon: null
       };
     }
     return trend > 0 
       ? {
-          text: 'text-emerald-700',
-          bg: 'bg-emerald-50',
-          border: 'border-emerald-200'
+          bg: 'rgba(16, 185, 129, 0.1)',
+          color: '#10b981',
+          icon: TrendingUp
         }
       : {
-          text: 'text-red-700',
-          bg: 'bg-red-50',
-          border: 'border-red-200'
+          bg: 'rgba(239, 68, 68, 0.1)',
+          color: '#ef4444',
+          icon: TrendingDown
         };
   };
 
-  const trendStyles = getTrendStyles();
+  const trendConfig = getTrendBadgeClasses();
+  const TrendIcon = trendConfig.icon;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ 
         delay: index * 0.1,
         duration: 0.4,
         ease: [0.4, 0, 0.2, 1]
       }}
-      whileHover={{ 
-        y: -8, 
-        scale: 1.02,
-        transition: { duration: 0.2 }
-      }}
-      className="group"
+      className="h-full"
     >
-      <Card className="relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 bg-white">
-        {/* Subtle top accent */}
-        <div className={cn("absolute top-0 left-0 right-0 h-1", color)} />
-        
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50/30 opacity-60" />
-        
-        <CardContent className="relative p-6">
-          <div className="flex items-start justify-between mb-4">
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                {title}
-              </p>
-              
-              <div className="flex items-baseline space-x-1 mb-1">
-                {prefix && (
-                  <span className="text-lg text-muted-foreground font-medium">{prefix}</span>
-                )}
-                <span className="text-3xl font-bold text-foreground tracking-tight">
-                  {formatValue(value)}
-                </span>
-                {suffix && (
-                  <span className="text-lg text-muted-foreground font-medium">{suffix}</span>
-                )}
-              </div>
-              
-              {description && (
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {description}
-                </p>
-              )}
-            </div>
-            
-            {/* Icon with enhanced styling */}
-            <div className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-110",
-              color
-            )}>
-              <Icon className="w-6 h-6 text-white" />
-            </div>
+      <div 
+        className="flex flex-col justify-between h-full min-h-[164px] p-5 rounded-2xl shadow-sm border bg-white"
+        style={{ borderColor: 'rgba(0,0,0,0.06)' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <h3 
+            className="text-sm font-bold uppercase tracking-wide leading-tight"
+            style={{ 
+              color: '#4b5563',
+              letterSpacing: '0.4px'
+            }}
+          >
+            {title}
+          </h3>
+          
+          {/* Icon Wrap */}
+          <div 
+            className="flex items-center justify-center rounded-xl"
+            style={{
+              width: '40px',
+              height: '40px',
+              background: `linear-gradient(135deg, ${iconGradient[0]} 0%, ${iconGradient[1]} 100%)`
+            }}
+          >
+            <Icon 
+              className="text-white" 
+              style={{ width: '20px', height: '20px' }}
+            />
+          </div>
+        </div>
+
+        {/* Value */}
+        <div className="flex-1">
+          <div 
+            className="text-4xl font-bold leading-none mt-2"
+            style={{ 
+              color: '#111827',
+              fontSize: '36px',
+              lineHeight: '1.1'
+            }}
+          >
+            {formatValue(value)}
           </div>
           
-          {/* Enhanced trend indicator */}
-          {trend !== undefined && (
-            <div className={cn(
-              "inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300",
-              trendStyles.bg,
-              trendStyles.border,
-              "border"
-            )}>
-              {getTrendIcon()}
-              <span className={cn("font-semibold", trendStyles.text)}>
+          {description && (
+            <p 
+              className="text-sm mt-1"
+              style={{ color: '#6b7280' }}
+            >
+              {description}
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        {trend !== undefined && (
+          <div className="mt-3.5">
+            <div 
+              className="inline-flex items-center gap-2 px-2.5 py-1.5 text-sm font-medium"
+              style={{
+                backgroundColor: trendConfig.bg,
+                color: trendConfig.color,
+                borderRadius: '999px'
+              }}
+            >
+              {TrendIcon && <TrendIcon style={{ width: '14px', height: '14px' }} />}
+              <span>
                 {trend > 0 && '+'}{Math.abs(trend).toFixed(1)}%
               </span>
-              <span className="text-muted-foreground font-normal">
+              <span 
+                className="text-xs ml-2"
+                style={{ color: '#6b7280' }}
+              >
                 vs. mês anterior
               </span>
             </div>
-          )}
-          
-          {/* Subtle bottom decoration */}
-          <div className="absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent opacity-50" />
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };
