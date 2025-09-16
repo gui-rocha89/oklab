@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -47,61 +48,61 @@ const UserManagement = ({ setActiveTab }) => {
   const [editUserRole, setEditUserRole] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [usersList, setUsersList] = useState([
-    {
-      id: 1,
-      name: 'Maria Silva',
-      email: 'maria.silva@oklab.com',
-      role: 'admin',
-      avatar: null,
-      lastActive: '2024-01-15',
-      projectsCount: 12,
-      status: 'active',
-      joinedAt: '2023-05-15',
-      activityLevel: 'high',
-      departamento: 'Marketing'
-    },
-    {
-      id: 2,
-      name: 'João Santos',
-      email: 'joao.santos@oklab.com',
-      role: 'editor',
-      avatar: null,
-      lastActive: '2024-01-14',
-      projectsCount: 8,
-      status: 'active',
-      joinedAt: '2023-08-20',
-      activityLevel: 'medium',
-      departamento: 'Design'
-    },
-    {
-      id: 3,
-      name: 'Ana Costa',
-      email: 'ana.costa@oklab.com',
-      role: 'viewer',
-      avatar: null,
-      lastActive: '2024-01-10',
-      projectsCount: 3,
-      status: 'inactive',
-      joinedAt: '2023-11-10',
-      activityLevel: 'low',
-      departamento: 'Desenvolvimento'
-    },
-    {
-      id: 4,
-      name: 'Carlos Lima',
-      email: 'carlos.lima@oklab.com',
-      role: 'editor',
-      avatar: null,
-      lastActive: '2024-01-12',
-      projectsCount: 15,
-      status: 'active',
-      joinedAt: '2023-03-05',
-      activityLevel: 'high',
-      departamento: 'Produção'
-    }
-  ]);
+  const [usersList, setUsersList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Fetch users from database
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          full_name,
+          cargo,
+          avatar_url,
+          created_at,
+          user_roles (role)
+        `);
+
+      if (profilesError) throw profilesError;
+
+      // Transform profiles to match the expected format
+      const transformedUsers = profiles.map(profile => ({
+        id: profile.id,
+        name: profile.full_name || profile.email,
+        email: profile.email,
+        role: profile.user_roles?.[0]?.role || 'user',
+        avatar: profile.avatar_url,
+        lastActive: new Date().toISOString().split('T')[0], // Mock data
+        projectsCount: Math.floor(Math.random() * 20) + 1, // Mock data
+        status: 'active',
+        joinedAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        activityLevel: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)], // Mock data
+        departamento: profile.cargo || 'Não definido'
+      }));
+
+      setUsersList(transformedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Erro ao carregar usuários",
+        description: "Não foi possível carregar a lista de usuários.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load users on component mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const filteredUsers = usersList.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,21 +165,39 @@ const UserManagement = ({ setActiveTab }) => {
     }
   };
 
-  const handleSaveUserRole = () => {
+  const handleSaveUserRole = async () => {
     if (!selectedUser || !editUserRole) return;
 
-    setUsersList(prev => 
-      prev.map(user => 
-        user.id === selectedUser.id 
-          ? { ...user, role: editUserRole }
-          : user
-      )
-    );
+    try {
+      // Update user role in database
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ role: editUserRole })
+        .eq('user_id', selectedUser.id);
 
-    toast({
-      title: "Hierarquia atualizada!",
-      description: `${selectedUser.name} agora é ${roleConfig[editUserRole].label}`,
-    });
+      if (error) throw error;
+
+      // Update local state
+      setUsersList(prev => 
+        prev.map(user => 
+          user.id === selectedUser.id 
+            ? { ...user, role: editUserRole }
+            : user
+        )
+      );
+
+      toast({
+        title: "Hierarquia atualizada!",
+        description: `${selectedUser.name} agora é ${roleConfig[editUserRole].label}`,
+      });
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      toast({
+        title: "Erro ao atualizar hierarquia",
+        description: "Não foi possível atualizar o papel do usuário.",
+        variant: "destructive"
+      });
+    }
 
     setIsEditModalOpen(false);
     setSelectedUser(null);
@@ -193,16 +212,42 @@ const UserManagement = ({ setActiveTab }) => {
     }
   };
 
-  const confirmDeleteUser = () => {
+  const confirmDeleteUser = async () => {
     if (!userToDelete) return;
 
-    setUsersList(prev => prev.filter(user => user.id !== userToDelete.id));
+    try {
+      // Delete user roles first
+      const { error: rolesError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userToDelete.id);
 
-    toast({
-      title: "Usuário excluído",
-      description: `${userToDelete.name} foi removido da equipe`,
-      variant: "destructive"
-    });
+      if (rolesError) throw rolesError;
+
+      // Delete user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userToDelete.id);
+
+      if (profileError) throw profileError;
+
+      // Update local state
+      setUsersList(prev => prev.filter(user => user.id !== userToDelete.id));
+
+      toast({
+        title: "Usuário excluído",
+        description: `${userToDelete.name} foi removido da equipe`,
+        variant: "destructive"
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro ao excluir usuário",
+        description: "Não foi possível remover o usuário da equipe.",
+        variant: "destructive"
+      });
+    }
 
     setIsDeleteModalOpen(false);
     setUserToDelete(null);
@@ -455,7 +500,17 @@ const UserManagement = ({ setActiveTab }) => {
       </motion.div>
 
       {/* Users Grid */}
-      {filteredUsers.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="project-card animate-pulse">
+              <div className="h-6 bg-gray-200 rounded mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      ) : filteredUsers.length > 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
