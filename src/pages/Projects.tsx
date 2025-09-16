@@ -150,7 +150,7 @@ export default function Projects() {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="w-full sm:w-44 h-9 px-3 rounded-[10px] justify-between bg-white shadow-sm hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200 truncate text-ellipsis whitespace-nowrap overflow-hidden"
+                      className="w-full sm:w-44 h-11 px-3 rounded-md justify-between bg-white shadow-sm hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200 truncate text-ellipsis whitespace-nowrap overflow-hidden"
                       data-filter="priority"
                     >
                       <span className="flex items-center space-x-2 truncate">
