@@ -126,17 +126,17 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50"
+        className="absolute right-0 mt-2 w-80 bg-popover rounded-xl shadow-lg border border-border z-50"
         style={{ 
           top: buttonRef?.current ? buttonRef.current.offsetHeight + 8 : '100%'
         }}
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <Bell className="w-5 h-5 text-gray-700" />
-              <h3 className="font-semibold text-gray-900">Notificações</h3>
+              <Bell className="w-5 h-5 text-popover-foreground" />
+              <h3 className="font-semibold text-popover-foreground">Notificações</h3>
               {unreadCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {unreadCount}
@@ -145,9 +145,9 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
             </div>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-1 hover:bg-accent rounded-full transition-colors"
             >
-              <X className="w-4 h-4 text-gray-500" />
+              <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
           
@@ -163,8 +163,8 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
                 onClick={() => setFilter(filterOption.key)}
                 className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs transition-colors ${
                   filter === filterOption.key
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                 }`}
               >
                 <span>{filterOption.label}</span>
@@ -185,18 +185,18 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
                     key={notification.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className={`p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer ${
-                      !notification.read ? 'bg-blue-50 border-l-4 border-blue-400' : ''
+                    className={`p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer ${
+                      !notification.read ? 'bg-accent border-l-4 border-primary' : ''
                     }`}
                     onClick={() => !notification.read && markAsRead(notification.id)}
                   >
                     <div className="flex items-start space-x-3">
-                      <div className={`p-2 rounded-full bg-gray-100 ${notification.color}`}>
+                      <div className={`p-2 rounded-full bg-secondary ${notification.color}`}>
                         <IconComponent className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-medium text-gray-900 text-sm truncate">
+                          <h4 className="font-medium text-popover-foreground text-sm truncate">
                             {notification.title}
                           </h4>
                           <button
@@ -204,20 +204,20 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
                               e.stopPropagation();
                               deleteNotification(notification.id);
                             }}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-muted-foreground hover:text-popover-foreground transition-colors"
                           >
                             <X className="w-3 h-3" />
                           </button>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2 leading-relaxed">
+                        <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
                           {notification.message}
                         </p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {notification.time}
                           </span>
                           {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div className="w-2 h-2 bg-primary rounded-full"></div>
                           )}
                         </div>
                       </div>
@@ -228,11 +228,11 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
             </div>
           ) : (
             <div className="p-8 text-center">
-              <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-gray-900 font-medium mb-2">
+              <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-popover-foreground font-medium mb-2">
                 Nenhuma notificação
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {filter === 'unread' 
                   ? 'Todas as notificações foram lidas' 
                   : 'Você não tem notificações no momento'}
