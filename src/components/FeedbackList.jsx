@@ -575,19 +575,11 @@ const FeedbackList = () => {
                                   }}
                                 >
                                   Cancelar
-                                </Button>
+                                 </Button>
                               </div>
                             </motion.div>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    setRespondingTo(null);
-                                    setResponseText('');
-                                  }}
-                                >
-                                  Cancelar
-                                </Button>
+                          )}
+                        </AnimatePresence>
                               </div>
                             </motion.div>
                           )}
