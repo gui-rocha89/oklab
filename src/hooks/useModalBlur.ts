@@ -4,8 +4,8 @@ const BLUR_STYLES = `
 :root {
   --oklab-blur: 10px;
   --oklab-overlay: rgba(17, 24, 39, 0.35);
-  --oklab-z-overlay: 1000;
-  --oklab-z-modal: 1002;
+  --oklab-z-overlay: 2147483000;
+  --oklab-z-modal: 2147483600;
 }
 
 #oklab-blur-overlay {
@@ -28,16 +28,39 @@ body.oklab--modal-open {
   overflow: hidden;
 }
 
-[role='dialog'].oklab--modal-top,
-.modal.oklab--modal-top,
-.ReactModal__Content.oklab--modal-top {
-  position: relative;
-  z-index: var(--oklab-z-modal);
-  pointer-events: auto;
+/* força topo absoluto para os modais mais comuns */
+.oklab--force-top,
+[role='dialog'],
+.modal,
+.modal.show,
+.ReactModal__Content,
+.MuiModal-root,
+.MuiDialog-container,
+.ant-modal,
+.ant-modal-wrap,
+dialog[open] {
+  position: relative !important;
+  z-index: var(--oklab-z-modal) !important;
+  isolation: isolate;
+}
+
+/* garante que nada do modal receba blur */
+.oklab--force-top *,
+[role='dialog'] *,
+.modal *,
+.ReactModal__Content *,
+.MuiModal-root *,
+.MuiDialog-container *,
+.ant-modal *,
+.ant-modal-wrap * {
+  filter: none !important;
+  -webkit-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 `;
 
-export const useModalBlur = (isOpen: boolean) => {
+export const useModalBlur = (isOpen: boolean, onClose?: () => void) => {
   useEffect(() => {
     if (isOpen) {
       // Inject styles
@@ -55,15 +78,31 @@ export const useModalBlur = (isOpen: boolean) => {
       // Add classes
       document.body.classList.add('oklab--modal-open');
       
-      // Add classes to dialog elements
-      const dialogs = document.querySelectorAll('[role="dialog"]');
-      dialogs.forEach(dialog => dialog.classList.add('oklab--modal-top'));
+      // Add classes to modal elements
+      const modalSelectors = [
+        '[role="dialog"]',
+        '.modal',
+        '.ReactModal__Content',
+        '.MuiModal-root',
+        '.MuiDialog-container',
+        '.ant-modal',
+        '.ant-modal-wrap',
+        'dialog[open]'
+      ];
       
-      const modals = document.querySelectorAll('.modal');
-      modals.forEach(modal => modal.classList.add('oklab--modal-top'));
+      modalSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => element.classList.add('oklab--force-top'));
+      });
+
+      // Add click outside to close functionality
+      const handleOverlayClick = (e: Event) => {
+        if (e.target === overlay && onClose) {
+          onClose();
+        }
+      };
       
-      const reactModals = document.querySelectorAll('.ReactModal__Content');
-      reactModals.forEach(modal => modal.classList.add('oklab--modal-top'));
+      overlay.addEventListener('click', handleOverlayClick);
 
       // Make overlay visible
       requestAnimationFrame(() => {
@@ -72,25 +111,33 @@ export const useModalBlur = (isOpen: boolean) => {
 
       return () => {
         // Cleanup function for when component unmounts while modal is open
+        overlay.removeEventListener('click', handleOverlayClick);
         cleanup();
       };
     } else {
       cleanup();
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   const cleanup = () => {
     // Remove classes
     document.body.classList.remove('oklab--modal-open');
     
-    const dialogs = document.querySelectorAll('[role="dialog"]');
-    dialogs.forEach(dialog => dialog.classList.remove('oklab--modal-top'));
+    const modalSelectors = [
+      '[role="dialog"]',
+      '.modal',
+      '.ReactModal__Content',
+      '.MuiModal-root',
+      '.MuiDialog-container',
+      '.ant-modal',
+      '.ant-modal-wrap',
+      'dialog[open]'
+    ];
     
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => modal.classList.remove('oklab--modal-top'));
-    
-    const reactModals = document.querySelectorAll('.ReactModal__Content');
-    reactModals.forEach(modal => modal.classList.remove('oklab--modal-top'));
+    modalSelectors.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(element => element.classList.remove('oklab--force-top'));
+    });
 
     // Remove overlay
     const overlay = document.getElementById('oklab-blur-overlay');

@@ -30,7 +30,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const { toast } = useToast();
 
   // Use the layered blur system
-  useModalBlur(isOpen);
+  useModalBlur(isOpen, () => setIsOpen(false));
 
   useEffect(() => {
     if (isOpen) {
