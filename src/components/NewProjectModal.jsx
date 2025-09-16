@@ -162,9 +162,11 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="lovable-modal-content fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1001] bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 flex flex-col" 
+          style={{ maxHeight: '90vh' }} 
+          role="dialog" 
+          aria-modal="true"
         >
-          <div className="lovable-modal-content bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
               <div className="flex items-center gap-3">
                 <FileSignature className="h-6 w-6 text-orange-500" />
@@ -312,7 +314,6 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                 <Button className="btn-primary" onClick={handleSubmit}>Criar Projeto</Button>
               </div>
             </div>
-          </div>
         </motion.div>
       )}
     </AnimatePresence>

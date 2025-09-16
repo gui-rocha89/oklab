@@ -5,11 +5,11 @@ const BLUR_STYLES = `
   position: fixed;
   inset: 0;
   z-index: 999;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.6);
   opacity: 0;
-  transition: opacity 0.2s ease-out;
+  transition: opacity 0.3s ease-out;
   pointer-events: auto;
 }
 
