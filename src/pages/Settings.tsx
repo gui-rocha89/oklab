@@ -30,14 +30,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { useUser } from "@/contexts/UserContext";
-import { ImageCropModal } from "@/components/ImageCropModal";
 
 export default function Settings() {
   const { user } = useUser();
   const { profile, loading, uploading, updateProfile, uploadAvatar } = useProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showCropModal, setShowCropModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   const [profileData, setProfileData] = useState({
     full_name: profile?.full_name || "",
@@ -98,30 +95,17 @@ export default function Settings() {
       return;
     }
 
-    // Validar tamanho (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validar tamanho (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Arquivo muito grande",
-        description: "A imagem deve ter no máximo 10MB.",
+        description: "A imagem deve ter no máximo 5MB.",
         variant: "destructive",
       });
       return;
     }
 
-    // Abrir modal de crop
-    setSelectedFile(file);
-    setShowCropModal(true);
-  };
-
-  const handleCropComplete = async (croppedFile: File) => {
-    setShowCropModal(false);
-    await uploadAvatar(croppedFile);
-    setSelectedFile(null);
-  };
-
-  const handleCropCancel = () => {
-    setShowCropModal(false);
-    setSelectedFile(null);
+    await uploadAvatar(file);
   };
 
   const handleSaveNotifications = () => {
@@ -204,11 +188,8 @@ export default function Settings() {
                   <>
                     <div className="flex items-center gap-6">
                       <div className="relative">
-                        <Avatar className="h-20 w-20 ring-2 ring-border">
-                          <AvatarImage 
-                            src={profile?.avatar_url || undefined}
-                            className="object-cover"
-                          />
+                        <Avatar className="h-20 w-20">
+                          <AvatarImage src={profile?.avatar_url || undefined} />
                           <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
                             {(profile?.full_name || user?.email)
                               ?.split(" ")
@@ -280,14 +261,6 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* Modal de Crop */}
-          <ImageCropModal
-            isOpen={showCropModal}
-            onClose={handleCropCancel}
-            imageFile={selectedFile}
-            onCropComplete={handleCropComplete}
-          />
 
           {/* Notificações */}
           <TabsContent value="notifications" className="space-y-6">
