@@ -308,11 +308,14 @@ const UserManagement = ({ setActiveTab }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleEditUser(user.id)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors tooltip"
-              data-tooltip="Editar usuário"
+              className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-sm font-medium text-gray-700"
             >
-              <Edit className="w-4 h-4 text-gray-600" />
+              <Edit className="w-4 h-4" />
+              <span>Configurar</span>
             </motion.button>
+          </div>
+
+          <div className="flex items-center space-x-2">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -322,15 +325,14 @@ const UserManagement = ({ setActiveTab }) => {
             >
               <Trash2 className="w-4 h-4 text-red-500" />
             </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Mail className="w-4 h-4 text-gray-600" />
+            </motion.button>
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <MoreVertical className="w-4 h-4 text-gray-600" />
-          </motion.button>
         </div>
       </motion.div>
     );
