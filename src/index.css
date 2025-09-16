@@ -130,10 +130,11 @@ All colors MUST be HSL.
     --input: 0 0% 18%;              /* #2d2d2d - Dark input background */
     --ring: 25 75% 52%;             /* Orange focus ring */
 
-    /* Gradients - Gray theme */
-    --gradient-primary: hsl(25 75% 52%);
-    --gradient-secondary: hsl(25 75% 58%);
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 7%), hsl(0 0% 12%));
+  /* Gradients - Enhanced with top-to-bottom gradient */
+  --gradient-primary: hsl(25 75% 52%);
+  --gradient-secondary: hsl(25 75% 58%);
+  --gradient-subtle: linear-gradient(180deg, hsl(0 0% 7%), hsl(0 0% 12%));
+  --gradient-header-dark: linear-gradient(180deg, hsl(0 0% 20%), hsl(0 0% 7%));
 
     /* Shadows - Adjusted for dark theme */
     --shadow-elegant: 0 4px 6px -1px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
@@ -270,6 +271,10 @@ All colors MUST be HSL.
   /* Background Components */
   .gradient-bg {
     @apply bg-primary;
+  }
+
+  .gradient-header-dark {
+    background: var(--gradient-header-dark);
   }
 
   /* Search Components */

@@ -84,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="sticky top-0 z-40 gradient-bg shadow-lg border-b border-border/10 transition-all duration-300"
+      className="sticky top-0 z-40 shadow-lg border-b border-border/10 transition-all duration-300 bg-primary dark:gradient-header-dark"
     >
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl font-bold text-white truncate transition-all duration-300"
+              className="text-xl font-bold text-white dark:text-white truncate transition-all duration-300"
             >
               {getPageTitle()}
             </motion.h1>
@@ -113,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-sm text-orange-200 mt-1 truncate transition-all duration-300"
+                className="text-sm text-orange-200 dark:text-gray-300 mt-1 truncate transition-all duration-300"
               >
                 {subtitle}
               </motion.p>
@@ -148,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleManageTeamClick}
-                className="hidden sm:flex items-center space-x-2 p-2 rounded-lg hover:bg-orange-600 transition-colors"
+                className="hidden sm:flex items-center space-x-2 p-2 rounded-lg hover:bg-orange-600 dark:hover:bg-gray-700 transition-colors"
               >
                 <Users className="w-5 h-5 text-white" />
                 <span className="text-sm font-medium text-white">
@@ -162,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              className="p-2 rounded-lg hover:bg-orange-600 dark:hover:bg-gray-700 transition-colors"
               title={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
             >
               {theme === 'dark' ? (
@@ -179,7 +179,7 @@ export const Header: React.FC<HeaderProps> = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleNotificationClick}
-                className="relative p-2 rounded-lg hover:bg-orange-600 transition-colors"
+                className="relative p-2 rounded-lg hover:bg-orange-600 dark:hover:bg-gray-700 transition-colors"
               >
                 <Bell className="w-6 h-6 text-white" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
@@ -197,7 +197,7 @@ export const Header: React.FC<HeaderProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleProfileClick}
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-orange-600 dark:hover:bg-gray-700 transition-colors"
             >
               <Avatar className="w-8 h-8">
                 <AvatarImage 
@@ -223,7 +223,7 @@ export const Header: React.FC<HeaderProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleLogoutClick}
-              className="flex items-center space-x-1 p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              className="flex items-center space-x-1 p-2 rounded-lg hover:bg-orange-600 dark:hover:bg-gray-700 transition-colors"
               title="Sair"
             >
               <LogOut className="w-5 h-5 text-white" />
