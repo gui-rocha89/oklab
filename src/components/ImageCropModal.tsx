@@ -64,21 +64,21 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
 
     // Desenhar área de crop (círculo)
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-    ctx.setLineDash([10, 5]);
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 100, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, 90, 0, 2 * Math.PI);
     ctx.stroke();
     ctx.setLineDash([]);
 
     // Desenhar overlay escuro
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Recortar área circular
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 100, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, 90, 0, 2 * Math.PI);
     ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
   }, [zoom, rotation, imageLoaded, imagePosition]);
@@ -118,26 +118,26 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
     
     if (!ctx) return;
 
-    // Definir tamanho do canvas final (quadrado de 400x400)
-    canvas.width = 400;
-    canvas.height = 400;
+    // Definir tamanho do canvas final (quadrado de 300x300)
+    canvas.width = 300;
+    canvas.height = 300;
 
     // Desenhar apenas a parte cortada
     ctx.save();
     
     // Criar máscara circular
     ctx.beginPath();
-    ctx.arc(200, 200, 200, 0, 2 * Math.PI);
+    ctx.arc(150, 150, 150, 0, 2 * Math.PI);
     ctx.clip();
     
     // Aplicar transformações da imagem
-    ctx.translate(200 + imagePosition.x, 200 + imagePosition.y);
+    ctx.translate(150 + imagePosition.x, 150 + imagePosition.y);
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.scale(zoom, zoom);
     
     // Desenhar imagem
     const image = imageRef.current;
-    const size = Math.min(400, 400) * 0.8;
+    const size = Math.min(300, 300) * 0.8;
     const drawHeight = (image.height / image.width) * size;
     
     ctx.drawImage(
@@ -174,7 +174,7 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Crop className="h-5 w-5" />
@@ -185,12 +185,12 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
         <div className="space-y-4">
           {imageFile && (
             <>
-              <div className="relative">
+              <div className="relative flex justify-center">
                 <canvas
                   ref={canvasRef}
-                  width={300}
-                  height={300}
-                  className="border rounded-lg cursor-move"
+                  width={280}
+                  height={280}
+                  className="border rounded-lg cursor-move bg-gray-50"
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
@@ -205,9 +205,9 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
                 />
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 text-sm">
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
+                  <Label className="flex items-center gap-2 text-sm font-medium">
                     <ZoomIn className="h-4 w-4" />
                     Zoom: {zoom.toFixed(1)}x
                   </Label>
@@ -222,7 +222,7 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
+                  <Label className="flex items-center gap-2 text-sm font-medium">
                     <RotateCcw className="h-4 w-4" />
                     Rotação: {rotation}°
                   </Label>
@@ -239,6 +239,7 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
                 <Button
                   variant="outline"
                   onClick={resetTransform}
+                  size="sm"
                   className="w-full"
                 >
                   Resetar Ajustes
@@ -248,11 +249,11 @@ export function ImageCropModal({ isOpen, onClose, imageFile, onCropComplete }: I
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={handleCrop}>
+          <Button onClick={handleCrop} className="bg-primary">
             Aplicar Corte
           </Button>
         </DialogFooter>
