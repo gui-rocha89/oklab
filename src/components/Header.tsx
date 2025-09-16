@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Bell, Search, User, Users, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/contexts/UserContext';
 import { useProfile } from '@/hooks/useProfile';
+import NotificationDropdown from '@/components/NotificationDropdown';
+import GlobalSearch from '@/components/GlobalSearch';
 
 interface HeaderProps {
   title?: string;
@@ -26,6 +28,11 @@ export const Header: React.FC<HeaderProps> = ({
   const { user, isSupremeAdmin, logout } = useUser();
   const { profile } = useProfile();
   const navigate = useNavigate();
+  
+  // Estados para dropdown de notificações e busca
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const notificationButtonRef = useRef(null);
 
   const getPageTitle = () => {
     if (title) return title;
@@ -42,10 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleNotificationClick = () => {
-    toast({
-      title: "🚧 Notificações não implementadas ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
-      duration: 4000,
-    });
+    setShowNotifications(!showNotifications);
   };
 
   const handleProfileClick = () => {
@@ -116,14 +120,20 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Centered Search Bar */}
           <div className="hidden md:flex items-center mx-6 flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-orange-200" />
-              <input
-                type="text"
-                placeholder="Buscar projetos..."
-                className="search-input w-full pl-10 pr-4 bg-orange-700 bg-opacity-20 border-orange-500 text-white placeholder-orange-200 focus:border-white focus:ring-0 transition-all duration-200"
-              />
-            </div>
+            <GlobalSearch
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              projects={[]} // Será preenchido com projetos reais
+              users={[]} // Será preenchido com usuários reais
+              onResultClick={(result) => {
+                if (result.type === 'project') {
+                  navigate('/projetos');
+                } else if (result.type === 'user') {
+                  navigate('/equipe');
+                }
+                setSearchTerm('');
+              }}
+            />
           </div>
 
           {/* Right side actions */}
@@ -144,15 +154,24 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             {/* Notifications */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleNotificationClick}
-              className="relative p-2 rounded-lg hover:bg-orange-600 transition-colors"
-            >
-              <Bell className="w-6 h-6 text-white" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-            </motion.button>
+            <div className="relative">
+              <motion.button
+                ref={notificationButtonRef}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleNotificationClick}
+                className="relative p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                <Bell className="w-6 h-6 text-white" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+              </motion.button>
+              
+              <NotificationDropdown
+                isOpen={showNotifications}
+                onClose={() => setShowNotifications(false)}
+                buttonRef={notificationButtonRef}
+              />
+            </div>
 
             {/* Profile */}
             <motion.button

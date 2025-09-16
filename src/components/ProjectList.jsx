@@ -29,6 +29,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ProjectViewerModal from '@/components/ProjectViewerModal';
+import CommentModal from '@/components/CommentModal';
+import ProjectEditModal from '@/components/ProjectEditModal';
 
 const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTab }) => {
   // Task 1: Estados para filtros avançados
@@ -36,6 +38,8 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
   const [searchTerm, setSearchTerm] = useState('');
   const [downloadingId, setDownloadingId] = useState(null);
   const [viewingProject, setViewingProject] = useState(null);
+  const [commentingProject, setCommentingProject] = useState(null);
+  const [editingProject, setEditingProject] = useState(null);
   
   // Novos estados para filtros avançados
   const [statusFilter, setStatusFilter] = useState('all');
@@ -123,11 +127,10 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
   const hasActiveFilters = statusFilter !== 'all' || priorityFilter !== 'all' || searchTerm !== '';
 
   const handleAdjustProject = (projectId) => {
-    toast({
-      title: "🚧 Ajustar projeto não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
-      description: "Isso abrirá a visão detalhada do projeto para edição.",
-      duration: 4000,
-    });
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setEditingProject(project);
+    }
   };
 
   const handleDownload = async (project) => {
@@ -229,10 +232,16 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
   };
 
   const handleComment = (projectId) => {
-    toast({
-      title: "🚧 Comentários não implementados ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
-      duration: 4000,
-    });
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setCommentingProject(project);
+    }
+  };
+
+  const handleSaveProject = (updatedProject) => {
+    // Aqui você salvaria o projeto via API/Supabase
+    onProjectAction(updatedProject.id, 'update', updatedProject);
+    setEditingProject(null);
   };
 
   const ProjectCard = ({ project, index }) => {
@@ -668,6 +677,19 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
         project={viewingProject}
         isOpen={!!viewingProject}
         onClose={() => setViewingProject(null)}
+      />
+      
+      <CommentModal
+        project={commentingProject}
+        isOpen={!!commentingProject}
+        onClose={() => setCommentingProject(null)}
+      />
+      
+      <ProjectEditModal
+        project={editingProject}
+        isOpen={!!editingProject}
+        onClose={() => setEditingProject(null)}
+        onSave={handleSaveProject}
       />
     </div>
   );
