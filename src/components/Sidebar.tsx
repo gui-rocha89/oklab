@@ -136,7 +136,7 @@ export function Sidebar() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.name || 'GUI'}
+                {user?.name || 'Gui'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {user?.email || 'gui@streamlab.com.br'}
