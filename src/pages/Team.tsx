@@ -516,9 +516,6 @@ export default function Team() {
                   >
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
-                  <Button size="sm" variant="outline">
-                    <Mail className="h-4 w-4" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>
