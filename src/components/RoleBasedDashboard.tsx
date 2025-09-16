@@ -3,6 +3,7 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Users, Target, User } from 'lucide-react';
+import Dashboard from '@/components/Dashboard';
 
 const getRoleConfig = (role: UserRole) => {
   const configs = {
@@ -74,51 +75,18 @@ export function RoleBasedDashboard() {
     );
   }
 
+  // Supreme Admin vê o dashboard completo original
+  if (hasRole('supreme_admin')) {
+    return <Dashboard 
+      projects={[]} 
+      onNewProjectClick={() => {}} 
+      onNewAudiovisualClick={() => {}} 
+      setActiveTab={() => {}} 
+    />;
+  }
+
   const roleConfig = getRoleConfig(profile.role);
   const Icon = roleConfig.icon;
-
-  // Supreme Admin vê o dashboard original através de componentes
-  if (hasRole('supreme_admin')) {
-    return (
-      <div className="space-y-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className={`p-2 rounded-lg ${roleConfig.color}`}>
-                <Icon className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-heading">{roleConfig.title}</p>
-                <p className="text-caption text-muted-foreground">{roleConfig.description}</p>
-              </div>
-              <Badge variant="destructive" className="ml-auto">Nível Máximo</Badge>
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Dashboard Supreme Admin</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Controle total da plataforma StreamLab.
-              </p>
-              <div className="space-y-2">
-                {roleConfig.permissions.map((permission, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
-                    <div className="w-2 h-2 bg-red-500 rounded-full" />
-                    {permission}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   // Manager vê dashboard simplificado
   if (hasRole('manager')) {
