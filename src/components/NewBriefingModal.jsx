@@ -194,7 +194,7 @@ const NewBriefingModal = ({ isOpen, setIsOpen, onBriefingCreate }) => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="month">Mês</Label>
                       <Input 
@@ -204,39 +204,42 @@ const NewBriefingModal = ({ isOpen, setIsOpen, onBriefingCreate }) => {
                         onChange={(e) => setMonth(e.target.value)} 
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="start-date">Dados início</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate ? startDate.toLocaleDateString('pt-BR') : <span>Selecionar dados</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className="pointer-events-auto" />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="end-date">Fim de dados</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {endDate ? endDate.toLocaleDateString('pt-BR') : <span>Selecionar dados</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus className="pointer-events-auto" />
-                        </PopoverContent>
-                      </Popover>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="start-date">Início do período</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {startDate ? startDate.toLocaleDateString('pt-BR') : <span>Selecionar data</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className="pointer-events-auto" />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="end-date">Fim do período</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {endDate ? endDate.toLocaleDateString('pt-BR') : <span>Selecionar data</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus className="pointer-events-auto" />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                   </div>
 
@@ -311,7 +314,7 @@ const NewBriefingModal = ({ isOpen, setIsOpen, onBriefingCreate }) => {
                                       className={cn("w-full justify-start text-left font-normal", !content.postDate && "text-muted-foreground")}
                                     >
                                       <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {content.postDate ? content.postDate.toLocaleDateString('pt-BR') : <span>Selecionar dados</span>}
+                                      {content.postDate ? content.postDate.toLocaleDateString('pt-BR') : <span>Selecionar data</span>}
                                     </Button>
                                   </PopoverTrigger>
                                   <PopoverContent className="w-auto p-0">
