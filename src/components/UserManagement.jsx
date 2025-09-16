@@ -42,10 +42,12 @@ const UserManagement = ({ setActiveTab }) => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('viewer');
-  const { toast } = useToast();
-
-  // Dados mockados para demonstração
-  const users = [
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [editUserRole, setEditUserRole] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [usersList, setUsersList] = useState([
     {
       id: 1,
       name: 'Maria Silva',
@@ -98,9 +100,10 @@ const UserManagement = ({ setActiveTab }) => {
       activityLevel: 'high',
       departamento: 'Produção'
     }
-  ];
+  ]);
+  const { toast } = useToast();
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = usersList.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -153,17 +156,56 @@ const UserManagement = ({ setActiveTab }) => {
   };
 
   const handleEditUser = (userId) => {
+    const user = usersList.find(u => u.id === userId);
+    if (user) {
+      setSelectedUser(user);
+      setEditUserRole(user.role);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleSaveUserRole = () => {
+    if (!selectedUser || !editUserRole) return;
+
+    setUsersList(prev => 
+      prev.map(user => 
+        user.id === selectedUser.id 
+          ? { ...user, role: editUserRole }
+          : user
+      )
+    );
+
     toast({
-      title: "🚧 Editar usuário não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
-      duration: 4000,
+      title: "Hierarquia atualizada!",
+      description: `${selectedUser.name} agora é ${roleConfig[editUserRole].label}`,
     });
+
+    setIsEditModalOpen(false);
+    setSelectedUser(null);
+    setEditUserRole('');
   };
 
   const handleDeleteUser = (userId) => {
+    const user = usersList.find(u => u.id === userId);
+    if (user) {
+      setUserToDelete(user);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDeleteUser = () => {
+    if (!userToDelete) return;
+
+    setUsersList(prev => prev.filter(user => user.id !== userToDelete.id));
+
     toast({
-      title: "🚧 Excluir usuário não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
-      duration: 4000,
+      title: "Usuário excluído",
+      description: `${userToDelete.name} foi removido da equipe`,
+      variant: "destructive"
     });
+
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
   };
 
   const UserCard = ({ user, index }) => {
@@ -340,7 +382,7 @@ const UserManagement = ({ setActiveTab }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Total de Usuários</p>
-              <p className="text-3xl font-bold text-gray-900">{users.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{usersList.length}</p>
             </div>
             <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600">
               <Users className="w-6 h-6 text-white" />
@@ -353,7 +395,7 @@ const UserManagement = ({ setActiveTab }) => {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Administradores</p>
               <p className="text-3xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'admin').length}
+                {usersList.filter(u => u.role === 'admin').length}
               </p>
             </div>
             <div className="p-3 rounded-full bg-gradient-to-r from-purple-500 to-purple-600">
@@ -367,7 +409,7 @@ const UserManagement = ({ setActiveTab }) => {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Editores</p>
               <p className="text-3xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'editor').length}
+                {usersList.filter(u => u.role === 'editor').length}
               </p>
             </div>
             <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600">
@@ -381,7 +423,7 @@ const UserManagement = ({ setActiveTab }) => {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Usuários Ativos</p>
               <p className="text-3xl font-bold text-gray-900">
-                {users.filter(u => u.status === 'active').length}
+                {usersList.filter(u => u.status === 'active').length}
               </p>
             </div>
             <div className="p-3 rounded-full bg-gradient-to-r from-green-500 to-green-600">
@@ -532,6 +574,114 @@ const UserManagement = ({ setActiveTab }) => {
             >
               <Send className="w-4 h-4" />
               <span>Enviar Convite</span>
+            </motion.button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Role Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Configurar Hierarquia de Acesso</DialogTitle>
+            <DialogDescription>
+              {selectedUser && `Altere a hierarquia de acesso de ${selectedUser.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="user-role" className="text-right text-sm font-medium">
+                Hierarquia
+              </label>
+              <Select value={editUserRole} onValueChange={setEditUserRole}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione uma hierarquia" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="viewer">
+                    <div className="flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <div>
+                        <div>Visualizador</div>
+                        <div className="text-xs text-gray-500">Apenas visualização</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="editor">
+                    <div className="flex items-center space-x-2">
+                      <Edit className="w-4 h-4" />
+                      <div>
+                        <div>Editor</div>
+                        <div className="text-xs text-gray-500">Pode editar e aprovar</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    <div className="flex items-center space-x-2">
+                      <Crown className="w-4 h-4" />
+                      <div>
+                        <div>Administrador</div>
+                        <div className="text-xs text-gray-500">Acesso total</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsEditModalOpen(false)}
+              className="btn-secondary mr-2"
+            >
+              Cancelar
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSaveUserRole}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Salvar Alterações</span>
+            </motion.button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Confirmation Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Excluir Usuário</DialogTitle>
+            <DialogDescription>
+              {userToDelete && `Tem certeza de que deseja excluir ${userToDelete.name}? Esta ação não pode ser desfeita.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-6">
+            <div className="p-3 rounded-full bg-red-100">
+              <Trash2 className="w-8 h-8 text-red-600" />
+            </div>
+          </div>
+          <DialogFooter>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="btn-secondary mr-2"
+            >
+              Cancelar
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={confirmDeleteUser}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Excluir Usuário</span>
             </motion.button>
           </DialogFooter>
         </DialogContent>
