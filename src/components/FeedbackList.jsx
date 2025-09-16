@@ -561,7 +561,7 @@ const FeedbackList = () => {
                                   size="sm" 
                                   onClick={() => handleResponse(feedback.id)}
                                   disabled={!responseText.trim()}
-                                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                                >
                                 >
                                   <Send className="h-4 w-4 mr-2" />
                                   Enviar Resposta
