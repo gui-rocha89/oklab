@@ -83,7 +83,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
           exit={{ opacity: 0, scale: 0.95 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          <div className="modal-content-safe bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
+          <div className="lovable-modal-content bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <Film className="h-6 w-6 text-orange-500" />
