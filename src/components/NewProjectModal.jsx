@@ -11,42 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 
-// Inject modal blur styles
-const injectModalBlurStyles = () => {
-  const styleId = 'oklab-modal-blur-styles';
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-      :root {
-        --oklab-blur: 8px;
-        --oklab-overlay: rgba(17,24,39,0.35);
-      }
-      
-      #oklab-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 999;
-        backdrop-filter: blur(var(--oklab-blur));
-        -webkit-backdrop-filter: blur(var(--oklab-blur));
-        background: var(--oklab-overlay);
-        opacity: 0;
-        transition: opacity 0.18s ease;
-        will-change: opacity, backdrop-filter;
-      }
-      
-      #oklab-modal-backdrop.oklab--visible {
-        opacity: 1;
-      }
-      
-      body.oklab--modal-open {
-        overflow: hidden;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-};
-
 const initialCreativeState = {
   id: 1,
   name: 'Criativo 1',
@@ -63,55 +27,6 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [clientEmail, setClientEmail] = useState('');
   const [creatives, setCreatives] = useState([initialCreativeState]);
   const { toast } = useToast();
-
-  // Handle modal blur effect
-  useEffect(() => {
-    if (isOpen) {
-      // Inject styles
-      injectModalBlurStyles();
-      
-      // Create backdrop element
-      const backdrop = document.createElement('div');
-      backdrop.id = 'oklab-modal-backdrop';
-      backdrop.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(backdrop);
-      
-      // Add click event to close modal when clicking backdrop
-      const handleBackdropClick = () => {
-        setIsOpen(false);
-      };
-      backdrop.addEventListener('click', handleBackdropClick);
-      
-      // Add classes
-      document.body.classList.add('oklab--modal-open');
-      
-      // Trigger visibility with slight delay for smooth transition
-      setTimeout(() => {
-        backdrop.classList.add('oklab--visible');
-      }, 10);
-
-      // Store cleanup function
-      return () => {
-        backdrop.removeEventListener('click', handleBackdropClick);
-      };
-    } else {
-      // Remove classes and backdrop
-      document.body.classList.remove('oklab--modal-open');
-      const backdrop = document.getElementById('oklab-modal-backdrop');
-      if (backdrop) {
-        backdrop.remove();
-      }
-    }
-
-    // Cleanup on unmount
-    return () => {
-      document.body.classList.remove('oklab--modal-open');
-      const backdrop = document.getElementById('oklab-modal-backdrop');
-      if (backdrop) {
-        backdrop.remove();
-      }
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -238,14 +153,20 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            onClick={() => setIsOpen(false)}
+          />
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col"
             style={{ maxHeight: '90vh' }}
-            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
               <div className="flex items-center gap-3">
