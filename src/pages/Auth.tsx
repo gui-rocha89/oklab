@@ -59,179 +59,120 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex p-3 rounded-2xl bg-white shadow-lg mb-6">
-            <img 
-              src={logoOrange} 
-              alt="StreamLab Logo" 
-              className="h-12 w-auto"
-            />
-          </div>
-          <h1 className="text-responsive-heading text-foreground mb-2">
-            StreamLab Platform
-          </h1>
-          <p className="text-caption text-muted-foreground">
-            Sistema de Gestão de Projetos Audiovisuais
-          </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Shield className="h-4 w-4 text-primary" />
-            <span className="text-caption text-primary font-medium">
-              Acesso restrito @streamlab.com.br
-            </span>
-          </div>
-        </motion.div>
+    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card className="shadow-2xl bg-white rounded-3xl p-8 border-0">
+          <CardContent className="space-y-6">
+            <div className="flex flex-col items-center space-y-4 mb-8">
+              <img 
+                src={logoOrange} 
+                alt="OKLAB" 
+                className="h-20 w-auto object-contain"
+              />
+              <p className="text-sm text-neutral-medium text-center leading-relaxed">
+                Acesso exclusivo aos tripulantes da galáxia<br />
+                streamlab.com.br
+              </p>
+            </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="shadow-xl border-0 overflow-hidden bg-white">
-            <CardHeader className="bg-primary text-white text-center">
-              <CardTitle className="text-responsive-title flex items-center justify-center gap-2">
-                {isLogin ? (
-                  <>
-                    <LogIn className="h-5 w-5" />
-                    Acessar Sistema
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-5 w-5" />
-                    Criar Conta Corporativa
-                  </>
-                )}
-              </CardTitle>
-              <CardDescription className="text-primary-foreground/80">
-                {isLogin 
-                  ? 'Entre com suas credenciais StreamLab'
-                  : 'Registre-se com seu email corporativo'
-                }
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <AnimatePresence mode="wait">
-                  {!isLogin && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="text"
-                          placeholder="Nome completo"
-                          value={formData.fullName}
-                          onChange={(e) => handleInputChange('fullName', e.target.value)}
-                          className="pl-10 h-12 border-border focus:ring-primary focus:border-primary"
-                          required={!isLogin}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="email@streamlab.com.br"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="pl-10 h-12 border-border focus:ring-primary focus:border-primary"
-                    pattern=".*@streamlab\.com\.br$"
-                    title="Apenas emails do domínio @streamlab.com.br são permitidos"
-                    required
-                  />
-                  {!isLogin && (
-                    <p className="text-caption text-muted-foreground mt-1">
-                      * Apenas emails corporativos @streamlab.com.br
-                    </p>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Senha"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="pl-10 pr-10 h-12 border-border focus:ring-primary focus:border-primary"
-                    minLength={6}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <AnimatePresence mode="wait">
+                {!isLogin && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+                    <Input
+                      type="text"
+                      placeholder="Nome Completo"
+                      value={formData.fullName}
+                      onChange={(e) => handleInputChange('fullName', e.target.value)}
+                      required={!isLogin}
+                      className="h-12 px-4 rounded-xl border-neutral-light focus:border-primary focus:ring-primary"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                <Button
-                  type="submit"
-                  className="w-full h-12 text-ui bg-primary hover:bg-primary/90"
-                  disabled={loading}
+              <Input
+                type="email"
+                placeholder="E-mail"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                required
+                pattern=".*@streamlab\.com\.br$"
+                title="Apenas emails do domínio @streamlab.com.br são permitidos"
+                className="h-12 px-4 rounded-xl border-neutral-light focus:border-primary focus:ring-primary"
+              />
+
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Senha"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  required
+                  minLength={6}
+                  className="h-12 px-4 pr-10 rounded-xl border-neutral-light focus:border-primary focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-medium hover:text-foreground transition-colors"
                 >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      {isLogin ? 'Entrando...' : 'Criando conta...'}
-                    </div>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <div className="flex items-center gap-2">
-                      {isLogin ? 'Entrar no Sistema' : 'Criar Conta'}
-                      <ArrowRight className="h-4 w-4" />
-                    </div>
+                    <Eye className="h-4 w-4" />
                   )}
-                </Button>
-              </form>
-
-              <div className="text-center pt-4 border-t border-border">
-                <p className="text-caption text-muted-foreground mb-3">
-                  {isLogin 
-                    ? 'Não possui conta corporativa?' 
-                    : 'Já possui conta?'
-                  }
-                </p>
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
-                  disabled={loading}
-                >
-                  {isLogin ? 'Solicitar acesso' : 'Fazer login'}
-                </Button>
+                </button>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-center mt-6"
-        >
-          <p className="text-caption text-muted-foreground">
-            © 2024 StreamLab. Sistema corporativo seguro.
-          </p>
-          <p className="text-caption text-primary mt-1">
-            Plataforma de gestão audiovisual profissional
-          </p>
-        </motion.div>
-      </div>
+              <Button
+                type="submit"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl text-base mt-6"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {isLogin ? 'ENTRANDO...' : 'CADASTRANDO...'}
+                  </div>
+                ) : (
+                  isLogin ? 'ENTRAR' : 'CADASTRAR'
+                )}
+              </Button>
+            </form>
+
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-neutral-medium hover:text-foreground transition-colors"
+                disabled={loading}
+              >
+                {isLogin 
+                  ? 'Não tem uma conta? Cadastre-se' 
+                  : 'Já tem uma conta? Entre'
+                }
+              </button>
+            </div>
+
+            <div className="text-center mt-8">
+              <p className="text-sm text-neutral-medium">
+                by Stream Lab
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
