@@ -150,18 +150,19 @@ export default function Projects() {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="w-full sm:w-44 h-11 justify-between bg-white shadow-sm hover:bg-gray-50"
+                      className="w-full sm:w-44 h-9 px-3 rounded-[10px] justify-between bg-white shadow-sm hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200 truncate text-ellipsis whitespace-nowrap overflow-hidden"
+                      data-filter="priority"
                     >
-                      <span className="flex items-center space-x-2">
+                      <span className="flex items-center space-x-2 truncate">
                         <span>{getPriorityIcon(priorityFilter)}</span>
-                        <span>
+                        <span className="truncate">
                           {priorityFilter === "all" 
                             ? "Todas as Prioridades" 
                             : getPriorityText(priorityFilter)
                           }
                         </span>
                       </span>
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-4 w-4 flex-shrink-0" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-white border shadow-lg z-50">
@@ -327,16 +328,17 @@ export default function Projects() {
 
         {/* Lista/Grid de Projetos */}
         {viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 items-stretch">
             {filteredProjects.map((project) => (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
+                className="flex"
               >
-                <Card className="min-h-[220px] rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group overflow-hidden">
-                  <CardHeader className="pb-3 relative">
+                <Card className="min-h-[220px] p-5 rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group overflow-hidden flex-1 flex flex-col">
+                  <CardHeader className="pb-3 relative flex-shrink-0">
                     {/* Background Pattern */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
                     
@@ -371,7 +373,7 @@ export default function Projects() {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 flex-1 flex flex-col">
                     {/* Project Description */}
                     <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
                       {project.description}
@@ -396,7 +398,7 @@ export default function Projects() {
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                    <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
                       <div className="text-sm text-muted-foreground flex items-center space-x-1">
                         <MessageSquare className="w-4 h-4" />
                         <span>{project.keyframes?.length || 0} comentário(s) pendente(s)</span>
