@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Upload, Film, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Upload, Film, FileText, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useModalBlur } from "@/hooks/useModalBlur";
 
 const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [title, setTitle] = useState('');
@@ -13,8 +15,12 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const fileInputRef = useRef(null);
   const { toast } = useToast();
 
+  // Use the layered blur system
+  useModalBlur(isOpen, () => setIsOpen(false));
+
   useEffect(() => {
     if (isOpen) {
+      // Reset form quando modal abre
       setTitle('');
       setComment('');
       setVideoFile(null);
@@ -26,8 +32,9 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
     if (file && file.type.startsWith('video/')) {
       setVideoFile(file);
       toast({
-        title: "Vídeo Anexado",
+        title: "🎥 Vídeo Anexado!",
         description: `${file.name} foi selecionado com sucesso.`,
+        duration: 3000,
       });
     } else {
       toast({
@@ -48,18 +55,19 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       return;
     }
     if (!videoFile) {
-      toast({
-        title: "Erro de Validação",
-        description: "É necessário anexar um vídeo.",
-        variant: "destructive",
-      });
-      return;
-    }
+        toast({
+          title: "Erro de Validação",
+          description: "É necessário anexar um vídeo.",
+          variant: "destructive",
+        });
+        return;
+      }
 
     const newProject = {
       title,
       comment,
       videoFile,
+      type: 'Audiovisual',
     };
     onProjectCreate(newProject);
     setIsOpen(false);
@@ -68,90 +76,82 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center gap-2">
-            <Film className="h-5 w-5 text-orange-500" />
-            <h2 className="text-lg font-semibold">Novo Projeto Audiovisual</h2>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-          {/* Título do Vídeo */}
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-              Título do Vídeo
-            </Label>
-            <Input 
-              id="title"
-              placeholder="Ex: Vídeo Institucional 2025"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full"
-            />
-          </div>
-
-          {/* Arquivo de Vídeo */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Arquivo de Vídeo
-            </Label>
-            <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="video/*"
-                onChange={handleFileChange}
-              />
-              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-1">Arraste ou clique para enviar</p>
-              <p className="text-xs text-gray-500">Formatos de vídeo suportados (MP4, MOV, etc.)</p>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div className="lovable-modal-content bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
+              <div className="flex items-center gap-3">
+                <Film className="h-6 w-6 text-orange-500" />
+                <h2 className="text-2xl font-bold text-gray-900">Novo Projeto Audiovisual</h2>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
+                <X className="h-5 w-5" />
+              </Button>
             </div>
-            {videoFile && (
-              <p className="text-sm text-green-600 mt-2">
-                ✅ {videoFile.name}
-              </p>
-            )}
-          </div>
 
-          {/* Comentários / Descrição */}
-          <div className="space-y-2">
-            <Label htmlFor="comment" className="text-sm font-medium text-gray-700">
-              Comentários / Descrição
-            </Label>
-            <Textarea
-              id="comment"
-              placeholder="Adicione uma descrição, observações ou o roteiro do vídeo aqui..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={4}
-              className="w-full resize-none"
-            />
-          </div>
-        </div>
+            <div className="overflow-y-auto p-8 space-y-8 flex-1">
+              <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="av-title" className="text-base font-semibold">Título do Vídeo</Label>
+                  <Input id="av-title" placeholder="Ex: Vídeo Institucional 2025" value={title} onChange={(e) => setTitle(e.target.value)} className="text-base py-6" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="av-video" className="text-base font-semibold">Arquivo de Vídeo</Label>
+                  <div
+                    className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-all"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="video/*"
+                      onChange={handleFileChange}
+                    />
+                    {videoFile ? (
+                      <div className="flex flex-col items-center justify-center text-green-600">
+                        <CheckCircle className="h-12 w-12 mb-3" />
+                        <p className="font-semibold text-lg">Vídeo Carregado!</p>
+                        <p className="text-sm text-gray-600">{videoFile.name}</p>
+                        <Button variant="link" size="sm" className="mt-2 text-sm">Trocar arquivo</Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <Upload className="h-12 w-12 mb-3 text-gray-400" />
+                        <p className="font-semibold text-lg">Arraste ou clique para enviar</p>
+                        <p className="text-sm">Formatos de vídeo suportados (MP4, MOV, etc.)</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600 text-white">
-            <FileText className="w-4 h-4 mr-2" />
-            Criar e enviar para aprovação
-          </Button>
-        </div>
-      </div>
-    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="av-comment" className="text-base font-semibold">Comentários / Descrição</Label>
+                  <Textarea id="av-comment" placeholder="Adicione uma descrição, observações ou o roteiro do vídeo aqui..." value={comment} onChange={(e) => setComment(e.target.value)} rows={5} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end p-6 border-t border-gray-200 sticky bottom-0 bg-white rounded-b-2xl z-10">
+              <div className="flex gap-4">
+                <Button variant="outline" size="lg" onClick={() => setIsOpen(false)}>Cancelar</Button>
+                <Button className="btn-primary" size="lg" onClick={handleSubmit}>
+                  <FileText className="w-5 h-5 mr-2" />
+                  Criar e Enviar para Aprovação
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
