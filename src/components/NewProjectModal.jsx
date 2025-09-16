@@ -26,7 +26,7 @@ const injectModalBlurStyles = () => {
       #oklab-modal-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 999;
+        z-index: 998;
         backdrop-filter: blur(var(--oklab-blur));
         -webkit-backdrop-filter: blur(var(--oklab-blur));
         background: var(--oklab-overlay);
@@ -238,12 +238,12 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col"
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col z-[1000]"
             style={{ maxHeight: '90vh' }}
             onClick={(e) => e.stopPropagation()}
           >
