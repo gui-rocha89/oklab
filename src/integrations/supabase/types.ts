@@ -47,6 +47,154 @@ export type Database = {
         }
         Relationships: []
       }
+      project_feedback: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          keyframe_id: string
+          response: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          x_position: number
+          y_position: number
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          keyframe_id: string
+          response?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          x_position: number
+          y_position: number
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          keyframe_id?: string
+          response?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          x_position?: number
+          y_position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_feedback_keyframe_id_fkey"
+            columns: ["keyframe_id"]
+            isOneToOne: false
+            referencedRelation: "project_keyframes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_keyframes: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          feedback_count: number | null
+          id: string
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          feedback_count?: number | null
+          id?: string
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          feedback_count?: number | null
+          id?: string
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_keyframes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          approval_date: string | null
+          client: string
+          created_at: string
+          description: string | null
+          id: string
+          priority: string
+          share_id: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approval_date?: string | null
+          client: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          share_id: string
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approval_date?: string | null
+          client?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          share_id?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

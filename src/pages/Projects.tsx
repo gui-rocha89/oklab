@@ -80,9 +80,8 @@ export default function Projects() {
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (project.client && project.client.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         project.client.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || project.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || project.priority === priorityFilter;
     const matchesType = typeFilter === "all" || project.type === typeFilter;
@@ -108,7 +107,7 @@ export default function Projects() {
     navigate(`/aprovacao-audiovisual/${shareId}`);
   };
 
-  const handleEditProject = (projectId: number) => {
+  const handleEditProject = (projectId: string) => {
     // Navigate to edit page or open edit modal
     toast({
       title: "Editar Projeto",
@@ -116,7 +115,7 @@ export default function Projects() {
     });
   };
 
-  const handleDeleteProject = (projectId: number) => {
+  const handleDeleteProject = (projectId: string) => {
     if (window.confirm("Tem certeza que deseja excluir este projeto?")) {
       deleteProject(projectId);
       toast({
@@ -406,14 +405,14 @@ export default function Projects() {
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                           Autor:
                         </p>
-                        <p className="text-sm font-medium text-foreground/90">{project.author}</p>
+                        <p className="text-sm font-medium text-foreground/90">{project.client}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                           Criado em:
                         </p>
                         <p className="text-sm font-medium text-foreground/90">
-                          {new Date(project.createdAt).toLocaleDateString('pt-BR')}
+                          {new Date(project.created_at).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                     </div>
@@ -444,7 +443,7 @@ export default function Projects() {
                         </Button>
                         <Button 
                           size="sm" 
-                          onClick={() => handleViewProject(project.shareId)}
+                          onClick={() => handleViewProject(project.share_id)}
                           className="ml-2 bg-primary hover:bg-primary/90 text-white shadow-md hover:shadow-lg transition-all"
                         >
                           <Eye className="h-4 w-4 mr-1" />
@@ -482,9 +481,9 @@ export default function Projects() {
                         </p>
                         
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{project.author}</span>
+                          <span>{project.client}</span>
                           <span>{project.type}</span>
-                          <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+                          <span>{new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
                           {project.keyframes.length > 0 && (
                             <span className="text-primary">
                               {project.keyframes.length} comentário{project.keyframes.length !== 1 ? 's' : ''}
@@ -496,7 +495,7 @@ export default function Projects() {
                       <div className="flex gap-2 ml-4">
                         <Button 
                           size="sm" 
-                          onClick={() => handleViewProject(project.shareId)}
+                          onClick={() => handleViewProject(project.share_id)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           Ver Projeto

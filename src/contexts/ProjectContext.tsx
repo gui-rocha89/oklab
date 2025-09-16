@@ -1,152 +1,49 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 // Enhanced project interface with feedback support
 export interface Project {
-  id: number;
-  shareId: string;
+  id: string;
+  share_id: string;
   title: string;
-  description: string;
+  description?: string;
   status: 'pending' | 'approved' | 'rejected' | 'feedback-sent' | 'in-progress' | 'archived';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  author: string;
-  createdAt: string;
-  updatedAt?: string;
+  client: string;
   type: 'Vídeo' | 'Audiovisual' | 'Design' | 'Documento' | 'Apresentação';
+  approval_date?: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
   keyframes: Array<{
-    id: number;
-    time: number;
-    comment: string;
-    timestamp: string;
-    resolved?: boolean;
-    response?: string; // Task 3: Campo para resposta da equipe
-    responseDate?: string; // Data da resposta
-    responseAuthor?: string; // Quem respondeu
+    id: string;
+    title: string;
+    feedback_count: number;
+    status: 'pending' | 'approved' | 'rejected';
+    attachments: any[];
+    feedbacks: Array<{
+      id: string;
+      x_position: number;
+      y_position: number;
+      comment: string;
+      response?: string;
+      status: 'pending' | 'resolved' | 'rejected';
+      created_at: string;
+      updated_at: string;
+      user_id: string;
+    }>;
   }>;
-  client?: string;
-  department?: string;
-  tags?: string[];
 }
-
-const enhancedMockProjects: Project[] = [
-  {
-    id: 1,
-    shareId: "abc123",
-    title: "Campanha Verão 2024",
-    description: "Vídeo promocional para a campanha de verão",
-    status: "pending",
-    priority: "high",
-    author: "Maria Silva",
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-16T14:30:00Z",
-    type: "Vídeo",
-    client: "Loja Fashion",
-    department: "Marketing",
-    tags: ["campanha", "verão", "promocional"],
-    keyframes: [
-      { id: 1, time: 15.5, comment: "Ajustar cor do texto", timestamp: "2024-01-15T11:30:00Z", resolved: false },
-      { id: 2, time: 32.2, comment: "Logo muito pequena aqui", timestamp: "2024-01-15T14:20:00Z", resolved: false }
-    ]
-  },
-  {
-    id: 2,
-    shareId: "def456",
-    title: "Tutorial Produto X",
-    description: "Vídeo explicativo do novo produto",
-    status: "approved",
-    priority: "medium",
-    author: "João Santos",
-    createdAt: "2024-01-14T09:00:00Z",
-    updatedAt: "2024-01-15T16:45:00Z",
-    type: "Audiovisual",
-    client: "TechCorp",
-    department: "Produto",
-    tags: ["tutorial", "produto", "explicativo"],
-    keyframes: []
-  },
-  {
-    id: 3,
-    shareId: "ghi789",
-    title: "Apresentação Trimestral",
-    description: "Slides para apresentação aos investidores",
-    status: "feedback-sent",
-    priority: "high",
-    author: "Ana Costa",
-    createdAt: "2024-01-13T16:00:00Z",
-    updatedAt: "2024-01-14T10:15:00Z",
-    type: "Apresentação",
-    client: "Investidores",
-    department: "Financeiro",
-    tags: ["apresentação", "trimestral", "investidores"],
-    keyframes: [
-      { 
-        id: 3, 
-        time: 45.1, 
-        comment: "Gráfico precisa de mais destaque", 
-        timestamp: "2024-01-14T08:15:00Z", 
-        resolved: true,
-        response: "Gráfico reformatado com cores mais vibrantes e aumentado em 25%",
-        responseDate: "2024-01-14T10:30:00Z",
-        responseAuthor: "Designer Principal"
-      }
-    ]
-  },
-  {
-    id: 4,
-    shareId: "jkl012",
-    title: "Identidade Visual Nova",
-    description: "Desenvolvimento da nova identidade visual da marca",
-    status: "in-progress",
-    priority: "urgent",
-    author: "Carlos Design",
-    createdAt: "2024-01-12T08:00:00Z",
-    updatedAt: "2024-01-16T09:30:00Z",
-    type: "Design",
-    client: "Empresa ABC",
-    department: "Branding",
-    tags: ["identidade", "visual", "marca", "logo"],
-    keyframes: [
-      {
-        id: 4,
-        time: 12.3,
-        comment: "As cores não estão alinhadas com o guidelines da marca. Por favor, revisar paleta de cores.",
-        timestamp: "2024-01-12T10:15:00Z",
-        resolved: false
-      },
-      {
-        id: 5,
-        time: 25.7,
-        comment: "O logotipo precisa de mais contraste para funcionar bem em fundos coloridos.",
-        timestamp: "2024-01-12T14:22:00Z",
-        resolved: false
-      }
-    ]
-  },
-  {
-    id: 5,
-    shareId: "mno345",
-    title: "Manual de Processos",
-    description: "Documentação completa dos processos internos",
-    status: "approved",
-    priority: "medium",
-    author: "Patricia Docs",
-    createdAt: "2024-01-11T14:00:00Z",
-    updatedAt: "2024-01-13T11:20:00Z",
-    type: "Documento",
-    client: "Interno",
-    department: "RH",
-    tags: ["manual", "processos", "documentação"],
-    keyframes: []
-  }
-];
 
 interface ProjectContextType {
   projects: Project[];
-  addProject: (project: Omit<Project, 'id'>) => void;
-  updateProject: (id: number, updates: Partial<Project>) => void;
-  deleteProject: (id: number) => void;
-  // Task 3: Função para adicionar resposta aos feedbacks
-  addFeedbackResponse: (projectId: number, keyframeId: number, response: string, author?: string) => void;
-  updateFeedbackStatus: (projectId: number, keyframeId: number, status: 'resolved' | 'pending' | 'rejected') => void;
+  loading: boolean;
+  addProject: (project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<void>;
+  updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  addFeedbackResponse: (projectId: string, keyframeId: string, response: string, author?: string) => Promise<void>;
+  updateFeedbackStatus: (projectId: string, keyframeId: string, status: 'resolved' | 'pending' | 'rejected') => Promise<void>;
   getProjectStats: () => {
     total: number;
     pending: number;
@@ -156,56 +53,209 @@ interface ProjectContextType {
     feedbacks: number;
     clientSatisfaction: number;
   };
-  // Enhanced filtering functions
   filterByPriority: (priority: Project['priority']) => Project[];
   filterByStatus: (status: Project['status']) => Project[];
   sortByPriority: (projects?: Project[]) => Project[];
   getProjectsByClient: (client: string) => Project[];
   getOverdueProjects: () => Project[];
-  // Task 1: Função para buscar todos os feedbacks
   getAllFeedbacks: () => Array<{
     id: string;
-    feedbackId: number;
-    projectId: number;
+    feedbackId: string;
+    projectId: string;
     projectTitle: string;
     shareId: string;
     comment: string;
-    time: number;
+    x_position: number;
+    y_position: number;
     timestamp: string;
     status: 'resolved' | 'pending' | 'rejected';
     author: string;
     response?: string;
     priority: string;
     type: string;
-    department?: string;
   }>;
+  refreshProjects: () => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
-  const [projects, setProjects] = useState<Project[]>(enhancedMockProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const addProject = (project: Omit<Project, 'id'>) => {
-    const newProject = {
-      ...project,
-      id: Math.max(...projects.map(p => p.id)) + 1,
-    };
-    setProjects(prev => [...prev, newProject]);
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch projects with keyframes and feedbacks
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          project_keyframes (
+            *,
+            project_feedback (*)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (projectsError) throw projectsError;
+
+      // Transform data to match interface
+      const transformedProjects: Project[] = (projectsData || []).map(project => ({
+        ...project,
+        keyframes: (project.project_keyframes || []).map(kf => ({
+          ...kf,
+          feedbacks: kf.project_feedback || []
+        }))
+      }));
+
+      setProjects(transformedProjects);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar projetos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateProject = (id: number, updates: Partial<Project>) => {
-    setProjects(prev => 
-      prev.map(project => 
-        project.id === id 
-          ? { ...project, ...updates, updatedAt: new Date().toISOString() }
-          : project
-      )
-    );
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const addProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          ...project,
+          user_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast({
+        title: "Sucesso",
+        description: "Projeto criado com sucesso",
+      });
+    } catch (error) {
+      console.error('Error adding project:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao criar projeto",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteProject = (id: number) => {
-    setProjects(prev => prev.filter(project => project.id !== id));
+  const updateProject = async (id: string, updates: Partial<Project>) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast({
+        title: "Sucesso",
+        description: "Projeto atualizado com sucesso",
+      });
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar projeto",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteProject = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast({
+        title: "Sucesso",
+        description: "Projeto excluído com sucesso",
+      });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao excluir projeto",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addFeedbackResponse = async (projectId: string, feedbackId: string, response: string, author: string = 'Equipe') => {
+    try {
+      const { error } = await supabase
+        .from('project_feedback')
+        .update({
+          response,
+          status: 'resolved'
+        })
+        .eq('id', feedbackId);
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast({
+        title: "Sucesso",
+        description: "Resposta adicionada com sucesso",
+      });
+    } catch (error) {
+      console.error('Error adding feedback response:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao adicionar resposta",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateFeedbackStatus = async (projectId: string, feedbackId: string, status: 'resolved' | 'pending' | 'rejected') => {
+    try {
+      const { error } = await supabase
+        .from('project_feedback')
+        .update({ status })
+        .eq('id', feedbackId);
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast({
+        title: "Sucesso",
+        description: "Status atualizado com sucesso",
+      });
+    } catch (error) {
+      console.error('Error updating feedback status:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar status",
+        variant: "destructive",
+      });
+    }
   };
 
   const getProjectStats = () => {
@@ -214,10 +264,15 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     const approved = projects.filter(p => p.status === "approved").length;
     const inProgress = projects.filter(p => p.status === "in-progress").length;
     const archived = projects.filter(p => p.status === "archived").length;
-    const feedbacks = projects.reduce((acc, p) => acc + p.keyframes.length, 0);
+    const feedbacks = projects.reduce((acc, p) => acc + p.keyframes.reduce((kfAcc, kf) => kfAcc + kf.feedbacks.length, 0), 0);
     
-    // Mock client satisfaction (in real app, this would come from feedback data)
-    const clientSatisfaction = 92;
+    // Calculate client satisfaction based on resolved feedbacks
+    const totalFeedbacks = feedbacks;
+    const resolvedFeedbacks = projects.reduce((acc, p) => 
+      acc + p.keyframes.reduce((kfAcc, kf) => 
+        kfAcc + kf.feedbacks.filter(f => f.status === 'resolved').length, 0), 0);
+    
+    const clientSatisfaction = totalFeedbacks > 0 ? Math.round((resolvedFeedbacks / totalFeedbacks) * 100) : 100;
 
     return {
       total,
@@ -235,7 +290,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     return [...projectList].sort((a, b) => {
       const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
       const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-      return priorityB - priorityA; // Higher priority first
+      return priorityB - priorityA;
     });
   };
 
@@ -251,75 +306,29 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     return projects.filter(project => project.client === client);
   };
 
-  // Task 3: Função para adicionar resposta aos feedbacks
-  const addFeedbackResponse = (projectId: number, keyframeId: number, response: string, author: string = 'Equipe') => {
-    setProjects(prev => 
-      prev.map(project => 
-        project.id === projectId 
-          ? {
-              ...project, 
-              keyframes: project.keyframes.map(keyframe =>
-                keyframe.id === keyframeId
-                  ? {
-                      ...keyframe,
-                      response,
-                      resolved: true,
-                      responseDate: new Date().toISOString(),
-                      responseAuthor: author
-                    }
-                  : keyframe
-              ),
-              updatedAt: new Date().toISOString()
-            }
-          : project
-      )
-    );
-  };
-
-  const updateFeedbackStatus = (projectId: number, keyframeId: number, status: 'resolved' | 'pending' | 'rejected') => {
-    setProjects(prev => 
-      prev.map(project => 
-        project.id === projectId 
-          ? {
-              ...project, 
-              keyframes: project.keyframes.map(keyframe =>
-                keyframe.id === keyframeId
-                  ? { ...keyframe, resolved: status === 'resolved' }
-                  : keyframe
-              ),
-              updatedAt: new Date().toISOString()
-            }
-          : project
-      )
-    );
-  };
-
-  // Task 1: Função para buscar todos os feedbacks
   const getAllFeedbacks = () => {
-    const allFeedbacks = [];
+    const allFeedbacks: any[] = [];
     projects.forEach(project => {
-      if (project.keyframes && project.keyframes.length > 0) {
-        project.keyframes.forEach(keyframe => {
+      project.keyframes.forEach(keyframe => {
+        keyframe.feedbacks.forEach(feedback => {
           allFeedbacks.push({
-            id: `${project.id}-${keyframe.id}`,
-            feedbackId: keyframe.id,
+            id: feedback.id,
+            feedbackId: feedback.id,
             projectId: project.id,
             projectTitle: project.title,
-            shareId: project.shareId,
-            comment: keyframe.comment,
-            time: keyframe.time,
-            timestamp: keyframe.timestamp,
-            status: keyframe.resolved ? 'resolved' : 'pending',
-            author: project.client || project.author || 'Cliente',
-            response: keyframe.response || null,
+            shareId: project.share_id,
+            comment: feedback.comment,
+            x_position: feedback.x_position,
+            y_position: feedback.y_position,
+            timestamp: feedback.created_at,
+            status: feedback.status,
+            author: project.client || 'Cliente',
+            response: feedback.response,
             priority: project.priority,
             type: project.type,
-            department: project.department,
-            responseDate: keyframe.responseDate,
-            responseAuthor: keyframe.responseAuthor
           });
         });
-      }
+      });
     });
     return allFeedbacks.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
@@ -327,16 +336,20 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const getOverdueProjects = (): Project[] => {
     const now = new Date();
     return projects.filter(project => {
-      // Mock logic: projects older than 30 days and still pending
-      const createdDate = new Date(project.createdAt);
+      const createdDate = new Date(project.created_at);
       const daysDiff = (now.getTime() - createdDate.getTime()) / (1000 * 3600 * 24);
       return daysDiff > 30 && (project.status === 'pending' || project.status === 'in-progress');
     });
   };
 
+  const refreshProjects = async () => {
+    await fetchProjects();
+  };
+
   return (
     <ProjectContext.Provider value={{
       projects,
+      loading,
       addProject,
       updateProject,
       deleteProject,
@@ -346,10 +359,10 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       sortByPriority,
       getProjectsByClient,
       getOverdueProjects,
-      // Task 3: Novas funções para feedbacks
       addFeedbackResponse,
       updateFeedbackStatus,
-      getAllFeedbacks
+      getAllFeedbacks,
+      refreshProjects
     }}>
       {children}
     </ProjectContext.Provider>
