@@ -85,7 +85,7 @@ export default function Auth() {
               <motion.img
                 src={logoWhite}
                 alt="MANUS I.A Logo"
-                className="h-16 w-auto mx-auto mb-6"
+                className="h-20 w-auto mx-auto mb-6"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
