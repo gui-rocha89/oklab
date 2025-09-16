@@ -98,7 +98,7 @@ export default function Auth() {
                 className="text-gray-600 text-sm leading-relaxed"
               >
                 Acesso exclusivo aos tripulantes da galáxia<br />
-                <span className="font-medium">manus.ai</span>
+                <span className="font-medium">streamlab.com.br</span>
               </motion.p>
             </div>
 
@@ -145,7 +145,7 @@ export default function Auth() {
               transition={{ delay: 0.4 }}
             >
               <p className="text-gray-400 text-xs">
-                by <span className="font-medium">MANUS I.A</span>
+                Um produto desenvolvido <span className="font-medium">By Stream Lab</span>
               </p>
             </motion.div>
           </CardContent>
