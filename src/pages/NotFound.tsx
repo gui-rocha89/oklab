@@ -23,7 +23,7 @@ const NotFound = () => {
         
         <div className="space-y-4">
           <Button 
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
             size="lg"
             className="w-full"
           >

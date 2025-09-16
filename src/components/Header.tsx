@@ -1,10 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Menu, Bell, Search, User, Users, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Menu, Bell, Search, User, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { UserRoleIndicator } from '@/components/UserRoleIndicator';
 
 interface HeaderProps {
   title?: string;
@@ -22,7 +19,6 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab 
 }) => {
   const { toast } = useToast();
-  const { profile, signOut } = useAuth();
 
   const getPageTitle = () => {
     if (title) return title;
@@ -50,10 +46,6 @@ export const Header: React.FC<HeaderProps> = ({
       title: "🚧 Perfil não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
       duration: 4000,
     });
-  };
-
-  const handleLogout = async () => {
-    await signOut();
   };
 
   const handleManageTeamClick = () => {
@@ -86,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-responsive-heading text-white truncate transition-all duration-300"
+              className="text-xl font-bold text-white truncate transition-all duration-300"
             >
               {getPageTitle()}
             </motion.h1>
@@ -95,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-caption text-orange-200 mt-1 truncate transition-all duration-300"
+                className="text-sm text-orange-200 mt-1 truncate transition-all duration-300"
               >
                 {subtitle}
               </motion.p>
@@ -116,9 +108,6 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
-            {/* User Role Indicator */}
-            <UserRoleIndicator className="hidden sm:flex" />
-
             {/* Manage Team */}
             {setActiveTab && (
               <motion.button
@@ -156,19 +145,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <User className="w-4 h-4 text-orange-500" />
               </div>
               <span className="hidden sm:block text-sm font-medium text-white">
-                {profile?.full_name || profile?.email || 'Admin'}
+                Admin
               </span>
-            </motion.button>
-
-            {/* Logout */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLogout}
-              className="p-2 rounded-lg hover:bg-orange-600 transition-colors"
-              title="Sair"
-            >
-              <LogOut className="w-5 h-5 text-white" />
             </motion.button>
           </div>
         </div>

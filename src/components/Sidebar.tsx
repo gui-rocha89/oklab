@@ -15,7 +15,7 @@ import logoWhite from "@/assets/logo-white-bg.png";
 const navigationItems = [
   {
     title: "Dashboard",
-    href: "/dashboard",
+    href: "/",
     icon: BarChart3,
   },
   {
@@ -45,8 +45,8 @@ export function Sidebar() {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    if (path === "/dashboard") {
-      return location.pathname === "/dashboard";
+    if (path === "/") {
+      return location.pathname === "/";
     }
     return location.pathname.startsWith(path);
   };
