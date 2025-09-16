@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Menu, Bell, Search, User, Users } from 'lucide-react';
+import { Menu, Bell, Search, User, Users, LogOut } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/contexts/UserContext';
 
@@ -48,6 +48,14 @@ export const Header: React.FC<HeaderProps> = ({
       title: "🚧 Perfil não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
       duration: 4000,
     });
+  };
+
+  const handleLogoutClick = () => {
+    toast({
+      title: "🚪 Logout realizado com sucesso!",
+      duration: 2000,
+    });
+    // Aqui seria implementada a lógica real de logout
   };
 
   const handleManageTeamClick = () => {
@@ -148,6 +156,20 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <span className="hidden sm:block text-sm font-medium text-white">
                 {user?.name || 'Gui'}
+              </span>
+            </motion.button>
+
+            {/* Logout Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogoutClick}
+              className="flex items-center space-x-1 p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5 text-white" />
+              <span className="hidden sm:block text-sm font-medium text-white">
+                Sair
               </span>
             </motion.button>
           </div>
