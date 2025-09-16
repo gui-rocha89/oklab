@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +16,6 @@ const initialCreativeState = {
   name: 'Criativo 1',
   type: '',
   publishDate: null,
-  isReviewed: false,
   caption: '',
   attachments: [{ id: 1, name: 'Anexo 1', type: 'auto-hosted', file: null }],
 };
@@ -42,7 +40,6 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
           name: 'Criativo 1',
           type: '',
           publishDate: null,
-          isReviewed: false,
           caption: '',
           attachments: [{ id: 1, name: 'Anexo 1', type: 'auto-hosted', file: null }],
         },
@@ -80,7 +77,6 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         name: `Criativo ${newId}`,
         type: '',
         publishDate: null,
-        isReviewed: false,
         caption: '',
         attachments: [{ id: 1, name: 'Anexo 1', type: 'auto-hosted', file: null }],
       },
@@ -263,11 +259,6 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      <Switch id={`c-reviewed-${creative.id}`} checked={!creative.isReviewed} onCheckedChange={(checked) => handleCreativeChange(creative.id, 'isReviewed', !checked)} />
-                      <Label htmlFor={`c-reviewed-${creative.id}`}>Não revisado</Label>
-                    </div>
-
                     <div className="space-y-2">
                       <Label htmlFor={`c-caption-${creative.id}`}>Legenda</Label>
                       <Textarea id={`c-caption-${creative.id}`} placeholder="Adicione uma legenda para o criativo" value={creative.caption} onChange={(e) => handleCreativeChange(creative.id, 'caption', e.target.value)} />
