@@ -17,7 +17,7 @@ import {
   Activity,
   Clock
 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -57,34 +57,37 @@ const UserManagement = ({ setActiveTab }) => {
     try {
       setIsLoading(true);
       
+      // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          email,
-          full_name,
-          cargo,
-          avatar_url,
-          created_at,
-          user_roles (role)
-        `);
+        .select('*');
 
       if (profilesError) throw profilesError;
 
+      // Get all user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
       // Transform profiles to match the expected format
-      const transformedUsers = profiles.map(profile => ({
-        id: profile.id,
-        name: profile.full_name || profile.email,
-        email: profile.email,
-        role: profile.user_roles?.[0]?.role || 'user',
-        avatar: profile.avatar_url,
-        lastActive: new Date().toISOString().split('T')[0], // Mock data
-        projectsCount: Math.floor(Math.random() * 20) + 1, // Mock data
-        status: 'active',
-        joinedAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-        activityLevel: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)], // Mock data
-        departamento: profile.cargo || 'Não definido'
-      }));
+      const transformedUsers = profiles.map(profile => {
+        const userRole = userRoles.find(role => role.user_id === profile.id);
+        return {
+          id: profile.id,
+          name: profile.full_name || profile.email,
+          email: profile.email,
+          role: userRole?.role || 'user',
+          avatar: profile.avatar_url,
+          lastActive: new Date().toISOString().split('T')[0],
+          projectsCount: Math.floor(Math.random() * 20) + 1,
+          status: 'active',
+          joinedAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          activityLevel: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)],
+          departamento: profile.cargo || 'Não definido'
+        };
+      });
 
       setUsersList(transformedUsers);
     } catch (error) {
@@ -110,11 +113,35 @@ const UserManagement = ({ setActiveTab }) => {
   );
 
   const roleConfig = {
+    supreme_admin: {
+      label: 'Administrador Supremo',
+      color: 'bg-gradient-to-r from-red-500 to-red-600',
+      icon: Crown,
+      description: 'Acesso total e irrestrito'
+    },
     admin: {
       label: 'Administrador',
       color: 'bg-gradient-to-r from-purple-500 to-purple-600',
       icon: Crown,
       description: 'Acesso total'
+    },
+    manager: {
+      label: 'Gerente',
+      color: 'bg-gradient-to-r from-indigo-500 to-indigo-600',
+      icon: Shield,
+      description: 'Gerenciamento de equipe'
+    },
+    team_lead: {
+      label: 'Líder de Equipe',
+      color: 'bg-gradient-to-r from-blue-500 to-blue-600',
+      icon: Edit,
+      description: 'Liderança de projetos'
+    },
+    user: {
+      label: 'Usuário',
+      color: 'bg-gradient-to-r from-gray-500 to-gray-600',
+      icon: User,
+      description: 'Acesso básico'
     },
     editor: {
       label: 'Editor',
@@ -442,7 +469,7 @@ const UserManagement = ({ setActiveTab }) => {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Administradores</p>
               <p className="text-3xl font-bold text-gray-900">
-                {usersList.filter(u => u.role === 'admin').length}
+                {usersList.filter(u => u.role === 'admin' || u.role === 'supreme_admin').length}
               </p>
             </div>
             <div className="p-3 rounded-full bg-gradient-to-r from-purple-500 to-purple-600">
