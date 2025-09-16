@@ -125,17 +125,17 @@ export default function Projects() {
                   placeholder="Buscar por título, descrição, autor ou cliente..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-11 shadow-sm border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="pl-10 h-11 shadow-sm border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               
               <div className="flex flex-wrap gap-2">
                 {/* Status Filter */}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-44 h-11 bg-white shadow-sm">
+                  <SelectTrigger className="w-full sm:w-44 h-11 bg-background shadow-sm">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg z-50">
+                  <SelectContent className="bg-popover border shadow-lg z-50">
                     <SelectItem value="all">Todos ({getFilterCount("all", "status")})</SelectItem>
                     <SelectItem value="pending">Pendente ({getFilterCount("pending", "status")})</SelectItem>
                     <SelectItem value="approved">Aprovado ({getFilterCount("approved", "status")})</SelectItem>
@@ -150,7 +150,7 @@ export default function Projects() {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="w-full sm:w-44 h-11 px-3 rounded-md justify-between bg-white shadow-sm hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200 truncate text-ellipsis whitespace-nowrap overflow-hidden"
+                      className="w-full sm:w-44 h-11 px-3 rounded-md justify-between bg-background shadow-sm hover:bg-muted hover:text-foreground hover:border-border transition-all duration-200 truncate text-ellipsis whitespace-nowrap overflow-hidden"
                       data-filter="priority"
                     >
                       <span className="flex items-center space-x-2 truncate">
@@ -165,10 +165,10 @@ export default function Projects() {
                       <ChevronDown className="h-4 w-4 flex-shrink-0" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-white border shadow-lg z-50">
+                  <DropdownMenuContent className="w-56 bg-popover border shadow-lg z-50">
                     <DropdownMenuItem 
                       onClick={() => setPriorityFilter("all")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                      className="flex items-center justify-between cursor-pointer hover:bg-muted"
                     >
                       <span className="flex items-center space-x-2">
                         <span>📋</span>
@@ -180,7 +180,7 @@ export default function Projects() {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => setPriorityFilter("urgent")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-red-50"
+                      className="flex items-center justify-between cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20"
                     >
                       <span className="flex items-center space-x-2">
                         <span>⚠️</span>
@@ -192,7 +192,7 @@ export default function Projects() {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => setPriorityFilter("high")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-red-50"
+                      className="flex items-center justify-between cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20"
                     >
                       <span className="flex items-center space-x-2">
                         <span>🔴</span>
@@ -204,7 +204,7 @@ export default function Projects() {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => setPriorityFilter("medium")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-yellow-50"
+                      className="flex items-center justify-between cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
                     >
                       <span className="flex items-center space-x-2">
                         <span>🟡</span>
@@ -216,7 +216,7 @@ export default function Projects() {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => setPriorityFilter("low")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-emerald-50"
+                      className="flex items-center justify-between cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
                     >
                       <span className="flex items-center space-x-2">
                         <span>🟢</span>
@@ -231,10 +231,10 @@ export default function Projects() {
 
                 {/* Type Filter */}
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-full sm:w-40 h-11 bg-white shadow-sm">
+                  <SelectTrigger className="w-full sm:w-40 h-11 bg-background shadow-sm">
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg z-50">
+                  <SelectContent className="bg-popover border shadow-lg z-50">
                     <SelectItem value="all">Todos os Tipos ({getFilterCount("all", "type")})</SelectItem>
                     {uniqueTypes.map(type => (
                       <SelectItem key={type} value={type}>
@@ -275,7 +275,7 @@ export default function Projects() {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="flex flex-wrap items-center gap-2 pb-2 border-b border-gray-200"
+              className="flex flex-wrap items-center gap-2 pb-2 border-b border-border"
             >
               <span className="text-sm text-muted-foreground">Filtros ativos:</span>
               {searchTerm && (
@@ -337,7 +337,7 @@ export default function Projects() {
                 transition={{ duration: 0.3 }}
                 className="flex"
               >
-                <Card className="min-h-[220px] p-5 rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group overflow-hidden flex-1 flex flex-col">
+                <Card className="min-h-[220px] p-5 rounded-2xl shadow-lg border-0 bg-card hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group overflow-hidden flex-1 flex flex-col">
                   <CardHeader className="pb-3 relative flex-shrink-0">
                     {/* Background Pattern */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
