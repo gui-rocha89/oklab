@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { Dashboard } from '@/components/Dashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Users, Target, User } from 'lucide-react';
@@ -78,7 +77,7 @@ export function RoleBasedDashboard() {
   const roleConfig = getRoleConfig(profile.role);
   const Icon = roleConfig.icon;
 
-  // Supreme Admin vê o dashboard completo atual
+  // Supreme Admin vê o dashboard original através de componentes
   if (hasRole('supreme_admin')) {
     return (
       <div className="space-y-6">
@@ -96,7 +95,27 @@ export function RoleBasedDashboard() {
             </CardTitle>
           </CardHeader>
         </Card>
-        <Dashboard />
+        
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Dashboard Supreme Admin</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Controle total da plataforma StreamLab.
+              </p>
+              <div className="space-y-2">
+                {roleConfig.permissions.map((permission, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-red-500 rounded-full" />
+                    {permission}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

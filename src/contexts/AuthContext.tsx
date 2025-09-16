@@ -139,6 +139,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
+      // Validar domínio @streamlab.com.br
+      if (!email.endsWith('@streamlab.com.br')) {
+        toast({
+          title: "Domínio não autorizado",
+          description: "Apenas emails do domínio @streamlab.com.br podem se cadastrar.",
+          variant: "destructive",
+        });
+        return { error: { message: "Domínio não autorizado" } };
+      }
+
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({

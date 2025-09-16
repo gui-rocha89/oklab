@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, LogIn, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, LogIn, UserPlus, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,24 +59,32 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <img 
-            src={logoOrange} 
-            alt="StreamLab Logo" 
-            className="h-16 w-auto mx-auto mb-4"
-          />
+          <div className="inline-flex p-3 rounded-2xl bg-white shadow-lg mb-6">
+            <img 
+              src={logoOrange} 
+              alt="StreamLab Logo" 
+              className="h-12 w-auto"
+            />
+          </div>
           <h1 className="text-responsive-heading text-foreground mb-2">
             StreamLab Platform
           </h1>
           <p className="text-caption text-muted-foreground">
             Sistema de Gestão de Projetos Audiovisuais
           </p>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Shield className="h-4 w-4 text-primary" />
+            <span className="text-caption text-primary font-medium">
+              Acesso restrito @streamlab.com.br
+            </span>
+          </div>
         </motion.div>
 
         <motion.div
@@ -84,25 +92,25 @@ export default function Auth() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="shadow-xl border-0 overflow-hidden">
+          <Card className="shadow-xl border-0 overflow-hidden bg-white">
             <CardHeader className="bg-primary text-white text-center">
               <CardTitle className="text-responsive-title flex items-center justify-center gap-2">
                 {isLogin ? (
                   <>
                     <LogIn className="h-5 w-5" />
-                    Entrar na Plataforma
+                    Acessar Sistema
                   </>
                 ) : (
                   <>
                     <UserPlus className="h-5 w-5" />
-                    Criar Conta
+                    Criar Conta Corporativa
                   </>
                 )}
               </CardTitle>
-              <CardDescription className="text-orange-100">
+              <CardDescription className="text-primary-foreground/80">
                 {isLogin 
-                  ? 'Acesse sua conta para continuar'
-                  : 'Registre-se para começar a usar a plataforma'
+                  ? 'Entre com suas credenciais StreamLab'
+                  : 'Registre-se com seu email corporativo'
                 }
               </CardDescription>
             </CardHeader>
@@ -124,7 +132,7 @@ export default function Auth() {
                           placeholder="Nome completo"
                           value={formData.fullName}
                           onChange={(e) => handleInputChange('fullName', e.target.value)}
-                          className="pl-10 h-12"
+                          className="pl-10 h-12 border-border focus:ring-primary focus:border-primary"
                           required={!isLogin}
                         />
                       </div>
@@ -136,12 +144,19 @@ export default function Auth() {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="email"
-                    placeholder="Email"
+                    placeholder="email@streamlab.com.br"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="pl-10 h-12"
+                    className="pl-10 h-12 border-border focus:ring-primary focus:border-primary"
+                    pattern=".*@streamlab\.com\.br$"
+                    title="Apenas emails do domínio @streamlab.com.br são permitidos"
                     required
                   />
+                  {!isLogin && (
+                    <p className="text-caption text-muted-foreground mt-1">
+                      * Apenas emails corporativos @streamlab.com.br
+                    </p>
+                  )}
                 </div>
 
                 <div className="relative">
@@ -151,7 +166,8 @@ export default function Auth() {
                     placeholder="Senha"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="pl-10 pr-10 h-12"
+                    className="pl-10 pr-10 h-12 border-border focus:ring-primary focus:border-primary"
+                    minLength={6}
                     required
                   />
                   <button
@@ -165,7 +181,7 @@ export default function Auth() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 text-ui"
+                  className="w-full h-12 text-ui bg-primary hover:bg-primary/90"
                   disabled={loading}
                 >
                   {loading ? (
@@ -175,18 +191,18 @@ export default function Auth() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      {isLogin ? 'Entrar' : 'Criar Conta'}
+                      {isLogin ? 'Entrar no Sistema' : 'Criar Conta'}
                       <ArrowRight className="h-4 w-4" />
                     </div>
                   )}
                 </Button>
               </form>
 
-              <div className="text-center pt-4 border-t">
+              <div className="text-center pt-4 border-t border-border">
                 <p className="text-caption text-muted-foreground mb-3">
                   {isLogin 
-                    ? 'Ainda não tem uma conta?' 
-                    : 'Já tem uma conta?'
+                    ? 'Não possui conta corporativa?' 
+                    : 'Já possui conta?'
                   }
                 </p>
                 <Button
@@ -195,7 +211,7 @@ export default function Auth() {
                   className="text-primary hover:text-primary/80 hover:bg-primary/10"
                   disabled={loading}
                 >
-                  {isLogin ? 'Criar nova conta' : 'Fazer login'}
+                  {isLogin ? 'Solicitar acesso' : 'Fazer login'}
                 </Button>
               </div>
             </CardContent>
@@ -209,7 +225,10 @@ export default function Auth() {
           className="text-center mt-6"
         >
           <p className="text-caption text-muted-foreground">
-            © 2024 StreamLab Platform. Sistema seguro de gestão.
+            © 2024 StreamLab. Sistema corporativo seguro.
+          </p>
+          <p className="text-caption text-primary mt-1">
+            Plataforma de gestão audiovisual profissional
           </p>
         </motion.div>
       </div>
