@@ -10,7 +10,7 @@ import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, Messa
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // ... keep existing code (imports)
 
