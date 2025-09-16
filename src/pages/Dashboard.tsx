@@ -24,6 +24,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { useProjects } from "@/contexts/ProjectContext";
 import NewProjectModal from "@/components/NewProjectModal";
 import NewAudiovisualProjectModal from "@/components/NewAudiovisualProjectModal";
+import NewBriefingModal from "@/components/NewBriefingModal";
 
 // ... keep existing code (imports)
 
@@ -133,6 +134,7 @@ export default function Dashboard() {
   const { projects, getProjectStats, addProject } = useProjects();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isAudiovisualModalOpen, setIsAudiovisualModalOpen] = useState(false);
+  const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(false);
   const stats = getProjectStats();
 
   const recentProjects = projects.slice(0, 3);
@@ -264,6 +266,7 @@ export default function Dashboard() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
+              onClick={() => setIsBriefingModalOpen(true)}
             >
               <ClipboardList className="w-5 h-5" />
               <span>Briefing</span>
@@ -325,6 +328,12 @@ export default function Dashboard() {
         isOpen={isAudiovisualModalOpen}
         setIsOpen={setIsAudiovisualModalOpen}
         onProjectCreate={addProject}
+      />
+      
+      <NewBriefingModal
+        isOpen={isBriefingModalOpen}
+        setIsOpen={setIsBriefingModalOpen}
+        onBriefingCreate={addProject}
       />
     </div>
   );
