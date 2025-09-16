@@ -110,8 +110,8 @@ const AudiovisualApprovalPage = ({ projects, onClientAction }) => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center p-4">
         <Loader2 className="w-16 h-16 text-orange-500 animate-spin mb-4" />
-        <h1 className="text-2xl font-bold text-gray-800">Carregando Projeto...</h1>
-        <p className="text-gray-600">Estamos preparando tudo para você.</p>
+        <h1 className="text-2xl font-bold text-foreground">Carregando Projeto...</h1>
+        <p className="text-muted-foreground">Estamos preparando tudo para você.</p>
       </div>
     );
   }
@@ -120,8 +120,8 @@ const AudiovisualApprovalPage = ({ projects, onClientAction }) => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center p-4">
         <XCircle className="w-16 h-16 text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-800">Projeto não encontrado</h1>
-        <p className="text-gray-600">O link de aprovação pode estar inválido ou o projeto foi removido.</p>
+        <h1 className="text-2xl font-bold text-foreground">Projeto não encontrado</h1>
+        <p className="text-muted-foreground">O link de aprovação pode estar inválido ou o projeto foi removido.</p>
       </div>
     );
   }
@@ -158,10 +158,10 @@ const AudiovisualApprovalPage = ({ projects, onClientAction }) => {
           className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full"
         >
           {confirmationContent.icon}
-          <h1 className="text-3xl font-bold text-gray-800 mt-6">
+          <h1 className="text-3xl font-bold text-foreground mt-6">
             {confirmationContent.title}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-muted-foreground mt-2">
             {confirmationContent.message}
           </p>
         </motion.div>
@@ -180,8 +180,8 @@ const AudiovisualApprovalPage = ({ projects, onClientAction }) => {
           <header className="text-center mb-8">
             <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
                 <img alt="OK LAB Logo" className="h-16 w-auto mx-auto mb-4" src="https://images.unsplash.com/photo-1599533508708-b07f6c57d2ba" />
-              <h1 className="text-3xl font-bold text-gray-800">{project.title}</h1>
-              <p className="text-gray-600 mt-1">{project.description}</p>
+              <h1 className="text-3xl font-bold text-foreground">{project.title}</h1>
+              <p className="text-muted-foreground mt-1">{project.description}</p>
             </motion.div>
           </header>
           
@@ -264,7 +264,7 @@ const AudiovisualApprovalPage = ({ projects, onClientAction }) => {
               initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
               className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 flex flex-col"
             >
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
                 <MessageSquare className="w-6 h-6 mr-3 text-orange-500" />
                 Pontos de Ajuste
               </h2>

@@ -58,7 +58,7 @@ const ProjectCard = ({ project, index }: any) => {
       text: 'Em Progresso'
     },
     'archived': {
-      color: 'bg-gray-100 text-gray-600',
+      color: 'bg-muted text-muted-foreground',
       icon: FolderOpen,
       text: 'Arquivado'
     },
@@ -84,18 +84,18 @@ const ProjectCard = ({ project, index }: any) => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="project-card card-hover bg-gradient-to-br from-white to-gray-50/30 rounded-xl p-6 shadow-md border-0 ring-1 ring-gray-100 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+      className="project-card card-hover bg-card border border-border rounded-xl p-6 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
-            <h3 className="font-semibold text-gray-900">{project.title}</h3>
+            <h3 className="font-semibold text-foreground">{project.title}</h3>
             <div className={`w-2 h-2 rounded-full ${priorityColors[project.priority as keyof typeof priorityColors]}`}></div>
           </div>
-          <p className="text-sm text-gray-600 mb-3">{project.description}</p>
+          <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
           
           {/* Project metadata */}
-          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
             <span>Por {project.author}</span>
             <span>•</span>
             <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
@@ -138,7 +138,7 @@ const ProjectCard = ({ project, index }: any) => {
       
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+          <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
             {project.type}
           </span>
           {project.tags && project.tags.slice(0, 2).map((tag: string) => (
@@ -209,10 +209,10 @@ export default function Dashboard() {
           className="flex items-center justify-between"
         >
           <div className="flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
               Bem-vindo! 🚀
             </h1>
-            <p className="text-base sm:text-lg text-gray-600">
+            <p className="text-base sm:text-lg text-muted-foreground">
               Gerencie e aprove conteúdos de forma eficiente com nossa plataforma moderna e intuitiva.
             </p>
           </div>
@@ -302,9 +302,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 shadow-lg border-0 ring-1 ring-gray-100"
+          className="bg-card border border-border rounded-2xl p-6 shadow-lg"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
+          <h2 className="text-xl font-bold text-foreground mb-6">Ações Rápidas</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -356,9 +356,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 shadow-lg border-0 ring-1 ring-gray-100"
+          className="bg-card border border-border rounded-2xl p-6 shadow-lg"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Projetos Recentes</h2>
+          <h2 className="text-xl font-bold text-foreground mb-6">Projetos Recentes</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {recentProjects.map((project, index) => (
               <ProjectCard key={project.id} project={project} index={index} />
@@ -368,8 +368,8 @@ export default function Dashboard() {
           {recentProjects.length === 0 && (
             <div className="text-center py-12">
               <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum projeto encontrado</h3>
-              <p className="text-gray-600 mb-6">Comece criando seu primeiro projeto.</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum projeto encontrado</h3>
+              <p className="text-muted-foreground mb-6">Comece criando seu primeiro projeto.</p>
               <Button className="btn-primary">
                 <FileText className="w-4 h-4 mr-2" />
                 Criar Projeto

@@ -162,6 +162,23 @@ All colors MUST be HSL.
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  /* Force white text in dark theme for common text classes */
+  .dark .text-gray-900,
+  .dark .text-gray-800,
+  .dark .text-gray-700,
+  .dark .text-gray-600,
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-slate-700,
+  .dark .text-slate-600 {
+    @apply text-foreground;
+  }
+
+  .dark .text-gray-500,
+  .dark .text-slate-500 {
+    @apply text-muted-foreground;
+  }
 }
 
 @layer components {
