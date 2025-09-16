@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { useModalBlur } from "@/hooks/useModalBlur";
 
 const initialCreativeState = {
   id: 1,
@@ -28,12 +29,11 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [creatives, setCreatives] = useState([initialCreativeState]);
   const { toast } = useToast();
 
+  // Use the layered blur system
+  useModalBlur(isOpen);
+
   useEffect(() => {
     if (isOpen) {
-      // Aplicar blur no fundo da página
-      document.body.style.filter = 'blur(2px)';
-      document.body.style.pointerEvents = 'none';
-      
       // Reset form quando modal abre
       setProjectName('');
       setProjectDescription('');
@@ -49,17 +49,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
           attachments: [{ id: 1, name: 'Anexo 1', type: 'auto-hosted', file: null }],
         },
       ]);
-    } else {
-      // Remover blur quando modal fecha
-      document.body.style.filter = '';
-      document.body.style.pointerEvents = '';
     }
-
-    // Cleanup ao desmontar
-    return () => {
-      document.body.style.filter = '';
-      document.body.style.pointerEvents = '';
-    };
   }, [isOpen]);
 
   const handleCreativeChange = (creativeId, field, value) => {
@@ -186,6 +176,8 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
               exit={{ opacity: 0, y: 50, scale: 0.95 }}
               className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col pointer-events-auto"
               style={{ maxHeight: '90vh' }}
+              role="dialog"
+              aria-modal="true"
             >
             <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
               <div className="flex items-center gap-3">
