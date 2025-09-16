@@ -195,7 +195,10 @@ export default function Settings() {
                     <div className="flex items-center gap-6">
                       <div className="relative">
                         <Avatar className="h-20 w-20">
-                          <AvatarImage src={profile?.avatar_url || undefined} />
+                          <AvatarImage 
+                            src={profile?.avatar_url || undefined} 
+                            className="object-cover"
+                          />
                           <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
                             {(profile?.full_name || user?.email)
                               ?.split(" ")
