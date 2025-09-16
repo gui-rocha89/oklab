@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Page Title - Left aligned and responsive */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-shrink-0 min-w-0 max-w-xs">
             <motion.h1 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -119,21 +119,23 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Centered Search Bar */}
-          <div className="hidden md:flex items-center mx-6 flex-1 max-w-md">
-            <GlobalSearch
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              projects={[]} // Será preenchido com projetos reais
-              users={[]} // Será preenchido com usuários reais
-              onResultClick={(result) => {
-                if (result.type === 'project') {
-                  navigate('/projetos');
-                } else if (result.type === 'user') {
-                  navigate('/equipe');
-                }
-                setSearchTerm('');
-              }}
-            />
+          <div className="hidden md:flex flex-1 justify-center px-8">
+            <div className="w-full max-w-lg">
+              <GlobalSearch
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                projects={[]} // Será preenchido com projetos reais
+                users={[]} // Será preenchido com usuários reais
+                onResultClick={(result) => {
+                  if (result.type === 'project') {
+                    navigate('/projetos');
+                  } else if (result.type === 'user') {
+                    navigate('/equipe');
+                  }
+                  setSearchTerm('');
+                }}
+              />
+            </div>
           </div>
 
           {/* Right side actions */}
