@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,24 +24,17 @@ import {
   Settings as SettingsIcon,
   Save,
   Trash2,
-  Camera,
-  Loader2
+  Camera
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useProfile } from "@/hooks/useProfile";
-import { useUser } from "@/contexts/UserContext";
-import { ImageCropModal } from "@/components/ImageCropModal";
 
 export default function Settings() {
-  const { user } = useUser();
-  const { profile, loading, uploading, updateProfile, uploadAvatar } = useProfile();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showCropModal, setShowCropModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
   const [profileData, setProfileData] = useState({
-    full_name: profile?.full_name || "",
-    email: profile?.email || user?.email || "",
+    name: "Maria Silva",
+    email: "maria@empresa.com",
+    company: "OKLAB Creative Studio",
+    bio: "Designer e diretora criativa com mais de 10 anos de experiência em projetos audiovisuais.",
+    avatar: null
   });
 
   const [notifications, setNotifications] = useState({
@@ -63,65 +56,11 @@ export default function Settings() {
 
   const { toast } = useToast();
 
-  // Atualizar formulário quando o perfil carregar
-  useEffect(() => {
-    if (profile) {
-      setProfileData({
-        full_name: profile.full_name || "",
-        email: profile.email || user?.email || "",
-      });
-    }
-  }, [profile, user]);
-
-  const handleSaveProfile = async () => {
-    await updateProfile({
-      full_name: profileData.full_name,
-      email: profileData.email,
+  const handleSaveProfile = () => {
+    toast({
+      title: "Perfil atualizado!",
+      description: "Suas informações foram salvas com sucesso."
     });
-  };
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Arquivo inválido",
-        description: "Por favor, selecione uma imagem.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validar tamanho (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "A imagem deve ter no máximo 10MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Abrir modal de crop
-    setSelectedFile(file);
-    setShowCropModal(true);
-  };
-
-  const handleCropComplete = async (croppedFile: File) => {
-    setShowCropModal(false);
-    await uploadAvatar(croppedFile);
-    setSelectedFile(null);
-  };
-
-  const handleCropCancel = () => {
-    setShowCropModal(false);
-    setSelectedFile(null);
   };
 
   const handleSaveNotifications = () => {
@@ -195,99 +134,76 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {loading ? (
-                  <div className="flex items-center justify-center p-8">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                    <span className="ml-2">Carregando perfil...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-6">
-                      <div className="relative">
-                        <Avatar className="h-20 w-20 ring-2 ring-border">
-                          <AvatarImage 
-                            src={profile?.avatar_url || undefined}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
-                            {(profile?.full_name || user?.email)
-                              ?.split(" ")
-                              .map(n => n[0])
-                              .join("")
-                              .toUpperCase()
-                              .slice(0, 2) || "??"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <Button 
-                          size="icon" 
-                          variant="outline" 
-                          className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
-                          onClick={handleAvatarClick}
-                          disabled={uploading}
-                        >
-                          {uploading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Camera className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="font-semibold text-lg">
-                          {profile?.full_name || user?.email?.split('@')[0] || "Usuário"}
-                        </h3>
-                        <p className="text-muted-foreground">{profile?.email || user?.email}</p>
-                        <Badge variant="secondary">Stream Lab</Badge>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
-                        <Input
-                          id="name"
-                          value={profileData.full_name}
-                          onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
-                          placeholder="Digite seu nome completo"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={profileData.email}
-                          onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                          placeholder="Digite seu email"
-                        />
-                      </div>
-                    </div>
-
-                    <Button onClick={handleSaveProfile} className="flex items-center gap-2">
-                      <Save className="h-4 w-4" />
-                      Salvar Perfil
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20">
+                      <AvatarImage src={profileData.avatar || undefined} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+                        {profileData.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button 
+                      size="icon" 
+                      variant="outline" 
+                      className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
+                    >
+                      <Camera className="h-4 w-4" />
                     </Button>
-                  </>
-                )}
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-lg">{profileData.name}</h3>
+                    <p className="text-muted-foreground">{profileData.email}</p>
+                    <Badge variant="secondary">{profileData.company}</Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome Completo</Label>
+                    <Input
+                      id="name"
+                      value={profileData.name}
+                      onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="company">Empresa</Label>
+                    <Input
+                      id="company"
+                      value={profileData.company}
+                      onChange={(e) => setProfileData({...profileData, company: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="bio">Biografia</Label>
+                    <Textarea
+                      id="bio"
+                      rows={3}
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={handleSaveProfile} className="flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  Salvar Perfil
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* Modal de Crop */}
-          <ImageCropModal
-            isOpen={showCropModal}
-            onClose={handleCropCancel}
-            imageFile={selectedFile}
-            onCropComplete={handleCropComplete}
-          />
 
           {/* Notificações */}
           <TabsContent value="notifications" className="space-y-6">
