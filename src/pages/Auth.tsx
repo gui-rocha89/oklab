@@ -70,9 +70,9 @@ export default function Auth() {
           <CardContent className="space-y-6">
             <div className="flex flex-col items-center space-y-4 mb-8">
               <img 
-                src={logoOrange} 
+                src="/src/assets/logo-white-bg.png" 
                 alt="OKLAB" 
-                className="h-20 w-auto object-contain"
+                className="h-28 w-auto object-contain"
               />
               <p className="text-sm text-neutral-medium text-center leading-relaxed">
                 Acesso exclusivo aos tripulantes da galáxia<br />
