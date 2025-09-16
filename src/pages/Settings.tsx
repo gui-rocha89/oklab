@@ -39,6 +39,7 @@ export default function Settings() {
   const [profileData, setProfileData] = useState({
     full_name: profile?.full_name || "",
     email: profile?.email || user?.email || "",
+    cargo: profile?.cargo || "",
     bio: profile?.bio || "",
   });
 
@@ -67,6 +68,7 @@ export default function Settings() {
       setProfileData({
         full_name: profile.full_name || "",
         email: profile.email || user?.email || "",
+        cargo: profile.cargo || "",
         bio: profile.bio || "",
       });
     }
@@ -76,6 +78,7 @@ export default function Settings() {
     await updateProfile({
       full_name: profileData.full_name,
       email: profileData.email,
+      cargo: profileData.cargo,
       bio: profileData.bio,
     });
   };
@@ -243,27 +246,37 @@ export default function Settings() {
                          />
                        </div>
 
-                       <div className="space-y-2">
-                         <Label htmlFor="email">Email</Label>
-                         <Input
-                           id="email"
-                           type="email"
-                           value={profileData.email}
-                           onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                           placeholder="Digite seu email"
-                         />
-                       </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={profileData.email}
+                            onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                            placeholder="Digite seu email"
+                          />
+                        </div>
 
-                       <div className="space-y-2">
-                         <Label htmlFor="bio">Biografia</Label>
-                         <Textarea
-                           id="bio"
-                           value={profileData.bio}
-                           onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                           placeholder="Conte um pouco sobre você, sua experiência e interesses..."
-                           rows={4}
-                         />
-                       </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cargo">Cargo</Label>
+                          <Input
+                            id="cargo"
+                            value={profileData.cargo}
+                            onChange={(e) => setProfileData({...profileData, cargo: e.target.value})}
+                            placeholder="Digite seu cargo ou função"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="bio">Biografia</Label>
+                          <Textarea
+                            id="bio"
+                            value={profileData.bio}
+                            onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                            placeholder="Conte um pouco sobre você, sua experiência e interesses..."
+                            rows={4}
+                          />
+                        </div>
                      </div>
 
                     <Button onClick={handleSaveProfile} className="flex items-center gap-2">

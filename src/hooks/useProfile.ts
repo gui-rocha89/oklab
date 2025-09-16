@@ -8,6 +8,7 @@ interface ProfileData {
   full_name?: string;
   email?: string;
   avatar_url?: string;
+  cargo?: string;
   bio?: string;
 }
 
