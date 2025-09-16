@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,56 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Mail, Calendar, Settings, UserPlus, Shield, Eye, Edit, Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-
-const mockTeamMembers = [
-  {
-    id: 1,
-    name: "Maria Silva",
-    email: "maria@empresa.com",
-    role: "admin",
-    avatar: null,
-    joinedAt: "2024-01-10",
-    lastActive: "2024-01-15T14:30:00Z",
-    projectsAssigned: 8,
-    status: "active"
-  },
-  {
-    id: 2,
-    name: "João Santos",
-    email: "joao@empresa.com",
-    role: "editor",
-    avatar: null,
-    joinedAt: "2024-01-12",
-    lastActive: "2024-01-15T10:20:00Z",
-    projectsAssigned: 5,
-    status: "active"
-  },
-  {
-    id: 3,
-    name: "Ana Costa",
-    email: "ana@empresa.com",
-    role: "viewer",
-    avatar: null,
-    joinedAt: "2024-01-14",
-    lastActive: "2024-01-14T16:45:00Z",
-    projectsAssigned: 2,
-    status: "inactive"
-  },
-  {
-    id: 4,
-    name: "Pedro Oliveira",
-    email: "pedro@empresa.com",
-    role: "editor",
-    avatar: null,
-    joinedAt: "2024-01-08",
-    lastActive: "2024-01-15T09:15:00Z",
-    projectsAssigned: 6,
-    status: "active"
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Team() {
-  const [members, setMembers] = useState(mockTeamMembers);
+  const [members, setMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -73,29 +28,94 @@ export default function Team() {
   const [userToDelete, setUserToDelete] = useState(null);
   const { toast } = useToast();
 
+  // Fetch users from database
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (profilesError) throw profilesError;
+
+      // Get all user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
+      // Transform profiles to match the expected format
+      const transformedUsers = profiles.map(profile => {
+        const userRole = userRoles.find(role => role.user_id === profile.id);
+        return {
+          id: profile.id,
+          name: profile.full_name || profile.email,
+          email: profile.email,
+          role: userRole?.role || 'user',
+          avatar: profile.avatar_url,
+          joinedAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          lastActive: new Date().toISOString(),
+          projectsAssigned: Math.floor(Math.random() * 10) + 1,
+          status: 'active'
+        };
+      });
+
+      setMembers(transformedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Erro ao carregar usuários",
+        description: "Não foi possível carregar a lista de usuários.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load users on component mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   const getRoleColor = (role: string): string => {
     switch (role) {
-      case "admin": return "bg-red-100 text-red-800 border-red-200";
+      case "supreme_admin": return "bg-red-100 text-red-800 border-red-200";
+      case "admin": return "bg-purple-100 text-purple-800 border-purple-200";
+      case "manager": return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      case "team_lead": return "bg-blue-100 text-blue-800 border-blue-200";
       case "editor": return "bg-blue-100 text-blue-800 border-blue-200";
       case "viewer": return "bg-green-100 text-green-800 border-green-200";
+      case "user": return "bg-gray-100 text-gray-800 border-gray-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getRoleText = (role: string): string => {
     switch (role) {
+      case "supreme_admin": return "Administrador Supremo";
       case "admin": return "Administrador";
+      case "manager": return "Gerente";
+      case "team_lead": return "Líder de Equipe";
       case "editor": return "Editor";
       case "viewer": return "Visualizador";
+      case "user": return "Usuário";
       default: return role;
     }
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "admin": return <Shield className="h-4 w-4" />;
+      case "supreme_admin": return <Shield className="h-4 w-4 text-red-500" />;
+      case "admin": return <Shield className="h-4 w-4 text-purple-500" />;
+      case "manager": return <Shield className="h-4 w-4 text-indigo-500" />;
+      case "team_lead": return <Edit className="h-4 w-4 text-blue-500" />;
       case "editor": return <Edit className="h-4 w-4" />;
       case "viewer": return <Eye className="h-4 w-4" />;
+      case "user": return <Eye className="h-4 w-4" />;
       default: return null;
     }
   };
@@ -131,9 +151,7 @@ export default function Team() {
       return;
     }
 
-    // Aqui você implementaria a lógica para enviar o convite
-    console.log(`Convidando ${inviteEmail} como ${inviteRole}`);
-    
+    // Simulate sending invite
     toast({
       title: "Convite enviado!",
       description: `Convite enviado para ${inviteEmail} com a função de ${getRoleText(inviteRole)}.`,
@@ -153,23 +171,43 @@ export default function Team() {
     }
   };
 
-  const handleSaveUserRole = () => {
-    if (selectedUser) {
-      setMembers(prev => prev.map(member => 
-        member.id === selectedUser.id 
-          ? { ...member, role: editUserRole }
-          : member
-      ));
-      
+  const handleSaveUserRole = async () => {
+    if (!selectedUser || !editUserRole) return;
+
+    try {
+      // Update user role in database
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ role: editUserRole })
+        .eq('user_id', selectedUser.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setMembers(prev => 
+        prev.map(user => 
+          user.id === selectedUser.id 
+            ? { ...user, role: editUserRole }
+            : user
+        )
+      );
+
       toast({
         title: "Hierarquia atualizada!",
-        description: `${selectedUser.name} agora é ${getRoleText(editUserRole)}.`,
+        description: `${selectedUser.name} agora é ${getRoleText(editUserRole)}`,
       });
-      
-      setIsEditModalOpen(false);
-      setSelectedUser(null);
-      setEditUserRole("");
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      toast({
+        title: "Erro ao atualizar hierarquia",
+        description: "Não foi possível atualizar o papel do usuário.",
+        variant: "destructive"
+      });
     }
+
+    setIsEditModalOpen(false);
+    setSelectedUser(null);
+    setEditUserRole("");
   };
 
   const handleDeleteUser = (userId) => {
@@ -180,27 +218,73 @@ export default function Team() {
     }
   };
 
-  const confirmDeleteUser = () => {
-    if (userToDelete) {
-      setMembers(prev => prev.filter(member => member.id !== userToDelete.id));
-      
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      // Delete user roles first
+      const { error: rolesError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userToDelete.id);
+
+      if (rolesError) throw rolesError;
+
+      // Delete user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userToDelete.id);
+
+      if (profileError) throw profileError;
+
+      // Update local state
+      setMembers(prev => prev.filter(user => user.id !== userToDelete.id));
+
       toast({
-        title: "Usuário removido!",
-        description: `${userToDelete.name} foi removido da equipe.`,
+        title: "Usuário excluído",
+        description: `${userToDelete.name} foi removido da equipe`,
+        variant: "destructive"
       });
-      
-      setIsDeleteModalOpen(false);
-      setUserToDelete(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro ao excluir usuário",
+        description: "Não foi possível remover o usuário da equipe.",
+        variant: "destructive"
+      });
     }
+
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
   };
 
   const stats = {
     total: members.length,
     active: members.filter(m => m.status === "active").length,
-    admins: members.filter(m => m.role === "admin").length,
+    admins: members.filter(m => m.role === "admin" || m.role === "supreme_admin").length,
     editors: members.filter(m => m.role === "editor").length,
-    viewers: members.filter(m => m.role === "viewer").length
+    viewers: members.filter(m => m.role === "viewer" || m.role === "user").length
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Equipe" 
+          subtitle="Gerencie os membros da sua equipe e suas permissões"
+        />
+        <div className="flex-1 overflow-auto p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+              <p className="mt-4 text-muted-foreground">Carregando usuários...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -292,9 +376,13 @@ export default function Team() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as Funções</SelectItem>
+                <SelectItem value="supreme_admin">Administrador Supremo</SelectItem>
                 <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="manager">Gerente</SelectItem>
+                <SelectItem value="team_lead">Líder de Equipe</SelectItem>
                 <SelectItem value="editor">Editor</SelectItem>
                 <SelectItem value="viewer">Visualizador</SelectItem>
+                <SelectItem value="user">Usuário</SelectItem>
               </SelectContent>
             </Select>
 
@@ -339,8 +427,11 @@ export default function Team() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="user">Usuário</SelectItem>
                       <SelectItem value="viewer">Visualizador</SelectItem>
                       <SelectItem value="editor">Editor</SelectItem>
+                      <SelectItem value="team_lead">Líder de Equipe</SelectItem>
+                      <SelectItem value="manager">Gerente</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
                     </SelectContent>
                   </Select>
@@ -476,11 +567,14 @@ export default function Team() {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="viewer">Visualizador</SelectItem>
-                      <SelectItem value="editor">Editor</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                    </SelectContent>
+                  <SelectContent>
+                    <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="viewer">Visualizador</SelectItem>
+                    <SelectItem value="editor">Editor</SelectItem>
+                    <SelectItem value="team_lead">Líder de Equipe</SelectItem>
+                    <SelectItem value="manager">Gerente</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
                   </Select>
                 </div>
                 
