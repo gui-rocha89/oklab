@@ -327,7 +327,7 @@ export default function Projects() {
 
         {/* Lista/Grid de Projetos */}
         {viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
               <motion.div
                 key={project.id}
@@ -335,104 +335,65 @@ export default function Projects() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="hover:shadow-lg transition-all duration-300 border-0 shadow-md group">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                        {project.title}
-                      </CardTitle>
-                      <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-                        {/* Enhanced Priority Badge */}
-                        <Badge className={`${getPriorityColor(project.priority)} border transition-colors`}>
-                          <span className="flex items-center space-x-1">
-                            <span>{getPriorityIcon(project.priority)}</span>
-                            <span className="font-medium">{getPriorityText(project.priority)}</span>
-                          </span>
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={`${getStatusColor(project.status)} border`}>
-                        {getStatusText(project.status)}
-                      </Badge>
-                      {project.tags && project.tags.slice(0, 2).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs bg-gray-50 hover:bg-gray-100">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
-                      {project.description}
+                <Card className="min-h-[220px] p-5 rounded-2xl shadow-sm border border-gray-100 bg-white hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+                  {/* Client Name Label */}
+                  <div className="mb-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                      Nome do Cliente
                     </p>
-                    
-                    {/* Enhanced Project Metadata */}
-                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <span className="font-medium">Autor:</span>
-                        <span>{project.author}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <span className="font-medium">Tipo:</span>
-                        <span>{project.type}</span>
-                      </div>
-                      {project.client && (
-                        <div className="flex items-center space-x-1">
-                          <span className="font-medium">Cliente:</span>
-                          <span className="text-primary">{project.client}</span>
-                        </div>
-                      )}
-                      {project.department && (
-                        <div className="flex items-center space-x-1">
-                          <span className="font-medium">Dept:</span>
-                          <span>{project.department}</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      <div className="flex items-center justify-between">
-                        <span>Criado em {new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
-                        {project.estimatedHours && (
-                          <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full text-xs">
-                            {project.estimatedHours}h estimadas
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <p className="text-sm text-gray-700">{project.client || 'Cliente não informado'}</p>
+                  </div>
 
-                    {project.keyframes.length > 0 && (
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-amber-600 font-medium">
-                          {project.keyframes.length} comentário{project.keyframes.length !== 1 ? 's' : ''} pendente{project.keyframes.length !== 1 ? 's' : ''}
-                        </span>
-                        {project.budget && (
-                          <span className="text-emerald-600 font-medium">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.budget)}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                  {/* Project Title */}
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2">
+                    {project.title}
+                  </h3>
+
+                  {/* Project Description */}
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                    {project.description}
+                  </p>
+
+                  {/* Meta Row */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                        Autor:
+                      </p>
+                      <p className="text-sm text-gray-700">{project.author}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                        Data da Criação do Projeto:
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        {new Date(project.createdAt).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
+                    <div className="text-sm text-gray-600">
+                      {project.keyframes?.length || 0} comentário(s) pendente(s)
+                    </div>
                     
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {}}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {}}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       <Button 
                         size="sm" 
                         onClick={() => handleViewProject(project.shareId)}
-                        className="flex-1"
                       >
-                        <Eye className="h-4 w-4 mr-2" />
+                        <Eye className="h-4 w-4 mr-1" />
                         Ver Projeto
                       </Button>
-                      <Button size="sm" variant="outline" className="px-3">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="px-3 hover:bg-red-50 hover:border-red-200 hover:text-red-600">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               </motion.div>
             ))}
