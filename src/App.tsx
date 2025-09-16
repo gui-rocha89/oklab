@@ -8,6 +8,7 @@ import { ProjectProvider } from "@/contexts/ProjectContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleBasedDashboard } from "@/components/RoleBasedDashboard";
+import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Feedbacks from "./pages/Feedbacks";
@@ -28,9 +29,10 @@ const App = () => (
         <AuthProvider>
           <ProjectProvider>
             <Routes>
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/aprovacao-audiovisual/:shareId" element={<AudiovisualApproval />} />
-              <Route path="/" element={
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Layout>
                     <RoleBasedDashboard />

@@ -50,7 +50,7 @@ export function ProtectedRoute({
               Necessário: {requiredRoles.join(' ou ')}
             </p>
           </div>
-          <Navigate to="/" replace />
+          <Navigate to="/dashboard" replace />
         </div>
       </div>
     );
