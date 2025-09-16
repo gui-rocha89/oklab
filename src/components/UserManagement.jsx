@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { Header } from "@/components/Header";
+import { UserRoleManager } from "@/components/UserRoleManager";
 import { 
   Users, 
   UserPlus, 
@@ -38,11 +39,20 @@ import {
 import { Input } from '@/components/ui/input';
 
 const UserManagement = ({ setActiveTab }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('viewer');
-  const { toast } = useToast();
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Header 
+        title="Gerenciamento de Usuários" 
+        subtitle="Controle de acesso e permissões da equipe"
+        setActiveTab={setActiveTab}
+      />
+      
+      <div className="flex-1 overflow-auto p-6">
+        <UserRoleManager />
+      </div>
+    </div>
+  );
+};
 
   // Dados mockados para demonstração
   const users = [

@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Menu, Bell, Search, User, Users } from 'lucide-react';
+import { Menu, Bell, Search, User, Users, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRoleIndicator } from '@/components/UserRoleIndicator';
 
 interface HeaderProps {
   title?: string;
@@ -19,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab 
 }) => {
   const { toast } = useToast();
+  const { profile, signOut } = useAuth();
 
   const getPageTitle = () => {
     if (title) return title;
@@ -46,6 +50,10 @@ export const Header: React.FC<HeaderProps> = ({
       title: "🚧 Perfil não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
       duration: 4000,
     });
+  };
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
   const handleManageTeamClick = () => {
@@ -108,6 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
+            {/* User Role Indicator */}
+            <UserRoleIndicator className="hidden sm:flex" />
+
             {/* Manage Team */}
             {setActiveTab && (
               <motion.button
@@ -145,8 +156,19 @@ export const Header: React.FC<HeaderProps> = ({
                 <User className="w-4 h-4 text-orange-500" />
               </div>
               <span className="hidden sm:block text-sm font-medium text-white">
-                Admin
+                {profile?.full_name || profile?.email || 'Admin'}
               </span>
+            </motion.button>
+
+            {/* Logout */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout}
+              className="p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5 text-white" />
             </motion.button>
           </div>
         </div>
