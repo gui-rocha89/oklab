@@ -8,13 +8,7 @@ interface ProfileData {
   full_name?: string;
   email?: string;
   avatar_url?: string;
-  phone?: string;
-  job_title?: string;
   bio?: string;
-  birth_date?: string;
-  address?: string;
-  city?: string;
-  country?: string;
 }
 
 export function useProfile() {
