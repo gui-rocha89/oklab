@@ -90,11 +90,11 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
           exit={{ opacity: 0, scale: 0.95 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          <div className="lovable-modal-content bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
+          <div className="lovable-modal-content bg-background rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
+            <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background rounded-t-2xl z-10">
               <div className="flex items-center gap-3">
                 <Film className="h-6 w-6 text-orange-500" />
-                <h2 className="text-2xl font-bold text-gray-900">Novo Projeto Audiovisual</h2>
+                <h2 className="text-2xl font-bold text-foreground">Novo Projeto Audiovisual</h2>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
                 <X className="h-5 w-5" />
@@ -102,7 +102,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
             </div>
 
             <div className="overflow-y-auto p-8 space-y-8 flex-1">
-              <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+              <div className="p-6 bg-muted/50 rounded-xl border border-border space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="av-title">Nome do projeto</Label>
                   <Input id="av-title" placeholder="Ex: Vídeo Institucional 2025" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -124,9 +124,9 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-gray-800">Arquivo de Vídeo</h3>
+                <h3 className="text-xl font-bold text-foreground">Arquivo de Vídeo</h3>
                 <div
-                  className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-all"
+                  className="relative border-2 border-dashed border-muted-foreground/30 rounded-xl p-8 text-center cursor-pointer hover:border-orange-500 hover:bg-muted/50 transition-all"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input
@@ -140,12 +140,12 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                     <div className="flex flex-col items-center justify-center text-green-600">
                       <CheckCircle className="h-12 w-12 mb-3" />
                       <p className="font-semibold text-lg">Vídeo Carregado!</p>
-                      <p className="text-sm text-gray-600">{videoFile.name}</p>
+                      <p className="text-sm text-muted-foreground">{videoFile.name}</p>
                       <Button variant="link" size="sm" className="mt-2 text-sm">Trocar arquivo</Button>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-gray-500">
-                      <Upload className="h-12 w-12 mb-3 text-gray-400" />
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <Upload className="h-12 w-12 mb-3 text-muted-foreground" />
                       <p className="font-semibold text-lg">Arraste ou clique para enviar</p>
                       <p className="text-sm">Formatos de vídeo suportados (MP4, MOV, etc.)</p>
                     </div>
@@ -154,7 +154,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
               </div>
             </div>
 
-            <div className="flex justify-end p-6 border-t border-gray-200 sticky bottom-0 bg-white rounded-b-2xl z-10">
+            <div className="flex justify-end p-6 border-t border-border sticky bottom-0 bg-background rounded-b-2xl z-10">
               <div className="flex gap-4">
                 <Button variant="outline" size="lg" onClick={() => setIsOpen(false)}>Cancelar</Button>
                 <Button className="btn-primary" onClick={handleSubmit}>

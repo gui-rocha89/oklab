@@ -164,11 +164,11 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
           exit={{ opacity: 0, scale: 0.95 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          <div className="lovable-modal-content bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
+          <div className="lovable-modal-content bg-background rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
+            <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background rounded-t-2xl z-10">
               <div className="flex items-center gap-3">
                 <FileSignature className="h-6 w-6 text-orange-500" />
-                <h2 className="text-2xl font-bold text-gray-900">Criar Novo Projeto</h2>
+                <h2 className="text-2xl font-bold text-foreground">Criar Novo Projeto</h2>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
                 <X className="h-5 w-5" />
@@ -176,7 +176,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
             </div>
 
             <div className="overflow-y-auto p-8 space-y-8 flex-1">
-              <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+              <div className="p-6 bg-muted/50 rounded-xl border border-border space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="project-name">Nome do projeto</Label>
                   <Input id="project-name" placeholder="Ex: Campanha de Lançamento" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
@@ -197,7 +197,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-gray-800">Criativos</h3>
+              <h3 className="text-xl font-bold text-foreground">Criativos</h3>
               <AnimatePresence>
                 {creatives.map((creative, creativeIndex) => (
                   <motion.div
@@ -207,10 +207,10 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -50, height: 0, padding: 0, margin: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="p-6 bg-white rounded-xl border border-gray-200 space-y-6"
+                    className="p-6 bg-card rounded-xl border border-border space-y-6"
                   >
                     <div className="flex justify-between items-center">
-                      <h4 className="font-semibold text-lg text-gray-700">Criativo #{creativeIndex + 1}</h4>
+                      <h4 className="font-semibold text-lg text-card-foreground">Criativo #{creativeIndex + 1}</h4>
                       <Button variant="destructive" size="sm" onClick={() => removeCreative(creative.id)}>
                         <Trash2 className="h-4 w-4 mr-2" />
                         Excluir
@@ -262,10 +262,10 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                     </div>
 
                     <div className="space-y-4 pt-4 border-t border-dashed">
-                      <h5 className="font-semibold text-gray-700">Anexos</h5>
+                      <h5 className="font-semibold text-card-foreground">Anexos</h5>
                       <div className="space-y-4">
                         {creative.attachments.map((attachment) => (
-                           <div key={attachment.id} className="p-4 bg-slate-50 rounded-lg border flex flex-col md:flex-row items-center gap-4">
+                           <div key={attachment.id} className="p-4 bg-muted/30 rounded-lg border border-border flex flex-col md:flex-row items-center gap-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow w-full">
                               <Input placeholder="Nome do anexo" value={attachment.name} onChange={(e) => handleAttachmentChange(creative.id, attachment.id, 'name', e.target.value)} />
                               <Select value={attachment.type} onValueChange={(value) => handleAttachmentChange(creative.id, attachment.id, 'type', value)}>
@@ -289,7 +289,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
-                            {attachment.file && <div className="text-sm text-gray-500 flex items-center gap-1 w-full md:w-auto"><Paperclip className="h-3 w-3" /><span>{attachment.file.name}</span></div>}
+                            {attachment.file && <div className="text-sm text-muted-foreground flex items-center gap-1 w-full md:w-auto"><Paperclip className="h-3 w-3" /><span>{attachment.file.name}</span></div>}
                           </div>
                         ))}
                       </div>
@@ -306,7 +306,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
               </Button>
             </div>
 
-            <div className="flex justify-end p-6 border-t border-gray-200 sticky bottom-0 bg-white rounded-b-2xl z-10">
+            <div className="flex justify-end p-6 border-t border-border sticky bottom-0 bg-background rounded-b-2xl z-10">
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
                 <Button className="btn-primary" onClick={handleSubmit}>Criar Projeto</Button>
