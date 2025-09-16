@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,17 +24,21 @@ import {
   Settings as SettingsIcon,
   Save,
   Trash2,
-  Camera
+  Camera,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Settings() {
+  const { user } = useUser();
+  const { profile, loading, uploading, updateProfile, uploadAvatar } = useProfile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [profileData, setProfileData] = useState({
-    name: "Maria Silva",
-    email: "maria@empresa.com",
-    company: "OKLAB Creative Studio",
-    bio: "Designer e diretora criativa com mais de 10 anos de experiência em projetos audiovisuais.",
-    avatar: null
+    full_name: profile?.full_name || "",
+    email: profile?.email || user?.email || "",
   });
 
   const [notifications, setNotifications] = useState({
@@ -56,11 +60,52 @@ export default function Settings() {
 
   const { toast } = useToast();
 
-  const handleSaveProfile = () => {
-    toast({
-      title: "Perfil atualizado!",
-      description: "Suas informações foram salvas com sucesso."
+  // Atualizar formulário quando o perfil carregar
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        full_name: profile.full_name || "",
+        email: profile.email || user?.email || "",
+      });
+    }
+  }, [profile, user]);
+
+  const handleSaveProfile = async () => {
+    await updateProfile({
+      full_name: profileData.full_name,
+      email: profileData.email,
     });
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Arquivo inválido",
+        description: "Por favor, selecione uma imagem.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar tamanho (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem deve ter no máximo 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await uploadAvatar(file);
   };
 
   const handleSaveNotifications = () => {
@@ -134,73 +179,85 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={profileData.avatar || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
-                        {profileData.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button 
-                      size="icon" 
-                      variant="outline" 
-                      className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
-                    >
-                      <Camera className="h-4 w-4" />
+                {loading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span className="ml-2">Carregando perfil...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <Avatar className="h-20 w-20">
+                          <AvatarImage src={profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+                            {(profile?.full_name || user?.email)
+                              ?.split(" ")
+                              .map(n => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2) || "??"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Button 
+                          size="icon" 
+                          variant="outline" 
+                          className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
+                          onClick={handleAvatarClick}
+                          disabled={uploading}
+                        >
+                          {uploading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Camera className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-lg">
+                          {profile?.full_name || user?.email?.split('@')[0] || "Usuário"}
+                        </h3>
+                        <p className="text-muted-foreground">{profile?.email || user?.email}</p>
+                        <Badge variant="secondary">Stream Lab</Badge>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nome Completo</Label>
+                        <Input
+                          id="name"
+                          value={profileData.full_name}
+                          onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
+                          placeholder="Digite seu nome completo"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={profileData.email}
+                          onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                          placeholder="Digite seu email"
+                        />
+                      </div>
+                    </div>
+
+                    <Button onClick={handleSaveProfile} className="flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      Salvar Perfil
                     </Button>
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="font-semibold text-lg">{profileData.name}</h3>
-                    <p className="text-muted-foreground">{profileData.email}</p>
-                    <Badge variant="secondary">{profileData.company}</Badge>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome Completo</Label>
-                    <Input
-                      id="name"
-                      value={profileData.name}
-                      onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profileData.email}
-                      onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="company">Empresa</Label>
-                    <Input
-                      id="company"
-                      value={profileData.company}
-                      onChange={(e) => setProfileData({...profileData, company: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="bio">Biografia</Label>
-                    <Textarea
-                      id="bio"
-                      rows={3}
-                      value={profileData.bio}
-                      onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <Button onClick={handleSaveProfile} className="flex items-center gap-2">
-                  <Save className="h-4 w-4" />
-                  Salvar Perfil
-                </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
