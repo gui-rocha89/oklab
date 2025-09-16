@@ -310,10 +310,10 @@ const FeedbackList = () => {
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full lg:w-48 h-11 bg-white">
+                <SelectTrigger className="w-full lg:w-48 h-11 bg-background">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border shadow-lg z-50">
+                <SelectContent className="bg-popover border shadow-lg z-50">
                   <SelectItem value="all">Todos os Status ({allFeedbacks.length})</SelectItem>
                   <SelectItem value="pending">Pendente ({stats.pending})</SelectItem>
                   <SelectItem value="resolved">Resolvido ({stats.resolved})</SelectItem>
@@ -322,10 +322,10 @@ const FeedbackList = () => {
               </Select>
 
               <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-full lg:w-64 h-11 bg-white">
+                <SelectTrigger className="w-full lg:w-64 h-11 bg-background">
                   <SelectValue placeholder="Projeto" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border shadow-lg z-50">
+                <SelectContent className="bg-popover border shadow-lg z-50">
                   <SelectItem value="all">Todos os Projetos ({uniqueProjects.length})</SelectItem>
                   {uniqueProjects.map((project) => (
                     <SelectItem key={project.id} value={project.id.toString()}>
@@ -338,7 +338,7 @@ const FeedbackList = () => {
 
             {/* Filtros ativos */}
             {(statusFilter !== 'all' || projectFilter !== 'all' || searchTerm) && (
-              <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border">
                 <span className="text-sm text-muted-foreground">Filtros ativos:</span>
                 {statusFilter !== 'all' && (
                   <Badge className={`${getStatusConfig(statusFilter).color} border`}>
@@ -461,7 +461,7 @@ const FeedbackList = () => {
                       </CardHeader>
                       
                       <CardContent className="space-y-4">
-                        <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-blue-500">
                           <p className="text-foreground leading-relaxed">
                             {feedback.comment}
                           </p>
@@ -472,7 +472,7 @@ const FeedbackList = () => {
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
-                            className="bg-emerald-50 p-4 rounded-lg border-l-4 border-emerald-500"
+                            className="bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-lg border-l-4 border-emerald-500"
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <Reply className="h-4 w-4 text-emerald-600" />
@@ -508,7 +508,7 @@ const FeedbackList = () => {
                                   Ações
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent className="bg-white border shadow-lg z-50">
+                              <DropdownMenuContent className="bg-popover border shadow-lg z-50">
                                 <DropdownMenuItem 
                                   onClick={() => markAsResolved(feedback.id)}
                                   className="cursor-pointer"
@@ -543,7 +543,7 @@ const FeedbackList = () => {
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
                               exit={{ opacity: 0, height: 0 }}
-                              className="space-y-3 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500"
+                              className="space-y-3 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg border-l-4 border-orange-500"
                             >
                               <div className="flex items-center gap-2 mb-2">
                                 <MessageSquare className="h-4 w-4 text-orange-600" />
