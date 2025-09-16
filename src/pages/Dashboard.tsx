@@ -10,6 +10,7 @@ import {
   FolderOpen,
   AlertTriangle,
   Film,
+  ClipboardList,
   DollarSign,
   Target,
   Users,
@@ -298,7 +299,7 @@ export default function Dashboard() {
           className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 shadow-lg border-0 ring-1 ring-gray-100"
         >
           <h2 className="text-xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -314,6 +315,14 @@ export default function Dashboard() {
             >
               <Film className="w-5 h-5" />
               <span>Audiovisual</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
+            >
+              <ClipboardList className="w-5 h-5" />
+              <span>Briefing</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
