@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { ProjectProvider } from "@/contexts/ProjectContext";
+import { UserProvider } from "@/contexts/UserContext";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Feedbacks from "./pages/Feedbacks";
@@ -17,8 +18,9 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ProjectProvider>
-      <TooltipProvider>
+    <UserProvider>
+      <ProjectProvider>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -56,9 +58,10 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-    </ProjectProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+      </ProjectProvider>
+    </UserProvider>
   </QueryClientProvider>
 );
 

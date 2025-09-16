@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Bell, Search, User, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useUser } from '@/contexts/UserContext';
 
 interface HeaderProps {
   title?: string;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab 
 }) => {
   const { toast } = useToast();
+  const { user, isSupremeAdmin } = useUser();
 
   const getPageTitle = () => {
     if (title) return title;
@@ -145,7 +147,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <User className="w-4 h-4 text-orange-500" />
               </div>
               <span className="hidden sm:block text-sm font-medium text-white">
-                Admin
+                {isSupremeAdmin ? 'Supremo' : user?.name || 'Admin'}
               </span>
             </motion.button>
           </div>

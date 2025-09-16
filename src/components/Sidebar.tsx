@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
 import {
   BarChart3,
   FileVideo,
@@ -43,6 +44,7 @@ const navigationItems = [
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const { user, isSupremeAdmin } = useUser();
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -116,7 +118,9 @@ export function Sidebar() {
       {isCollapsed && (
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
           <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer">
-            <span className="text-sm font-medium text-primary-foreground">U</span>
+            <span className="text-sm font-medium text-primary-foreground">
+              {user?.name?.charAt(0) || 'S'}
+            </span>
           </div>
         </div>
       )}
@@ -126,14 +130,16 @@ export function Sidebar() {
         <div className="absolute bottom-4 left-4 right-4 p-3 bg-sidebar-accent rounded-lg">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-primary-foreground">U</span>
+              <span className="text-sm font-medium text-primary-foreground">
+                {user?.name?.charAt(0) || 'S'}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
-                Usuário Admin
+                {isSupremeAdmin ? 'Usuário Supremo' : user?.name || 'Usuário Admin'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                admin@oklab.com
+                {user?.email || 'supremo@manus.ai'}
               </p>
             </div>
           </div>
