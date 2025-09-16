@@ -153,21 +153,25 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <>
+          {/* Backdrop com blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md"
             onClick={() => setIsOpen(false)}
           />
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col"
-            style={{ maxHeight: '90vh' }}
-          >
+          
+          {/* Modal acima do backdrop */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.95 }}
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col pointer-events-auto"
+              style={{ maxHeight: '90vh' }}
+            >
             <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
               <div className="flex items-center gap-3">
                 <FileSignature className="h-6 w-6 text-orange-500" />
@@ -315,8 +319,9 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                 <Button className="btn-primary" onClick={handleSubmit}>Criar Projeto</Button>
               </div>
             </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
+        </>
       )}
     </AnimatePresence>
   );
