@@ -539,29 +539,29 @@ const FeedbackList = () => {
                         {/* Task 3: Campo de resposta */}
                         <AnimatePresence>
                           {respondingTo === feedback.id && (
-                            <motion.div
+                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
                               exit={{ opacity: 0, height: 0 }}
-                              className="space-y-3 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500"
+                              className="space-y-3 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500"
                             >
                               <div className="flex items-center gap-2 mb-2">
-                                <MessageSquare className="h-4 w-4 text-blue-600" />
-                                <span className="text-sm font-medium text-blue-800">Sua Resposta</span>
+                                <MessageSquare className="h-4 w-4 text-orange-600" />
+                                <span className="text-sm font-medium text-orange-800">Sua Resposta</span>
                               </div>
                               <Textarea
                                 placeholder="Digite sua resposta detalhada ao feedback..."
                                 value={responseText}
                                 onChange={(e) => setResponseText(e.target.value)}
                                 rows={4}
-                                className="resize-none border-blue-200 focus:border-blue-400"
+                                className="resize-none border-orange-200 focus:border-orange-400"
                               />
                               <div className="flex gap-2">
                                 <Button 
                                   size="sm" 
                                   onClick={() => handleResponse(feedback.id)}
                                   disabled={!responseText.trim()}
-                                  className="bg-blue-600 hover:bg-blue-700"
+                                  className="bg-orange-600 hover:bg-orange-700"
                                 >
                                   <Send className="h-4 w-4 mr-2" />
                                   Enviar Resposta
