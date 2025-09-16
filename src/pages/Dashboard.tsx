@@ -26,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { useProjects } from "@/contexts/ProjectContext";
 import NewProjectModal from "@/components/NewProjectModal";
-import NewAudiovisualProjectModal from "@/components/NewAudiovisualProjectModal";
 
 // ... keep existing code (imports)
 
@@ -172,7 +171,6 @@ const ProjectCard = ({ project, index }: any) => {
 export default function Dashboard() {
   const { projects, getProjectStats, addProject } = useProjects();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
-  const [isNewAudiovisualModalOpen, setIsNewAudiovisualModalOpen] = useState(false);
   const stats = getProjectStats();
 
   const recentProjects = projects.slice(0, 3);
@@ -317,7 +315,6 @@ export default function Dashboard() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
-              onClick={() => setIsNewAudiovisualModalOpen(true)}
             >
               <Film className="w-5 h-5" />
               <span>Audiovisual</span>
@@ -380,12 +377,6 @@ export default function Dashboard() {
       <NewProjectModal
         isOpen={isNewProjectModalOpen}
         setIsOpen={setIsNewProjectModalOpen}
-        onProjectCreate={addProject}
-      />
-      
-      <NewAudiovisualProjectModal
-        isOpen={isNewAudiovisualModalOpen}
-        setIsOpen={setIsNewAudiovisualModalOpen}
         onProjectCreate={addProject}
       />
     </div>

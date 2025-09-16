@@ -39,7 +39,7 @@ const ProjectViewerModal = ({ project, isOpen, onClose }) => {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="lovable-modal-content fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1001] w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden"
+          className="lovable-modal-content w-full max-w-sm mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden relative"
         >
             <button onClick={handleClose} className="absolute top-3 right-3 z-10 p-2 bg-white/50 rounded-full hover:bg-white transition">
               <X className="h-5 w-5 text-gray-800" />
