@@ -357,7 +357,7 @@ const NewBriefingModal = ({ isOpen, setIsOpen, onBriefingCreate }) => {
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor={`caption-${content.id}`}>Lenda</Label>
+                              <Label htmlFor={`caption-${content.id}`}>LEGENDA</Label>
                               <Textarea 
                                 id={`caption-${content.id}`}
                                 placeholder="Texto da legenda/caption..." 
