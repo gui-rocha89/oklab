@@ -79,10 +79,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       }}
       className="h-full"
     >
-      <div 
-        className="flex flex-col justify-between h-full min-h-[164px] p-5 rounded-2xl shadow-sm border bg-white"
-        style={{ borderColor: 'rgba(0,0,0,0.06)' }}
-      >
+        <div 
+          className="flex flex-col justify-between h-full min-h-[164px] p-5 rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white to-gray-50/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group"
+          style={{ borderColor: 'transparent' }}
+        >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 mb-2">
           <h3 
@@ -97,7 +97,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           
           {/* Icon Wrap */}
           <div 
-            className="flex items-center justify-center rounded-xl"
+            className="flex items-center justify-center rounded-xl shadow-md ring-1 ring-white/20 group-hover:shadow-lg transition-all duration-300"
             style={{
               width: '40px',
               height: '40px',

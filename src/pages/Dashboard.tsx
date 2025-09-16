@@ -81,7 +81,7 @@ const ProjectCard = ({ project, index }: any) => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="project-card card-hover bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
+      className="project-card card-hover bg-gradient-to-br from-white to-gray-50/30 rounded-xl p-6 shadow-md border-0 ring-1 ring-gray-100 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -229,13 +229,13 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Professional Metrics Grid - 3 Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+        {/* Professional Metrics Grid - 3 Column Layout with Enhanced Visual Effects */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 items-stretch">
           <MetricCard
             title="Projetos Pendentes"
             value={stats.pending}
             icon={Clock}
-            iconGradient={['#FFEDD5', '#FDBA74']}
+            iconGradient={['#E67E22', '#DC7633']}
             trend={enhancedStats.monthlyGrowth.projects}
             description="Aguardando aprovação ou revisão"
             index={0}
@@ -244,7 +244,7 @@ export default function Dashboard() {
             title="Projetos Aprovados"
             value={stats.approved}
             icon={CheckCircle}
-            iconGradient={['#D1FAE5', '#34D399']}
+            iconGradient={['#27AE60', '#229954']}
             trend={8}
             description="Prontos para publicação"
             index={1}
@@ -253,7 +253,7 @@ export default function Dashboard() {
             title="Total de Projetos"
             value={stats.total}
             icon={FileText}
-            iconGradient={['#EDE9FE', '#A78BFA']}
+            iconGradient={['#8E44AD', '#7D3C98']}
             trend={enhancedStats.monthlyGrowth.projects}
             description="Todos os projetos este mês"
             index={2}
@@ -262,7 +262,7 @@ export default function Dashboard() {
             title="Tempo de Aprovação"
             value={stats.avgApprovalTime}
             icon={Target}
-            iconGradient={['#DBEAFE', '#60A5FA']}
+            iconGradient={['#3498DB', '#2980B9']}
             trend={-15}
             format="time"
             description="Média de horas para aprovação"
@@ -272,7 +272,7 @@ export default function Dashboard() {
             title="Taxa de Eficiência"
             value={stats.efficiency}
             icon={BarChart3}
-            iconGradient={['#E9D5FF', '#A78BFA']}
+            iconGradient={['#9B59B6', '#8E44AD']}
             trend={enhancedStats.monthlyGrowth.efficiency}
             format="percentage"
             description="Projetos entregues no prazo"
@@ -282,7 +282,7 @@ export default function Dashboard() {
             title="Satisfação dos Clientes"
             value={stats.clientSatisfaction}
             icon={Star}
-            iconGradient={['#FFE4E6', '#FB7185']}
+            iconGradient={['#E74C3C', '#C0392B']}
             trend={enhancedStats.monthlyGrowth.satisfaction}
             format="percentage"
             description="Avaliação média dos clientes"
@@ -290,12 +290,12 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Quick Actions */}
+        {/* Enhanced Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200"
+          className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 shadow-lg border-0 ring-1 ring-gray-100"
         >
           <h2 className="text-xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -334,12 +334,12 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Recent Projects */}
+        {/* Enhanced Recent Projects */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200"
+          className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 shadow-lg border-0 ring-1 ring-gray-100"
         >
           <h2 className="text-xl font-bold text-gray-900 mb-6">Projetos Recentes</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
