@@ -18,17 +18,17 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 13% 18%;
 
-    /* Primary Orange Palette */
-    --primary: 22 93% 53%;           /* #f97316 */
+    /* Primary Orange Palette - Brand Color */
+    --primary: 25 75% 52%;           /* Brand Orange #e67e22 */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 25 95% 62%;      /* #fb923c */
-    --primary-light: 32 97% 83%;     /* #fed7aa */
+    --primary-glow: 25 75% 58%;      /* Slightly lighter variant */
+    --primary-light: 25 75% 85%;     /* Light tint */
 
     /* Secondary & Accent Colors */
     --secondary: 220 14% 96%;        /* #f3f4f6 */
     --secondary-foreground: 220 13% 18%;
     
-    --accent: 25 95% 62%;            /* #fb923c */
+    --accent: 25 75% 52%;            /* Same as primary brand color */
     --accent-foreground: 0 0% 100%;
 
     /* Neutral Grays */
@@ -52,29 +52,29 @@ All colors MUST be HSL.
     /* Interactive Elements */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 22 93% 53%;
+    --ring: 25 75% 52%;
 
     --radius: 0.75rem;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(22 93% 53%), hsl(25 95% 62%));
-    --gradient-secondary: linear-gradient(135deg, hsl(25 95% 62%), hsl(32 97% 83%));
+    /* Gradients - Removed, using solid colors */
+    --gradient-primary: hsl(25 75% 52%);
+    --gradient-secondary: hsl(25 75% 58%);
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 98%));
     
     /* Shadows */
-    --shadow-elegant: 0 4px 6px -1px hsl(22 93% 53% / 0.1), 0 2px 4px -2px hsl(22 93% 53% / 0.1);
-    --shadow-glow: 0 0 0 1px hsl(22 93% 53% / 0.1), 0 10px 15px -3px hsl(22 93% 53% / 0.1);
+    --shadow-elegant: 0 4px 6px -1px hsl(25 75% 52% / 0.1), 0 2px 4px -2px hsl(25 75% 52% / 0.1);
+    --shadow-glow: 0 0 0 1px hsl(25 75% 52% / 0.1), 0 10px 15px -3px hsl(25 75% 52% / 0.1);
     --shadow-card: 0 1px 3px 0 hsl(220 13% 18% / 0.1), 0 1px 2px -1px hsl(220 13% 18% / 0.1);
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 13% 18%;
-    --sidebar-primary: 22 93% 53%;
+    --sidebar-primary: 25 75% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
     --sidebar-accent-foreground: 220 13% 18%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 22 93% 53%;
+    --sidebar-ring: 25 75% 52%;
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -91,15 +91,15 @@ All colors MUST be HSL.
     --popover: 220 20% 14%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 22 93% 53%;
+    --primary: 25 75% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 25 95% 62%;
-    --primary-light: 32 97% 83%;
+    --primary-glow: 25 75% 58%;
+    --primary-light: 25 75% 85%;
 
     --secondary: 220 20% 14%;
     --secondary-foreground: 0 0% 100%;
     
-    --accent: 25 95% 62%;
+    --accent: 25 75% 52%;
     --accent-foreground: 0 0% 100%;
 
     --muted: 220 20% 14%;
@@ -114,24 +114,24 @@ All colors MUST be HSL.
 
     --border: 220 20% 18%;
     --input: 220 20% 18%;
-    --ring: 22 93% 53%;
+    --ring: 25 75% 52%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(22 93% 53%), hsl(25 95% 62%));
-    --gradient-secondary: linear-gradient(135deg, hsl(25 95% 62%), hsl(32 97% 83%));
+    --gradient-primary: hsl(25 75% 52%);
+    --gradient-secondary: hsl(25 75% 58%);
     --gradient-subtle: linear-gradient(180deg, hsl(220 25% 20%), hsl(220 20% 14%));
 
     --shadow-elegant: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
-    --shadow-glow: 0 0 0 1px hsl(22 93% 53% / 0.3), 0 10px 15px -3px hsl(22 93% 53% / 0.3);
+    --shadow-glow: 0 0 0 1px hsl(25 75% 52% / 0.3), 0 10px 15px -3px hsl(25 75% 52% / 0.3);
     --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
 
     --sidebar-background: 220 20% 14%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 22 93% 53%;
+    --sidebar-primary: 25 75% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 20% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 20% 18%;
-    --sidebar-ring: 22 93% 53%;
+    --sidebar-ring: 25 75% 52%;
   }
 }
 
@@ -194,13 +194,13 @@ All colors MUST be HSL.
     box-shadow: var(--shadow-glow);
   }
 
-  /* Button Components */
+  /* Button Components - Using solid brand orange */
   .btn-primary {
-    @apply bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200;
+    @apply bg-primary text-white font-medium px-6 py-2 rounded-xl shadow-lg hover:bg-primary/90 transition-all duration-200;
   }
 
   .btn-outline-orange {
-    @apply border-2 border-orange-500 text-orange-600 font-medium px-6 py-2 rounded-xl hover:bg-orange-50 transition-all duration-200;
+    @apply border-2 border-primary text-primary font-medium px-6 py-2 rounded-xl hover:bg-primary/10 transition-all duration-200;
   }
 
   /* Card Components */
@@ -252,12 +252,12 @@ All colors MUST be HSL.
 
   /* Background Components */
   .gradient-bg {
-    @apply bg-gradient-to-r from-orange-500 to-orange-600;
+    @apply bg-primary;
   }
 
   /* Search Components */
   .search-input {
-    @apply px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent;
+    @apply px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent;
   }
 }
 
@@ -312,9 +312,9 @@ All colors MUST be HSL.
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 0 0 hsl(22 93% 53% / 0.4);
+    box-shadow: 0 0 0 0 hsl(25 75% 52% / 0.4);
   }
   50% {
-    box-shadow: 0 0 0 10px hsl(22 93% 53% / 0);
+    box-shadow: 0 0 0 10px hsl(25 75% 52% / 0);
   }
 }

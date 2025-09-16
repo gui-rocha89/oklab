@@ -414,7 +414,7 @@ export default function Projects() {
                         <Button 
                           size="sm" 
                           onClick={() => handleViewProject(project.shareId)}
-                          className="ml-2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all"
+                          className="ml-2 bg-primary hover:bg-primary/90 text-white shadow-md hover:shadow-lg transition-all"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Ver Projeto
