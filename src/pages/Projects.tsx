@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown } from "lucide-react";
+import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
@@ -335,65 +335,91 @@ export default function Projects() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="min-h-[220px] p-5 rounded-2xl shadow-sm border border-gray-100 bg-white hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-                  {/* Client Name Label */}
-                  <div className="mb-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                      Nome do Cliente
-                    </p>
-                    <p className="text-sm text-gray-700">{project.client || 'Cliente não informado'}</p>
-                  </div>
-
-                  {/* Project Title */}
-                  <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2">
-                    {project.title}
-                  </h3>
-
-                  {/* Project Description */}
-                  <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
-                    {project.description}
-                  </p>
-
-                  {/* Meta Row */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                        Autor:
-                      </p>
-                      <p className="text-sm text-gray-700">{project.author}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                        Data da Criação do Projeto:
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        {new Date(project.createdAt).toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
-                    <div className="text-sm text-gray-600">
-                      {project.keyframes?.length || 0} comentário(s) pendente(s)
-                    </div>
+                <Card className="min-h-[220px] rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group overflow-hidden">
+                  <CardHeader className="pb-3 relative">
+                    {/* Background Pattern */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
                     
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {}}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {}}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleViewProject(project.shareId)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver Projeto
-                      </Button>
+                    <div className="flex items-start justify-between mb-3 relative z-10">
+                      <div className="flex-1">
+                        {/* Client Name Label */}
+                        <div className="mb-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">
+                            Nome do Cliente
+                          </p>
+                          <p className="text-sm font-medium text-foreground/90">{project.client || 'Cliente não informado'}</p>
+                        </div>
+                        
+                        {/* Project Title */}
+                        <CardTitle className="text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                          {project.title}
+                        </CardTitle>
+                      </div>
+                      
+                      {/* Status & Priority Badges */}
+                      <div className="flex flex-col items-end space-y-2 ml-3">
+                        <Badge className={`${getStatusColor(project.status)} border-0 shadow-sm font-medium`}>
+                          {getStatusText(project.status)}
+                        </Badge>
+                        <Badge className={`${getPriorityColor(project.priority)} border-0 shadow-sm font-medium`}>
+                          <span className="flex items-center space-x-1">
+                            <span>{getPriorityIcon(project.priority)}</span>
+                            <span>{getPriorityText(project.priority)}</span>
+                          </span>
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    {/* Project Description */}
+                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+                      {project.description}
+                    </p>
+                    
+                    {/* Meta Row */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                          Autor:
+                        </p>
+                        <p className="text-sm font-medium text-foreground/90">{project.author}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                          Criado em:
+                        </p>
+                        <p className="text-sm font-medium text-foreground/90">
+                          {new Date(project.createdAt).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                      <div className="text-sm text-muted-foreground flex items-center space-x-1">
+                        <MessageSquare className="w-4 h-4" />
+                        <span>{project.keyframes?.length || 0} comentário(s) pendente(s)</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleViewProject(project.shareId)}
+                          className="ml-2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver Projeto
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
                 </Card>
               </motion.div>
             ))}
