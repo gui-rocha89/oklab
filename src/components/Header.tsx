@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Bell, Search, User, Users, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/contexts/UserContext';
+import { useProfile } from '@/hooks/useProfile';
 
 interface HeaderProps {
   title?: string;
@@ -21,6 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { toast } = useToast();
   const { user, isSupremeAdmin, logout } = useUser();
+  const { profile } = useProfile();
+  const navigate = useNavigate();
 
   const getPageTitle = () => {
     if (title) return title;
@@ -44,10 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleProfileClick = () => {
-    toast({
-      title: "🚧 Perfil não implementado ainda—mas não se preocupe! Você pode solicitar isso no seu próximo prompt! 🚀",
-      duration: 4000,
-    });
+    navigate('/configuracoes');
   };
 
   const handleLogoutClick = async () => {
@@ -159,11 +161,22 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={handleProfileClick}
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-orange-600 transition-colors"
             >
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-orange-500" />
-              </div>
+              <Avatar className="w-8 h-8">
+                <AvatarImage 
+                  src={profile?.avatar_url || undefined} 
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-white text-orange-500 text-sm font-semibold">
+                  {(profile?.full_name || user?.user_metadata?.full_name || user?.email)
+                    ?.split(" ")
+                    .map(n => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2) || "??"}
+                </AvatarFallback>
+              </Avatar>
               <span className="hidden sm:block text-sm font-medium text-white">
-                {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Gui'}
+                {profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'}
               </span>
             </motion.button>
 
