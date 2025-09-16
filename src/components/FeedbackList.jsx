@@ -561,7 +561,7 @@ const FeedbackList = () => {
                                   size="sm" 
                                   onClick={() => handleResponse(feedback.id)}
                                   disabled={!responseText.trim()}
-                                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                                  className="bg-orange-600 hover:bg-orange-700"
                                 >
                                   <Send className="h-4 w-4 mr-2" />
                                   Enviar Resposta
@@ -575,11 +575,7 @@ const FeedbackList = () => {
                                   }}
                                 >
                                   Cancelar
-                                 </Button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                                </Button>
                               </div>
                             </motion.div>
                           )}
