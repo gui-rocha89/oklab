@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab 
 }) => {
   const { toast } = useToast();
-  const { user, isSupremeAdmin } = useUser();
+  const { user, isSupremeAdmin, logout } = useUser();
 
   const getPageTitle = () => {
     if (title) return title;
@@ -50,12 +50,20 @@ export const Header: React.FC<HeaderProps> = ({
     });
   };
 
-  const handleLogoutClick = () => {
-    toast({
-      title: "🚪 Logout realizado com sucesso!",
-      duration: 2000,
-    });
-    // Aqui seria implementada a lógica real de logout
+  const handleLogoutClick = async () => {
+    try {
+      await logout();
+      toast({
+        title: "🚪 Logout realizado com sucesso!",
+        duration: 2000,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao sair",
+        description: "Tente novamente",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleManageTeamClick = () => {
@@ -155,7 +163,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <User className="w-4 h-4 text-orange-500" />
               </div>
               <span className="hidden sm:block text-sm font-medium text-white">
-                {user?.name || 'Gui'}
+                {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Gui'}
               </span>
             </motion.button>
 
