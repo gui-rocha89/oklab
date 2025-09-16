@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      platform_reviews: {
+        Row: {
+          client_email: string
+          client_name: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          project_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          client_email: string
+          client_name?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          project_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          client_email?: string
+          client_name?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
