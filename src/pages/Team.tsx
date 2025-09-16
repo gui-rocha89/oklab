@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Mail, Calendar, Settings, UserPlus, Shield, Eye, Edit } from "lucide-react";
+import { Search, Plus, Mail, Calendar, Settings, UserPlus, Shield, Eye, Edit, Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const mockTeamMembers = [
@@ -59,13 +59,18 @@ const mockTeamMembers = [
 ];
 
 export default function Team() {
-  const [members] = useState(mockTeamMembers);
+  const [members, setMembers] = useState(mockTeamMembers);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [editUserRole, setEditUserRole] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const { toast } = useToast();
 
   const getRoleColor = (role: string): string => {
@@ -137,6 +142,56 @@ export default function Team() {
     setIsInviteOpen(false);
     setInviteEmail("");
     setInviteRole("viewer");
+  };
+
+  const handleEditUser = (userId) => {
+    const user = members.find(m => m.id === userId);
+    if (user) {
+      setSelectedUser(user);
+      setEditUserRole(user.role);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleSaveUserRole = () => {
+    if (selectedUser) {
+      setMembers(prev => prev.map(member => 
+        member.id === selectedUser.id 
+          ? { ...member, role: editUserRole }
+          : member
+      ));
+      
+      toast({
+        title: "Hierarquia atualizada!",
+        description: `${selectedUser.name} agora é ${getRoleText(editUserRole)}.`,
+      });
+      
+      setIsEditModalOpen(false);
+      setSelectedUser(null);
+      setEditUserRole("");
+    }
+  };
+
+  const handleDeleteUser = (userId) => {
+    const user = members.find(m => m.id === userId);
+    if (user) {
+      setUserToDelete(user);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDeleteUser = () => {
+    if (userToDelete) {
+      setMembers(prev => prev.filter(member => member.id !== userToDelete.id));
+      
+      toast({
+        title: "Usuário removido!",
+        description: `${userToDelete.name} foi removido da equipe.`,
+      });
+      
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
+    }
   };
 
   const stats = {
@@ -354,9 +409,21 @@ export default function Team() {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => handleEditUser(member.id)}
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     Configurar
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleDeleteUser(member.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                   <Button size="sm" variant="outline">
                     <Mail className="h-4 w-4" />
@@ -384,6 +451,91 @@ export default function Team() {
             </CardContent>
           </Card>
         )}
+
+        {/* Modal de Edição de Hierarquia */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Hierarquia do Usuário</DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <Avatar>
+                    <AvatarFallback>{getInitials(selectedUser.name)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{selectedUser.name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="userRole">Nova Hierarquia</Label>
+                  <Select value={editUserRole} onValueChange={setEditUserRole}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer">Visualizador</SelectItem>
+                      <SelectItem value="editor">Editor</SelectItem>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={handleSaveUserRole} className="flex-1">
+                    Salvar Alterações
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Confirmação de Exclusão */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+                Confirmar Exclusão
+              </DialogTitle>
+            </DialogHeader>
+            {userToDelete && (
+              <div className="space-y-4">
+                <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-red-800">
+                    Tem certeza de que deseja remover <strong>{userToDelete.name}</strong> da equipe?
+                  </p>
+                  <p className="text-sm text-red-600 mt-2">
+                    Esta ação não pode ser desfeita. O usuário perderá acesso a todos os projetos.
+                  </p>
+                </div>
+                
+                <div className="flex gap-2 pt-2">
+                  <Button 
+                    variant="destructive" 
+                    onClick={confirmDeleteUser}
+                    className="flex-1"
+                  >
+                    Sim, Remover Usuário
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsDeleteModalOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
