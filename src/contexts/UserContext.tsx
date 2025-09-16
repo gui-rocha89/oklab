@@ -19,8 +19,8 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 // Mock do usuário supremo - em um app real, isso viria de uma API/auth
 const mockSupremeUser: User = {
   id: '1',
-  name: 'Usuário Supremo',
-  email: 'supremo@manus.ai',
+  name: 'GUI',
+  email: 'gui@streamlab.com.br',
   role: 'supreme_admin',
   avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956'
 };

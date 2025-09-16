@@ -119,7 +119,7 @@ export function Sidebar() {
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
           <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer">
             <span className="text-sm font-medium text-primary-foreground">
-              {user?.name?.charAt(0) || 'S'}
+              G
             </span>
           </div>
         </div>
@@ -131,15 +131,15 @@ export function Sidebar() {
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
               <span className="text-sm font-medium text-primary-foreground">
-                {user?.name?.charAt(0) || 'S'}
+                G
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {isSupremeAdmin ? 'Usuário Supremo' : user?.name || 'Usuário Admin'}
+                {user?.name || 'GUI'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {user?.email || 'supremo@manus.ai'}
+                {user?.email || 'gui@streamlab.com.br'}
               </p>
             </div>
           </div>

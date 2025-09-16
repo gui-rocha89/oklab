@@ -147,7 +147,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <User className="w-4 h-4 text-orange-500" />
               </div>
               <span className="hidden sm:block text-sm font-medium text-white">
-                {isSupremeAdmin ? 'Supremo' : user?.name || 'Admin'}
+                {user?.name || 'GUI'}
               </span>
             </motion.button>
           </div>
