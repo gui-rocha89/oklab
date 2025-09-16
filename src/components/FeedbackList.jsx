@@ -172,9 +172,9 @@ const FeedbackList = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Total</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-                  <p className="text-xs text-muted-foreground">feedbacks</p>
+                  <p className="text-label text-xs text-muted-foreground uppercase mb-1">Total</p>
+                  <p className="text-display text-3xl text-foreground">{stats.total}</p>
+                  <p className="text-caption text-xs text-muted-foreground">feedbacks</p>
                 </div>
                 <div className="p-2 bg-blue-500 rounded-lg">
                   <MessageCircle className="h-5 w-5 text-white" />
@@ -193,9 +193,9 @@ const FeedbackList = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Pendentes</p>
-                  <p className="text-2xl font-bold text-amber-600">{stats.pending}</p>
-                  <p className="text-xs text-muted-foreground">aguardando</p>
+                  <p className="text-label text-xs text-muted-foreground uppercase mb-1">Pendentes</p>
+                  <p className="text-display text-3xl text-warning">{stats.pending}</p>
+                  <p className="text-caption text-xs text-muted-foreground">aguardando</p>
                 </div>
                 <div className="p-2 bg-amber-500 rounded-lg">
                   <Clock className="h-5 w-5 text-white" />
@@ -214,9 +214,9 @@ const FeedbackList = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Resolvidos</p>
-                  <p className="text-2xl font-bold text-emerald-600">{stats.resolved}</p>
-                  <p className="text-xs text-muted-foreground">concluídos</p>
+                  <p className="text-label text-xs text-muted-foreground uppercase mb-1">Resolvidos</p>
+                  <p className="text-display text-3xl text-success">{stats.resolved}</p>
+                  <p className="text-caption text-xs text-muted-foreground">concluídos</p>
                 </div>
                 <div className="p-2 bg-emerald-500 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-white" />
@@ -235,9 +235,9 @@ const FeedbackList = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Rejeitados</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-                  <p className="text-xs text-muted-foreground">descartados</p>
+                  <p className="text-label text-xs text-muted-foreground uppercase mb-1">Rejeitados</p>
+                  <p className="text-display text-3xl text-destructive">{stats.rejected}</p>
+                  <p className="text-caption text-xs text-muted-foreground">descartados</p>
                 </div>
                 <div className="p-2 bg-red-500 rounded-lg">
                   <XCircle className="h-5 w-5 text-white" />
@@ -256,9 +256,9 @@ const FeedbackList = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Taxa Resposta</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.responseRate}%</p>
-                  <p className="text-xs text-muted-foreground">respondidos</p>
+                  <p className="text-label text-xs text-muted-foreground uppercase mb-1">Taxa Resposta</p>
+                  <p className="text-display text-3xl text-primary">{stats.responseRate}%</p>
+                  <p className="text-caption text-xs text-muted-foreground">respondidos</p>
                 </div>
                 <div className="p-2 bg-blue-500 rounded-lg">
                   <TrendingUp className="h-5 w-5 text-white" />
@@ -277,9 +277,9 @@ const FeedbackList = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tempo Médio</p>
-                  <p className="text-2xl font-bold text-purple-600">{stats.avgResponseTime}</p>
-                  <p className="text-xs text-muted-foreground">resposta</p>
+                  <p className="text-label text-xs text-muted-foreground uppercase mb-1">Tempo Médio</p>
+                  <p className="text-display text-3xl text-primary">{stats.avgResponseTime}</p>
+                  <p className="text-caption text-xs text-muted-foreground">resposta</p>
                 </div>
                 <div className="p-2 bg-purple-500 rounded-lg">
                   <BarChart3 className="h-5 w-5 text-white" />

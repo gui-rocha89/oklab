@@ -93,13 +93,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         <div className="relative z-10 flex flex-col justify-between h-full">
           {/* Header */}
           <div className="flex items-center justify-between gap-3 mb-2">
-            <h3 
-              className="text-sm font-bold uppercase tracking-wide leading-tight group-hover:text-primary/80 transition-colors duration-300"
-              style={{ 
-                color: '#4b5563',
-                letterSpacing: '0.4px'
-              }}
-            >
+            <h3 className="text-label text-muted-foreground uppercase group-hover:text-primary/80 transition-colors duration-300">
               {title}
             </h3>
             
@@ -121,22 +115,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
           {/* Value */}
           <div className="flex-1">
-            <div 
-              className="text-4xl font-bold leading-none mt-2 group-hover:text-primary/90 transition-colors duration-300"
-              style={{ 
-                color: '#111827',
-                fontSize: '36px',
-                lineHeight: '1.1'
-              }}
-            >
+            <div className="text-responsive-display text-foreground mt-2 group-hover:text-primary/90 transition-colors duration-300">
               {formatValue(value)}
             </div>
             
             {description && (
-              <p 
-                className="text-sm mt-1 group-hover:text-primary/70 transition-colors duration-300"
-                style={{ color: '#6b7280' }}
-              >
+              <p className="text-caption text-muted-foreground mt-1 group-hover:text-primary/70 transition-colors duration-300">
                 {description}
               </p>
             )}

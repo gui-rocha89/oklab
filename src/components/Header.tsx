@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl font-bold text-white truncate transition-all duration-300"
+              className="text-responsive-heading text-white truncate transition-all duration-300"
             >
               {getPageTitle()}
             </motion.h1>
@@ -87,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-sm text-orange-200 mt-1 truncate transition-all duration-300"
+                className="text-caption text-orange-200 mt-1 truncate transition-all duration-300"
               >
                 {subtitle}
               </motion.p>
