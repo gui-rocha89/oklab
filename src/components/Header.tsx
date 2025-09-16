@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, Bell, Search, User, Users, LogOut } from 'lucide-react';
+import { Menu, Bell, Search, User, Users, LogOut, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   const { user, isSupremeAdmin, logout } = useUser();
   const { profile } = useProfile();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   
   // Estados para dropdown de notificações e busca
   const [showNotifications, setShowNotifications] = useState(false);
@@ -154,6 +156,21 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </motion.button>
             )}
+
+            {/* Theme Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-lg hover:bg-orange-600 transition-colors"
+              title={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5 text-white" />
+              ) : (
+                <Moon className="w-5 h-5 text-white" />
+              )}
+            </motion.button>
 
             {/* Notifications */}
             <div className="relative">

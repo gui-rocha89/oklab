@@ -82,55 +82,72 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 220 25% 20%;
-    --foreground: 0 0% 100%;
+    /* Base colors - Dark Asana-like palette */
+    --background: 215 23% 11%;        /* #1a1d23 - Deep dark blue-gray */
+    --foreground: 220 14% 96%;        /* #f3f4f6 - Soft white */
 
-    --card: 220 20% 14%;
-    --card-foreground: 0 0% 100%;
+    /* Card and surfaces */
+    --card: 215 20% 17%;              /* #2a2d34 - Elevated surface */
+    --card-foreground: 220 14% 96%;
 
-    --popover: 220 20% 14%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 215 20% 17%;
+    --popover-foreground: 220 14% 96%;
 
-    --primary: 25 75% 52%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 25 75% 58%;
-    --primary-light: 25 75% 85%;
+    /* Primary - Keep the orange vibrant */
+    --primary: 25 75% 52%;            /* Keep original orange */
+    --primary-foreground: 215 23% 11%;
+    --primary-glow: 25 95% 65%;       /* Brighter orange for glow */
+    --primary-light: 25 85% 60%;      /* Light orange variant */
 
-    --secondary: 220 20% 14%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary and muted */
+    --secondary: 215 16% 22%;         /* #363a42 - Subtle elevation */
+    --secondary-foreground: 220 14% 96%;
     
-    --accent: 25 75% 52%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 215 16% 22%;
+    --accent-foreground: 220 14% 96%;
 
-    --muted: 220 20% 14%;
-    --muted-foreground: 220 5% 65%;
+    /* Muted backgrounds and text */
+    --muted: 215 13% 25%;             /* #3e424a - Muted backgrounds */
+    --muted-foreground: 218 11% 65%; /* #9ca3af - Muted text */
 
-    --neutral-dark: 220 25% 8%;
-    --neutral-medium: 220 5% 65%;
-    --neutral-light: 220 20% 14%;
+    /* Status colors - Adjusted for dark theme */
+    --success: 142 71% 45%;           /* Adjusted green */
+    --success-foreground: 220 14% 96%;
+    
+    --warning: 43 96% 56%;            /* Adjusted yellow */
+    --warning-foreground: 215 23% 11%;
+    
+    --destructive: 0 72% 51%;         /* Brighter red for visibility */
+    --destructive-foreground: 220 14% 96%;
 
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
+    /* Neutral palette */
+    --neutral-dark: 215 23% 11%;
+    --neutral-medium: 215 16% 22%;
+    --neutral-light: 215 13% 25%;
 
-    --border: 220 20% 18%;
-    --input: 220 20% 18%;
-    --ring: 25 75% 52%;
+    /* Borders and inputs */
+    --border: 215 16% 22%;            /* Subtle borders */
+    --input: 215 16% 22%;
+    --ring: 25 75% 52%;               /* Orange focus ring */
 
+    /* Gradients - Darker theme */
     --gradient-primary: hsl(25 75% 52%);
     --gradient-secondary: hsl(25 75% 58%);
-    --gradient-subtle: linear-gradient(180deg, hsl(220 25% 20%), hsl(220 20% 14%));
+    --gradient-subtle: linear-gradient(180deg, hsl(215 23% 11%), hsl(215 20% 17%));
 
-    --shadow-elegant: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
-    --shadow-glow: 0 0 0 1px hsl(25 75% 52% / 0.3), 0 10px 15px -3px hsl(25 75% 52% / 0.3);
-    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
+    /* Shadows - Adjusted for dark theme */
+    --shadow-elegant: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 0 1px hsl(25 75% 52% / 0.4), 0 10px 15px -3px hsl(25 75% 52% / 0.4);
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
 
-    --sidebar-background: 220 20% 14%;
-    --sidebar-foreground: 0 0% 100%;
+    /* Sidebar specific - Slightly lighter than main bg */
+    --sidebar-background: 215 20% 15%;  /* #282c34 - Slightly lighter than main bg */
+    --sidebar-foreground: 220 14% 96%;
     --sidebar-primary: 25 75% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 18%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 20% 18%;
+    --sidebar-primary-foreground: 220 14% 96%;
+    --sidebar-accent: 215 16% 22%;
+    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-border: 215 16% 20%;
     --sidebar-ring: 25 75% 52%;
   }
 }
