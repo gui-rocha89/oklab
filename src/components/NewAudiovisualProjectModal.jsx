@@ -77,27 +77,13 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop com blur */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/50"
-            onClick={() => setIsOpen(false)}
-          />
-          
-          {/* Modal acima do backdrop */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 50, scale: 0.95 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 flex flex-col pointer-events-auto"
-              style={{ maxHeight: '90vh' }}
-              role="dialog"
-              aria-modal="true"
-            >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div className="modal-content-safe bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 flex flex-col" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <Film className="h-6 w-6 text-orange-500" />
@@ -161,9 +147,8 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                 </Button>
               </div>
             </div>
-            </motion.div>
           </div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
