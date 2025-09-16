@@ -76,6 +76,12 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       backdrop.setAttribute('aria-hidden', 'true');
       document.body.appendChild(backdrop);
       
+      // Add click event to close modal when clicking backdrop
+      const handleBackdropClick = () => {
+        setIsOpen(false);
+      };
+      backdrop.addEventListener('click', handleBackdropClick);
+      
       // Add classes
       document.body.classList.add('oklab--modal-open');
       
@@ -83,6 +89,11 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       setTimeout(() => {
         backdrop.classList.add('oklab--visible');
       }, 10);
+
+      // Store cleanup function
+      return () => {
+        backdrop.removeEventListener('click', handleBackdropClick);
+      };
     } else {
       // Remove classes and backdrop
       document.body.classList.remove('oklab--modal-open');
@@ -227,7 +238,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center" onClick={() => setIsOpen(false)}>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
