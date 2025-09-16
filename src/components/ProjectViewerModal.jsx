@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { useModalBlur } from '../hooks/useModalBlur';
 
 const ProjectViewerModal = ({ project, isOpen, onClose }) => {
   const [currentCreativeIndex, setCurrentCreativeIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
+  
+  useModalBlur(isOpen, onClose);
 
   if (!isOpen || !project) {
     return null;
@@ -33,19 +36,11 @@ const ProjectViewerModal = ({ project, isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleClose}
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="lovable-modal-content w-full max-w-sm mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden relative"
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden relative"
-          >
             <button onClick={handleClose} className="absolute top-3 right-3 z-10 p-2 bg-white/50 rounded-full hover:bg-white transition">
               <X className="h-5 w-5 text-gray-800" />
             </button>
@@ -124,7 +119,6 @@ const ProjectViewerModal = ({ project, isOpen, onClose }) => {
                 ))}
               </div>
             )}
-          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
