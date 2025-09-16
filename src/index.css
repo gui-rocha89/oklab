@@ -142,11 +142,79 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variant-ligatures: contextual;
   }
 }
 
 @layer components {
+  /* Typography Utilities - Inter Refinements */
+  .text-display {
+    @apply font-bold tracking-tight leading-none;
+    letter-spacing: -0.02em;
+  }
+
+  .text-heading {
+    @apply font-semibold tracking-tight leading-tight;
+    letter-spacing: -0.015em;
+  }
+
+  .text-title {
+    @apply font-medium tracking-tight leading-snug;
+    letter-spacing: -0.0075em;
+  }
+
+  .text-body {
+    @apply font-normal leading-relaxed;
+    letter-spacing: 0;
+  }
+
+  .text-caption {
+    @apply font-normal leading-relaxed;
+    letter-spacing: 0.0025em;
+  }
+
+  .text-label {
+    @apply font-medium leading-relaxed;
+    letter-spacing: 0.005em;
+  }
+
+  /* Interface-specific typography */
+  .text-ui {
+    @apply font-medium;
+    font-feature-settings: "tnum", "cv02", "cv03";
+    letter-spacing: 0.0025em;
+  }
+
+  .text-mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    font-feature-settings: "tnum";
+  }
+
+  /* Responsive typography utilities */
+  .text-responsive-display {
+    font-size: clamp(1.875rem, 4vw, 3.75rem);
+    @apply font-bold tracking-tight leading-none;
+    letter-spacing: -0.02em;
+  }
+
+  .text-responsive-heading {
+    font-size: clamp(1.25rem, 2.5vw, 2.25rem);
+    @apply font-semibold tracking-tight leading-tight;
+    letter-spacing: -0.015em;
+  }
+
+  .text-responsive-title {
+    font-size: clamp(1.125rem, 2vw, 1.5rem);
+    @apply font-medium tracking-tight leading-snug;
+    letter-spacing: -0.0075em;
+  }
+
   /* Custom Component Styles */
   .card-gradient {
     background: var(--gradient-subtle);
