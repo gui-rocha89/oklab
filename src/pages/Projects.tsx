@@ -10,11 +10,13 @@ import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, Messa
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
+import { useToast } from "@/components/ui/use-toast";
 
 // ... keep existing code (imports)
 
 export default function Projects() {
-  const { projects } = useProjects();
+  const { projects, updateProject, deleteProject } = useProjects();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -104,6 +106,25 @@ export default function Projects() {
 
   const handleViewProject = (shareId: string) => {
     navigate(`/aprovacao-audiovisual/${shareId}`);
+  };
+
+  const handleEditProject = (projectId: number) => {
+    // Navigate to edit page or open edit modal
+    toast({
+      title: "Editar Projeto",
+      description: "Funcionalidade de edição em desenvolvimento.",
+    });
+  };
+
+  const handleDeleteProject = (projectId: number) => {
+    if (window.confirm("Tem certeza que deseja excluir este projeto?")) {
+      deleteProject(projectId);
+      toast({
+        title: "Projeto Excluído",
+        description: "O projeto foi removido com sucesso.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -405,10 +426,20 @@ export default function Projects() {
                       </div>
                       
                       <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
+                          onClick={() => handleEditProject(project.id)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          onClick={() => handleDeleteProject(project.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                         <Button 
@@ -470,10 +501,18 @@ export default function Projects() {
                           <Eye className="h-4 w-4 mr-2" />
                           Ver Projeto
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditProject(project.id)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteProject(project.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
