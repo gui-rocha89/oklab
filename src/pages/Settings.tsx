@@ -39,6 +39,13 @@ export default function Settings() {
   const [profileData, setProfileData] = useState({
     full_name: profile?.full_name || "",
     email: profile?.email || user?.email || "",
+    phone: profile?.phone || "",
+    job_title: profile?.job_title || "",
+    bio: profile?.bio || "",
+    birth_date: profile?.birth_date || "",
+    address: profile?.address || "",
+    city: profile?.city || "",
+    country: profile?.country || "Brasil",
   });
 
   const [notifications, setNotifications] = useState({
@@ -66,6 +73,13 @@ export default function Settings() {
       setProfileData({
         full_name: profile.full_name || "",
         email: profile.email || user?.email || "",
+        phone: profile.phone || "",
+        job_title: profile.job_title || "",
+        bio: profile.bio || "",
+        birth_date: profile.birth_date || "",
+        address: profile.address || "",
+        city: profile.city || "",
+        country: profile.country || "Brasil",
       });
     }
   }, [profile, user]);
@@ -74,6 +88,13 @@ export default function Settings() {
     await updateProfile({
       full_name: profileData.full_name,
       email: profileData.email,
+      phone: profileData.phone,
+      job_title: profileData.job_title,
+      bio: profileData.bio,
+      birth_date: profileData.birth_date,
+      address: profileData.address,
+      city: profileData.city,
+      country: profileData.country,
     });
   };
 
@@ -229,28 +250,110 @@ export default function Settings() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo</Label>
-                        <Input
-                          id="name"
-                          value={profileData.full_name}
-                          onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
-                          placeholder="Digite seu nome completo"
-                        />
-                      </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                         <Label htmlFor="name">Nome Completo</Label>
+                         <Input
+                           id="name"
+                           value={profileData.full_name}
+                           onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
+                           placeholder="Digite seu nome completo"
+                         />
+                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={profileData.email}
-                          onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                          placeholder="Digite seu email"
-                        />
-                      </div>
-                    </div>
+                       <div className="space-y-2">
+                         <Label htmlFor="email">Email</Label>
+                         <Input
+                           id="email"
+                           type="email"
+                           value={profileData.email}
+                           onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                           placeholder="Digite seu email"
+                         />
+                       </div>
+
+                       <div className="space-y-2">
+                         <Label htmlFor="phone">Telefone</Label>
+                         <Input
+                           id="phone"
+                           type="tel"
+                           value={profileData.phone}
+                           onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                           placeholder="(11) 99999-9999"
+                         />
+                       </div>
+
+                       <div className="space-y-2">
+                         <Label htmlFor="job_title">Cargo</Label>
+                         <Input
+                           id="job_title"
+                           value={profileData.job_title}
+                           onChange={(e) => setProfileData({...profileData, job_title: e.target.value})}
+                           placeholder="Designer, Desenvolvedor, etc."
+                         />
+                       </div>
+
+                       <div className="space-y-2">
+                         <Label htmlFor="birth_date">Data de Nascimento</Label>
+                         <Input
+                           id="birth_date"
+                           type="date"
+                           value={profileData.birth_date}
+                           onChange={(e) => setProfileData({...profileData, birth_date: e.target.value})}
+                         />
+                       </div>
+
+                       <div className="space-y-2">
+                         <Label htmlFor="country">País</Label>
+                         <Select 
+                           value={profileData.country} 
+                           onValueChange={(value) => setProfileData({...profileData, country: value})}
+                         >
+                           <SelectTrigger>
+                             <SelectValue placeholder="Selecione um país" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="Brasil">Brasil</SelectItem>
+                             <SelectItem value="Portugal">Portugal</SelectItem>
+                             <SelectItem value="Estados Unidos">Estados Unidos</SelectItem>
+                             <SelectItem value="Argentina">Argentina</SelectItem>
+                             <SelectItem value="Chile">Chile</SelectItem>
+                             <SelectItem value="Uruguai">Uruguai</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       <div className="space-y-2">
+                         <Label htmlFor="city">Cidade</Label>
+                         <Input
+                           id="city"
+                           value={profileData.city}
+                           onChange={(e) => setProfileData({...profileData, city: e.target.value})}
+                           placeholder="São Paulo, Rio de Janeiro, etc."
+                         />
+                       </div>
+
+                       <div className="space-y-2">
+                         <Label htmlFor="address">Endereço</Label>
+                         <Input
+                           id="address"
+                           value={profileData.address}
+                           onChange={(e) => setProfileData({...profileData, address: e.target.value})}
+                           placeholder="Rua, número, bairro"
+                         />
+                       </div>
+                     </div>
+
+                     <div className="space-y-2">
+                       <Label htmlFor="bio">Biografia</Label>
+                       <Textarea
+                         id="bio"
+                         value={profileData.bio}
+                         onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                         placeholder="Conte um pouco sobre você, sua experiência e interesses..."
+                         rows={4}
+                       />
+                     </div>
 
                     <Button onClick={handleSaveProfile} className="flex items-center gap-2">
                       <Save className="h-4 w-4" />
