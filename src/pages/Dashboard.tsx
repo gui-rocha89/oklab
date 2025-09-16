@@ -18,7 +18,7 @@ import {
   Zap,
   Star
 } from 'lucide-react';
-import logoWhite from '@/assets/logo-white-bg.png';
+import { Logo } from '@/components/ui/logo';
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -218,10 +218,7 @@ export default function Dashboard() {
           </div>
           
           <div className="hidden md:flex items-center justify-center ml-8">
-            <motion.img
-              src={logoWhite}
-              alt="MANUS I.A Logo"
-              className="h-32 w-auto opacity-90"
+            <motion.div
               initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
               animate={{ opacity: 0.9, scale: 1, rotate: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
@@ -230,7 +227,12 @@ export default function Dashboard() {
                 rotate: 2,
                 transition: { duration: 0.3 }
               }}
-            />
+            >
+              <Logo 
+                className="h-32 w-auto opacity-90" 
+                alt="MANUS I.A Logo" 
+              />
+            </motion.div>
           </div>
         </motion.div>
 

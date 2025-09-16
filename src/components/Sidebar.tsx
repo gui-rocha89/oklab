@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logoWhite from "@/assets/logo-white-bg.png";
+import { Logo } from "@/components/ui/logo";
 
 const navigationItems = [
   {
@@ -61,17 +61,15 @@ export function Sidebar() {
       <div className="relative p-6 border-b border-sidebar-border">
         <div className="flex items-center justify-center w-full mb-2">
           {!isCollapsed ? (
-            <img 
-              src={logoWhite} 
+            <Logo 
+              className="h-20 w-auto transition-all duration-300 hover:scale-105" 
               alt="MANUS I.A"
-              className="h-20 w-auto transition-all duration-300 hover:scale-105"
             />
           ) : (
             <div className="flex flex-col items-center space-y-2">
-              <img 
-                src={logoWhite} 
+              <Logo 
+                className="h-8 w-auto transition-all duration-300 hover:scale-105" 
                 alt="MANUS I.A"
-                className="h-8 w-auto transition-all duration-300 hover:scale-105"
               />
               <div className="w-8 h-0.5 bg-primary rounded-full opacity-60"></div>
             </div>

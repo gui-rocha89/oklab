@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import logoWhite from '@/assets/logo-white-bg.png';
+import { Logo } from '@/components/ui/logo';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -117,14 +117,17 @@ export default function Auth() {
           <CardContent className="p-12 text-center">
             {/* Logo */}
             <div className="mb-8">
-              <motion.img
-                src={logoWhite}
-                alt="MANUS I.A Logo"
-                className="h-20 w-auto mx-auto mb-6"
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-              />
+                className="mb-6"
+              >
+                <Logo 
+                  className="h-20 w-auto mx-auto" 
+                  alt="MANUS I.A Logo" 
+                />
+              </motion.div>
               
               <motion.p 
                 initial={{ opacity: 0 }}
