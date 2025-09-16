@@ -10,9 +10,11 @@ import logoWhite from '@/assets/logo-white-bg.png';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const navigate = useNavigate();
@@ -34,23 +36,56 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      if (isSignUp) {
+        if (formData.password !== formData.confirmPassword) {
+          toast({
+            title: "Erro",
+            description: "As senhas não coincidem",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
 
-      if (error) {
-        toast({
-          title: "Erro no login",
-          description: error.message,
-          variant: "destructive",
+        const { error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
         });
+
+        if (error) {
+          toast({
+            title: "Erro no cadastro",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Cadastro realizado!",
+            description: "Verifique seu email para confirmar a conta.",
+          });
+        }
       } else {
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Redirecionando...",
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
         });
-        navigate('/');
+
+        if (error) {
+          toast({
+            title: "Erro no login",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Redirecionando...",
+          });
+          navigate('/');
+        }
       }
     } catch (error) {
       toast({
@@ -128,13 +163,38 @@ export default function Auth() {
                 required
               />
 
+              {isSignUp && (
+                <Input
+                  type="password"
+                  placeholder="Confirmar Senha"
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                  required
+                />
+              )}
+
               <Button
                 type="submit"
                 disabled={loading}
                 className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium text-base rounded-xl mt-6 transition-all duration-200"
               >
-                {loading ? "ENTRANDO..." : "ENTRAR"}
+                {loading ? 
+                  (isSignUp ? "CADASTRANDO..." : "ENTRANDO...") : 
+                  (isSignUp ? "CADASTRAR" : "ENTRAR")
+                }
               </Button>
+
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="w-full text-sm text-gray-600 hover:text-primary mt-4 transition-colors"
+              >
+                {isSignUp ? 
+                  "Já tem uma conta? Fazer login" : 
+                  "Não tem uma conta? Cadastre-se"
+                }
+              </button>
             </motion.form>
 
             {/* Footer */}
