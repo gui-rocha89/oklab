@@ -14,7 +14,6 @@ interface CreativeApproval {
 interface ApprovalProgressProps {
   approvals: CreativeApproval[];
   totalCreatives: number;
-  onDownloadKit?: () => void;
   isGeneratingKit?: boolean;
 }
 

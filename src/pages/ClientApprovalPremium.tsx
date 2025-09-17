@@ -12,7 +12,11 @@ import {
   Sparkles,
   Instagram,
   ChevronDown,
-  Eye
+  Eye,
+  Check,
+  Loader2,
+  Download,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -409,11 +413,9 @@ const ClientApprovalPremium = () => {
       </header>
 
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Approval Progress */}
         <ApprovalProgress 
           approvals={getAllApprovals()}
           totalCreatives={getTotalCreatives()}
-          onDownloadKit={isFullyApproved() ? handleDownloadKit : undefined}
           isGeneratingKit={isGenerating}
         />
         
