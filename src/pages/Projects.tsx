@@ -141,7 +141,7 @@ export default function Projects() {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Buscar por título, descrição, autor ou cliente..."
+                  placeholder="Buscar por título, descrição, criado por ou cliente..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-11 shadow-sm border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -402,9 +402,9 @@ export default function Projects() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-                          Autor:
+                          Criado por:
                         </p>
-                        <p className="text-sm font-medium text-foreground/90">{project.client}</p>
+                        <p className="text-sm font-medium text-foreground/90">{project.author || 'Usuário'}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
