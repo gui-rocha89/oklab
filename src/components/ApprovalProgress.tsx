@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface CreativeApproval {
-  attachment_index: number;
   status: 'pending' | 'approved' | 'changes_requested';
   feedback?: string;
 }

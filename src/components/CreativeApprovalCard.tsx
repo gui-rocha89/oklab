@@ -32,7 +32,6 @@ interface Attachment {
 
 interface CreativeApproval {
   id?: string;
-  attachment_index: number;
   caption?: string;
   publish_date?: string;
   status: 'pending' | 'approved' | 'changes_requested';
@@ -41,8 +40,8 @@ interface CreativeApproval {
 
 interface CreativeApprovalCardProps {
   keyframeId: string;
-  attachment: Attachment | Attachment[];
-  attachmentIndex: number;
+  attachments: Attachment[];
+  creativoTitle: string;
   approval?: CreativeApproval;
   onApprovalUpdate: (approval: CreativeApproval) => void;
   profileName?: string;
@@ -50,8 +49,8 @@ interface CreativeApprovalCardProps {
 
 export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
   keyframeId,
-  attachment,
-  attachmentIndex,
+  attachments,
+  creativoTitle,
   approval,
   onApprovalUpdate,
   profileName = "oklab_oficial"
@@ -70,7 +69,7 @@ export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
     try {
       const approvalData = {
         keyframe_id: keyframeId,
-        attachment_index: attachmentIndex,
+        attachment_index: 0, // Always 0 since we treat entire keyframe as one creative
         status: action,
         feedback: feedback.trim() || null
       };
@@ -87,7 +86,6 @@ export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
 
       const updatedApproval: CreativeApproval = {
         id: data.id,
-        attachment_index: attachmentIndex,
         caption: data.caption,
         publish_date: data.publish_date,
         status: data.status as 'pending' | 'approved' | 'changes_requested',
@@ -167,10 +165,10 @@ Prepare-se para uma experiência única com nossa nova campanha.
               </div>
               <div>
                 <h3 className="font-semibold text-lg text-foreground">
-                  {Array.isArray(attachment) ? attachment[0]?.name : attachment.name}
+                  {creativoTitle}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Criativo #{attachmentIndex + 1} {Array.isArray(attachment) && attachment.length > 1 && `(${attachment.length} imagens)`}
+                  {attachments.length === 1 ? '1 imagem' : `${attachments.length} imagens (carrossel)`}
                 </p>
               </div>
             </div>
@@ -204,14 +202,14 @@ Prepare-se para uma experiência única com nossa nova campanha.
 
               {/* Instagram Image or Carousel */}
               <div className="aspect-square bg-muted flex items-center justify-center rounded-lg overflow-hidden">
-                {Array.isArray(attachment) && attachment.length > 1 ? (
-                  <InstagramCarousel attachments={attachment} />
+                {attachments.length > 1 ? (
+                  <InstagramCarousel attachments={attachments} />
                 ) : (
                   <>
-                    {(Array.isArray(attachment) ? attachment[0] : attachment)?.url ? (
+                    {attachments[0]?.url ? (
                       <img 
-                        src={(Array.isArray(attachment) ? attachment[0] : attachment).url} 
-                        alt={(Array.isArray(attachment) ? attachment[0] : attachment).name}
+                        src={attachments[0].url} 
+                        alt={attachments[0].name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -220,7 +218,7 @@ Prepare-se para uma experiência única com nossa nova campanha.
                           <span className="text-2xl font-bold text-primary">OK</span>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-foreground">{(Array.isArray(attachment) ? attachment[0] : attachment)?.name}</p>
+                          <p className="text-sm font-medium text-foreground">{attachments[0]?.name}</p>
                           <p className="text-xs text-muted-foreground">Preview do Post</p>
                         </div>
                       </div>
@@ -272,8 +270,8 @@ Prepare-se para uma experiência única com nossa nova campanha.
             </div>
           </div>
 
-          {/* Feedback Section */}
-          {approval?.status !== 'approved' && (
+          {/* Feedback Section - Only show when status is changes_requested or when rejecting */}
+          {(approval?.status === 'changes_requested' || (!approval || approval.status === 'pending')) && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />

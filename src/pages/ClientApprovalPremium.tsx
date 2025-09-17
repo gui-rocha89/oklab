@@ -34,7 +34,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface CreativeApproval {
   id?: string;
-  attachment_index: number;
   caption?: string;
   publish_date?: string;
   status: 'pending' | 'approved' | 'changes_requested';
@@ -126,7 +125,6 @@ const ClientApprovalPremium = () => {
         }
         groupedApprovals[approval.keyframe_id].push({
           id: approval.id,
-          attachment_index: approval.attachment_index,
           caption: approval.caption,
           publish_date: approval.publish_date,
           status: approval.status,
@@ -148,7 +146,7 @@ const ClientApprovalPremium = () => {
       }
       
       const existingIndex = updated[keyframeId].findIndex(
-        a => a.attachment_index === approval.attachment_index
+        a => a.id === approval.id
       );
       
       if (existingIndex >= 0) {
@@ -186,15 +184,17 @@ const ClientApprovalPremium = () => {
   };
 
   const getTotalCreatives = () => {
-    return keyframes.reduce((total, keyframe) => {
-      return total + (keyframe.attachments?.length || 0);
-    }, 0);
+    return keyframes.length; // One creative per keyframe
   };
 
   const isFullyApproved = () => {
     const totalCreatives = getTotalCreatives();
-    const allApprovals = getAllApprovals();
-    const approvedCount = allApprovals.filter(a => a.status === 'approved').length;
+    const approvedCount = keyframes.filter(keyframe => {
+      const keyframeApprovals = approvals[keyframe.id] || [];
+      // Check if there's any approval with status 'approved' for this keyframe
+      return keyframeApprovals.some(approval => approval.status === 'approved');
+    }).length;
+    
     return totalCreatives > 0 && approvedCount === totalCreatives;
   };
 
@@ -446,45 +446,44 @@ const ClientApprovalPremium = () => {
                 </p>
               </CardHeader>
               <CardContent className="space-y-8">
-                {keyframes.map((keyframe, keyframeIndex) => (
-                  <div key={keyframe.id} className="space-y-6">
-                    {/* Keyframe Title */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-primary">{keyframeIndex + 1}</span>
+                {keyframes.map((keyframe, keyframeIndex) => {
+                  // Get approval for this keyframe (criativo)
+                  const keyframeApprovals = approvals[keyframe.id] || [];
+                  const approval = keyframeApprovals.length > 0 ? keyframeApprovals[0] : undefined; // Get first (and should be only) approval for keyframe
+                  
+                  return (
+                    <div key={keyframe.id} className="space-y-6">
+                      {/* Criativo Number */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-primary">{keyframeIndex + 1}</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground">Criativo {keyframeIndex + 1}</h3>
                       </div>
-                      <h3 className="text-lg font-semibold text-foreground">{keyframe.title}</h3>
+                      
+                      {/* Single Creative Card per Keyframe */}
+                      {keyframe.attachments && keyframe.attachments.length > 0 ? (
+                        <div className="ml-11">
+                          <CreativeApprovalCard
+                            key={keyframe.id}
+                            keyframeId={keyframe.id}
+                            attachments={keyframe.attachments}
+                            creativoTitle={keyframe.title}
+                            approval={approval}
+                            onApprovalUpdate={(updatedApproval) => 
+                              handleApprovalUpdate(keyframe.id, updatedApproval)
+                            }
+                            profileName="oklab_oficial"
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-center p-4 text-muted-foreground ml-11">
+                          <p className="text-sm">Nenhum arquivo encontrado neste criativo.</p>
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Individual Creatives */}
-                    {keyframe.attachments && keyframe.attachments.length > 0 ? (
-                      <div className="space-y-6 ml-11">
-                        {keyframe.attachments.map((attachment, attachmentIndex) => {
-                          const keyframeApprovals = approvals[keyframe.id] || [];
-                          const approval = keyframeApprovals.find(a => a.attachment_index === attachmentIndex);
-                          
-                          return (
-                            <CreativeApprovalCard
-                              key={`${keyframe.id}-${attachmentIndex}`}
-                              keyframeId={keyframe.id}
-                              attachment={attachment}
-                              attachmentIndex={attachmentIndex}
-                              approval={approval}
-                              onApprovalUpdate={(updatedApproval) => 
-                                handleApprovalUpdate(keyframe.id, updatedApproval)
-                              }
-                              profileName="oklab_oficial"
-                            />
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-center p-4 text-muted-foreground">
-                        <p className="text-sm">Nenhum arquivo encontrado neste criativo.</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
           </motion.div>
