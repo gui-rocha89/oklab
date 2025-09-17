@@ -86,23 +86,33 @@ const ProjectCard = ({ project, index }: any) => {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
+          {/* Client name - most prominent */}
+          <h2 className="text-lg font-bold text-foreground mb-1">
+            {project.client}
+          </h2>
+          
+          {/* Project title - secondary prominence */}
           <div className="flex items-center space-x-2 mb-2">
-            <h3 className="font-semibold text-foreground">{project.title}</h3>
+            <h3 className="font-semibold text-foreground/90">{project.title}</h3>
             <div className={`w-2 h-2 rounded-full ${priorityColors[project.priority as keyof typeof priorityColors]}`}></div>
           </div>
-          <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
           
-          {/* Project metadata */}
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
-            <span>Por {project.author}</span>
+          {/* Description - less prominent */}
+          {project.description && (
+            <p className="text-sm text-muted-foreground/80 mb-3 line-clamp-2">
+              {project.description}
+            </p>
+          )}
+          
+          {/* Creator and link generation info */}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>Criado por {project.author || 'Usuário'}</span>
             <span>•</span>
-            <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
-            {project.client && (
-              <>
-                <span>•</span>
-                <span className="font-medium">{project.client}</span>
-              </>
-            )}
+            <span>Link gerado em {new Date(project.created_at).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: '2-digit', 
+              year: 'numeric'
+            })}</span>
           </div>
 
         </div>

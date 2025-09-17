@@ -16,6 +16,7 @@ export interface Project {
   created_at: string;
   updated_at: string;
   user_id: string;
+  author?: string;
   keyframes: Array<{
     id: string;
     title: string;
@@ -93,6 +94,10 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         .from('projects')
         .select(`
           *,
+          profiles!projects_user_id_fkey (
+            full_name,
+            email
+          ),
           project_keyframes (
             *,
             project_feedback (*)
@@ -105,6 +110,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       // Transform data to match interface
       const transformedProjects: Project[] = (projectsData || []).map(project => ({
         ...project,
+        author: project.profiles?.full_name || project.profiles?.email || 'Usuário',
         keyframes: (project.project_keyframes || []).map(kf => ({
           ...kf,
           feedbacks: kf.project_feedback || []
