@@ -17,9 +17,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { InstagramPost } from './InstagramPost';
 import { InstagramCarousel } from './InstagramCarousel';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { PriorityIndicator } from './PriorityIndicator';
+import { supabase } from '../integrations/supabase/client';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -39,7 +41,7 @@ interface CreativeApproval {
 
 interface CreativeApprovalCardProps {
   keyframeId: string;
-  attachment: Attachment;
+  attachment: Attachment | Attachment[];
   attachmentIndex: number;
   approval?: CreativeApproval;
   onApprovalUpdate: (approval: CreativeApproval) => void;
@@ -56,15 +58,10 @@ export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
 }) => {
   const [feedback, setFeedback] = useState(approval?.feedback || '');
   const [submitting, setSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const handleAction = async (action: 'approved' | 'changes_requested') => {
     if (action === 'changes_requested' && !feedback.trim()) {
-      toast({
-        title: "Feedback Obrigatório",
-        description: "Por favor, descreva as alterações desejadas.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, descreva as alterações desejadas.");
       return;
     }
 
@@ -99,20 +96,11 @@ export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
 
       onApprovalUpdate(updatedApproval);
 
-      toast({
-        title: action === 'approved' ? "✅ Criativo Aprovado!" : "📝 Feedback Enviado!",
-        description: action === 'approved' 
-          ? "Este criativo foi aprovado com sucesso." 
-          : "Suas solicitações foram registradas.",
-      });
+      toast.success(action === 'approved' ? "✅ Criativo Aprovado!" : "📝 Feedback Enviado!");
 
     } catch (error) {
       console.error('Error updating approval:', error);
-      toast({
-        title: "Erro",
-        description: "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao processar ação. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
@@ -179,10 +167,10 @@ Prepare-se para uma experiência única com nossa nova campanha.
               </div>
               <div>
                 <h3 className="font-semibold text-lg text-foreground">
-                  {attachment.name}
+                  {Array.isArray(attachment) ? attachment[0]?.name : attachment.name}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Criativo #{attachmentIndex + 1}
+                  Criativo #{attachmentIndex + 1} {Array.isArray(attachment) && attachment.length > 1 && `(${attachment.length} imagens)`}
                 </p>
               </div>
             </div>
@@ -214,24 +202,30 @@ Prepare-se para uma experiência única com nossa nova campanha.
                 <MoreHorizontal className="w-6 h-6 text-muted-foreground cursor-pointer" />
               </div>
 
-              {/* Instagram Image */}
+              {/* Instagram Image or Carousel */}
               <div className="aspect-square bg-muted flex items-center justify-center rounded-lg overflow-hidden">
-                {attachment.url ? (
-                  <img 
-                    src={attachment.url} 
-                    alt={attachment.name}
-                    className="w-full h-full object-cover"
-                  />
+                {Array.isArray(attachment) && attachment.length > 1 ? (
+                  <InstagramCarousel attachments={attachment} />
                 ) : (
-                  <div className="text-center space-y-3">
-                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
-                      <span className="text-2xl font-bold text-primary">OK</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{attachment.name}</p>
-                      <p className="text-xs text-muted-foreground">Preview do Post</p>
-                    </div>
-                  </div>
+                  <>
+                    {(Array.isArray(attachment) ? attachment[0] : attachment)?.url ? (
+                      <img 
+                        src={(Array.isArray(attachment) ? attachment[0] : attachment).url} 
+                        alt={(Array.isArray(attachment) ? attachment[0] : attachment).name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center space-y-3">
+                        <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
+                          <span className="text-2xl font-bold text-primary">OK</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{(Array.isArray(attachment) ? attachment[0] : attachment)?.name}</p>
+                          <p className="text-xs text-muted-foreground">Preview do Post</p>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

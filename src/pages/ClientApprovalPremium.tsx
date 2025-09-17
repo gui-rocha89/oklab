@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
 import { InstagramPost } from '@/components/InstagramPost';
-import { PlatformRating } from '@/components/PlatformRating';
+import { SimplePlatformRating } from '@/components/SimplePlatformRating';
 import { DownloadSection } from '@/components/DownloadSection';
 import { CreativeApprovalCard } from '@/components/CreativeApprovalCard';
 import { ApprovalProgress } from '@/components/ApprovalProgress';
@@ -49,9 +49,7 @@ const ClientApprovalPremium = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [showRating, setShowRating] = useState(false);
   const [actionCompleted, setActionCompleted] = useState(false);
-  const [completedAction, setCompletedAction] = useState('');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const { generateDeliveryKit, isGenerating } = useDeliveryKit();
   const { toast } = useToast();
@@ -201,70 +199,8 @@ const ClientApprovalPremium = () => {
   };
 
   const handleAction = async (action: string) => {
-    if (action === 'changes_requested' && !feedback.trim()) {
-      toast({
-        title: "Feedback Obrigatório",
-        description: "Por favor, descreva as alterações desejadas.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSubmitting(true);
-    
-    try {
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({ 
-          status: action,
-          approval_date: action === 'approved' ? new Date().toISOString() : null
-        })
-        .eq('id', project.id);
-
-      if (updateError) throw updateError;
-
-      if (feedback.trim() && keyframes.length > 0) {
-        const { error: feedbackError } = await supabase
-          .from('project_feedback')
-          .insert({
-            keyframe_id: keyframes[0].id,
-            user_id: project.user_id,
-            comment: feedback,
-            status: 'pending',
-            x_position: 0,
-            y_position: 0
-          });
-
-        if (feedbackError) {
-          console.error('Error saving feedback:', feedbackError);
-        }
-      }
-
-      setCompletedAction(action);
-      setActionCompleted(true);
-      
-      // Delay before showing rating to let user see success message
-      setTimeout(() => {
-        setShowRating(true);
-      }, 2000);
-
-      toast({
-        title: action === 'approved' ? "✨ Projeto Aprovado!" : "📝 Feedback Enviado!",
-        description: action === 'approved' 
-          ? "Perfeito! Vamos dar vida ao seu projeto." 
-          : "Recebemos suas solicitações. Nossa equipe analisará tudo.",
-      });
-
-    } catch (error) {
-      console.error('Error updating project:', error);
-      toast({
-        title: "Erro",
-        description: "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    // This function is now simplified and only used for legacy support if needed
+    console.log('Legacy action:', action);
   };
 
   if (isLoading) {
@@ -312,64 +248,78 @@ const ClientApprovalPremium = () => {
     );
   }
 
-  if (actionCompleted && !showRating) {
+  if (actionCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-subtle">
         <Helmet>
-          <title>Ação Concluída - OK Lab</title>
+          <title>Projeto Concluído - OK Lab</title>
         </Helmet>
         
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-8 max-w-md"
-        >
+        <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-40 shadow-sm">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-center">
+              <Logo className="h-10 w-auto" />
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8 max-w-2xl">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
-            className="relative"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center space-y-8"
           >
-            <div className="w-24 h-24 bg-success/10 rounded-full flex items-center justify-center mx-auto">
-              <div className="w-16 h-16 bg-success rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-white" />
-              </div>
-            </div>
             <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
+              className="relative"
             >
-              <Sparkles className="w-4 h-4 text-white" />
-            </motion.div>
-          </motion.div>
-
-          <div className="space-y-3">
-            <h1 className="text-3xl font-bold text-foreground">
-              {completedAction === 'approved' ? 'Projeto Aprovado!' : 'Feedback Enviado!'}
-            </h1>
-            <p className="text-muted-foreground leading-relaxed">
-              {completedAction === 'approved' 
-                ? 'Fantástico! Nossa equipe já iniciou os preparativos para dar vida ao seu projeto. Em breve você verá resultados incríveis!' 
-                : 'Recebemos suas observações! Nossa equipe criativa analisará cada detalhe para entregar exatamente o que você imagina.'
-              }
-            </p>
-          </div>
-
-          <div className="pt-4 space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Aguarde... estamos preparando algo especial para você! ✨
-            </p>
-            <div className="w-48 h-1 bg-muted rounded-full mx-auto overflow-hidden">
+              <div className="w-24 h-24 bg-success/10 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 bg-success rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-white" />
+                </div>
+              </div>
               <motion.div
-                className="h-full bg-primary"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 2 }}
-              />
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center"
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+              </motion.div>
+            </motion.div>
+
+            <div className="space-y-3">
+              <h1 className="text-3xl font-bold text-foreground">Projeto Concluído!</h1>
+              <p className="text-muted-foreground leading-relaxed">
+                Recebemos suas aprovações e feedback. Nossa equipe entrará em contato em breve com os próximos passos!
+              </p>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Platform Rating */}
+            <div className="pt-8">
+              <Card className="p-6">
+                <div className="text-center space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Como foi sua experiência conosco?
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Sua avaliação nos ajuda a melhorar nossos serviços
+                  </p>
+                  <SimplePlatformRating projectId={project?.id} />
+                </div>
+              </Card>
+            </div>
+
+            {/* Download Section - if available */}
+            {isFullyApproved() && (
+              <DownloadSection 
+                project={project}
+                keyframes={keyframes}
+              />
+            )}
+          </motion.div>
+        </div>
       </div>
     );
   }
@@ -540,63 +490,121 @@ const ClientApprovalPremium = () => {
           </motion.div>
         )}
 
-        {/* Legacy Project Approval (fallback for old projects) */}
-        {keyframes.length > 0 && project?.status !== 'approved' && !isFullyApproved() && (
+        {/* Legacy Project Approval (fallback for old projects) - REMOVED */}
+
+        {/* General Project Feedback Section - Only show if all individual creatives are approved */}
+        {isFullyApproved() && !actionCompleted && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8"
+            className="mt-8 space-y-6"
           >
-            <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <MessageSquare className="w-6 h-6 text-primary" />
-                  Aprovação Geral do Projeto
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Use esta seção apenas se preferir aprovar todo o projeto de uma vez (não recomendado)
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <Card className="p-6">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    Todos os creativos foram aprovados!
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Deixe um feedback geral sobre o projeto se desejar.
+                  </p>
+                </div>
+
+                {/* Project-level feedback */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                    <label className="text-sm font-medium text-foreground">
-                      Feedback geral (opcional para aprovação, obrigatório para alterações)
-                    </label>
-                  </div>
                   <Textarea
+                    placeholder="Deixe um feedback geral sobre o projeto (opcional)..."
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Descreva suas observações gerais sobre o projeto..."
-                    className="min-h-[120px] resize-none"
+                    className="min-h-[100px]"
                   />
-                </div>
-                
-                <div className="flex gap-4 pt-4">
+
                   <Button
-                    onClick={() => handleAction('approved')}
+                    onClick={() => {
+                      if (feedback.trim()) {
+                        // Save feedback and show success
+                        supabase
+                          .from('projects')
+                          .update({
+                            client_feedback: feedback,
+                            updated_at: new Date().toISOString()
+                          })
+                          .eq('share_id', shareId)
+                          .then(() => {
+                            toast({
+                              title: "Feedback enviado com sucesso!",
+                              description: "Obrigado pelo seu feedback."
+                            });
+                          });
+                      }
+                      setActionCompleted(true);
+                    }}
                     disabled={submitting}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-primary hover:bg-primary-glow text-white px-8 py-3 text-lg font-semibold"
                     size="lg"
                   >
-                    <ThumbsUp className="w-5 h-5 mr-2" />
-                    {submitting ? 'Aprovando...' : 'Aprovar Projeto Completo'}
-                  </Button>
-                  <Button
-                    onClick={() => handleAction('changes_requested')}
-                    disabled={submitting}
-                    variant="outline"
-                    className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
-                    size="lg"
-                  >
-                    <ThumbsDown className="w-5 h-5 mr-2" />
-                    {submitting ? 'Enviando...' : 'Solicitar Alterações'}
+                    {submitting ? 'Enviando...' : 'Concluir'}
                   </Button>
                 </div>
-              </CardContent>
+              </div>
             </Card>
+          </motion.div>
+        )}
+
+        {/* Success Message and Rating - Show after completion */}
+        {actionCompleted && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-8 space-y-6"
+          >
+            <Card className="p-8 text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+              >
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </motion.div>
+              
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Obrigado pelo seu feedback!
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Recebemos suas aprovações. Nossa equipe entrará em contato em breve.
+              </p>
+            </Card>
+
+            {/* Platform Rating - Independent section */}
+            <Card className="p-6">
+              <div className="text-center space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Como foi sua experiência conosco?
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Sua avaliação nos ajuda a melhorar nossos serviços
+                </p>
+                <SimplePlatformRating projectId={project?.id} />
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Download Section - Always show at bottom when fully approved */}
+        {isFullyApproved() && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8"
+          >
+            <DownloadSection 
+              project={project}
+              keyframes={keyframes}
+            />
           </motion.div>
         )}
 
@@ -728,13 +736,7 @@ const ClientApprovalPremium = () => {
         </div>
       </footer>
 
-      {/* Platform Rating Modal */}
-      <PlatformRating
-        projectId={project?.id}
-        isOpen={showRating}
-        onClose={() => setShowRating(false)}
-        completedAction={completedAction}
-      />
+      {/* Platform Rating Modal - Removed, now inline */}
     </div>
   );
 };
