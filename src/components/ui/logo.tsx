@@ -7,7 +7,7 @@ interface LogoProps {
   alt?: string;
 }
 
-export function Logo({ className = "h-16 w-auto", alt = "MANUS I.A Logo" }: LogoProps) {
+export function Logo({ className = "h-16 w-auto", alt = "OK Lab Logo" }: LogoProps) {
   const { theme, resolvedTheme } = useTheme();
   
   // Use the resolved theme to avoid hydration issues
