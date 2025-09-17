@@ -104,15 +104,14 @@ export default function Projects() {
   };
 
   const handleViewProject = (shareId: string) => {
-    navigate(`/aprovacao-audiovisual/${shareId}`);
+    navigate(`/projeto/${shareId}`);
   };
 
   const handleEditProject = (projectId: string) => {
-    // Navigate to edit page or open edit modal
-    toast({
-      title: "Editar Projeto",
-      description: "Funcionalidade de edição em desenvolvimento.",
-    });
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      window.open(`/projeto/${project.share_id}`, '_blank');
+    }
   };
 
   const handleDeleteProject = (projectId: string) => {
@@ -421,7 +420,11 @@ export default function Projects() {
                     <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
                       <div className="text-sm text-muted-foreground flex items-center space-x-1">
                         <MessageSquare className="w-4 h-4" />
-                        <span>{project.keyframes?.length || 0} comentário(s) pendente(s)</span>
+                        <span>
+                          {project.keyframes?.reduce((total, keyframe) => 
+                            total + (keyframe.feedbacks?.filter(feedback => feedback.status === 'pending').length || 0), 0
+                          ) || 0} comentário(s) pendente(s)
+                        </span>
                       </div>
                       
                       <div className="flex items-center space-x-1">
@@ -484,11 +487,16 @@ export default function Projects() {
                           <span>{project.client}</span>
                           <span>{project.type}</span>
                           <span>{new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
-                          {project.keyframes.length > 0 && (
-                            <span className="text-primary">
-                              {project.keyframes.length} comentário{project.keyframes.length !== 1 ? 's' : ''}
-                            </span>
-                          )}
+                          {(() => {
+                            const pendingFeedbacks = project.keyframes?.reduce((total, keyframe) => 
+                              total + (keyframe.feedbacks?.filter(feedback => feedback.status === 'pending').length || 0), 0
+                            ) || 0;
+                            return pendingFeedbacks > 0 && (
+                              <span className="text-primary">
+                                {pendingFeedbacks} comentário{pendingFeedbacks !== 1 ? 's' : ''}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                       
