@@ -133,10 +133,13 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Remove fields that don't exist in the database table
+      const { approvalLink, creatives, ...projectData } = project as any;
+
       const { data, error } = await supabase
         .from('projects')
         .insert({
-          ...project,
+          ...projectData,
           user_id: user.id
         })
         .select()
