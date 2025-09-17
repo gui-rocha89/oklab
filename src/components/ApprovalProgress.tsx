@@ -20,7 +20,6 @@ interface ApprovalProgressProps {
 export const ApprovalProgress: React.FC<ApprovalProgressProps> = ({
   approvals,
   totalCreatives,
-  onDownloadKit,
   isGeneratingKit = false
 }) => {
   const approvedCount = approvals.filter(a => a.status === 'approved').length;
@@ -133,21 +132,9 @@ export const ApprovalProgress: React.FC<ApprovalProgressProps> = ({
                 </h3>
                 <p className="text-green-700">
                   Perfeito! Todos os {totalCreatives} creativos foram aprovados. 
-                  Agora você pode baixar o kit completo com o PDF e todos os arquivos organizados.
+                  Role para baixo para baixar o kit completo com o PDF e todos os arquivos organizados.
                 </p>
               </div>
-
-              {onDownloadKit && (
-                <Button
-                  onClick={onDownloadKit}
-                  disabled={isGeneratingKit}
-                  className="bg-primary hover:bg-primary-glow text-white px-6 py-3 text-lg font-semibold"
-                  size="lg"
-                >
-                  <Download className="w-5 h-5 mr-2" />
-                  {isGeneratingKit ? 'Gerando Kit...' : 'Baixar Kit Completo'}
-                </Button>
-              )}
             </div>
           </motion.div>
         )}
