@@ -52,10 +52,15 @@ const ClientApproval = () => {
         .from('projects')
         .select('*')
         .eq('share_id', shareId)
-        .single();
+        .maybeSingle();
 
       if (projectError) {
-        console.error('Project not found:', projectError);
+        console.error('Error fetching project:', projectError);
+        return;
+      }
+
+      if (!projectData) {
+        console.log('Project not found for share_id:', shareId);
         return;
       }
 
