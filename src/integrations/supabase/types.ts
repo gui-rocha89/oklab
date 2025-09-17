@@ -88,6 +88,41 @@ export type Database = {
         }
         Relationships: []
       }
+      project_downloads: {
+        Row: {
+          client_ip: string | null
+          created_at: string
+          downloaded_at: string
+          files_downloaded: Json
+          id: string
+          project_id: string
+        }
+        Insert: {
+          client_ip?: string | null
+          created_at?: string
+          downloaded_at?: string
+          files_downloaded?: Json
+          id?: string
+          project_id: string
+        }
+        Update: {
+          client_ip?: string | null
+          created_at?: string
+          downloaded_at?: string
+          files_downloaded?: Json
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_downloads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_feedback: {
         Row: {
           comment: string

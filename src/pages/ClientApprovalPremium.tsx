@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
 import { InstagramPost } from '@/components/InstagramPost';
 import { PlatformRating } from '@/components/PlatformRating';
+import { DownloadSection } from '@/components/DownloadSection';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -294,7 +295,10 @@ const ClientApprovalPremium = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Download Section - Show after approval */}
+        <DownloadSection project={project} keyframes={keyframes} />
+        
         {/* Project Overview */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
