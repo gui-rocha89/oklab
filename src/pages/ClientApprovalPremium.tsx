@@ -22,13 +22,26 @@ import { Logo } from '@/components/ui/logo';
 import { InstagramPost } from '@/components/InstagramPost';
 import { PlatformRating } from '@/components/PlatformRating';
 import { DownloadSection } from '@/components/DownloadSection';
+import { CreativeApprovalCard } from '@/components/CreativeApprovalCard';
+import { ApprovalProgress } from '@/components/ApprovalProgress';
+import { useDeliveryKit } from '@/hooks/useDeliveryKit';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+interface CreativeApproval {
+  id?: string;
+  attachment_index: number;
+  caption?: string;
+  publish_date?: string;
+  status: 'pending' | 'approved' | 'changes_requested';
+  feedback?: string;
+}
 
 const ClientApprovalPremium = () => {
   const { shareId } = useParams();
   const [project, setProject] = useState(null);
   const [keyframes, setKeyframes] = useState([]);
+  const [approvals, setApprovals] = useState<Record<string, CreativeApproval[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +49,7 @@ const ClientApprovalPremium = () => {
   const [actionCompleted, setActionCompleted] = useState(false);
   const [completedAction, setCompletedAction] = useState('');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const { generateDeliveryKit, isGenerating } = useDeliveryKit();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,6 +88,11 @@ const ClientApprovalPremium = () => {
         console.error('Error fetching keyframes:', keyframesError);
       } else {
         setKeyframes(keyframesData || []);
+        
+        // Fetch approvals for each keyframe
+        if (keyframesData && keyframesData.length > 0) {
+          await fetchApprovals(keyframesData);
+        }
       }
 
     } catch (error) {
@@ -81,6 +100,100 @@ const ClientApprovalPremium = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchApprovals = async (keyframesData: any[]) => {
+    try {
+      const keyframeIds = keyframesData.map(kf => kf.id);
+      
+      const { data: approvalsData, error } = await supabase
+        .from('creative_approvals')
+        .select('*')
+        .in('keyframe_id', keyframeIds);
+
+      if (error) {
+        console.error('Error fetching approvals:', error);
+        return;
+      }
+
+      // Group approvals by keyframe_id
+      const groupedApprovals: Record<string, CreativeApproval[]> = {};
+      (approvalsData || []).forEach(approval => {
+        if (!groupedApprovals[approval.keyframe_id]) {
+          groupedApprovals[approval.keyframe_id] = [];
+        }
+        groupedApprovals[approval.keyframe_id].push({
+          id: approval.id,
+          attachment_index: approval.attachment_index,
+          caption: approval.caption,
+          publish_date: approval.publish_date,
+          status: approval.status,
+          feedback: approval.feedback
+        });
+      });
+
+      setApprovals(groupedApprovals);
+    } catch (error) {
+      console.error('Error fetching approvals:', error);
+    }
+  };
+
+  const handleApprovalUpdate = (keyframeId: string, approval: CreativeApproval) => {
+    setApprovals(prev => {
+      const updated = { ...prev };
+      if (!updated[keyframeId]) {
+        updated[keyframeId] = [];
+      }
+      
+      const existingIndex = updated[keyframeId].findIndex(
+        a => a.attachment_index === approval.attachment_index
+      );
+      
+      if (existingIndex >= 0) {
+        updated[keyframeId][existingIndex] = approval;
+      } else {
+        updated[keyframeId].push(approval);
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleDownloadKit = async () => {
+    if (!project || !keyframes) return;
+    
+    try {
+      await generateDeliveryKit(project, keyframes, approvals);
+    } catch (error) {
+      console.error('Error generating delivery kit:', error);
+      toast({
+        title: "Erro ao Gerar Kit",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Calculate total approvals and check if fully approved
+  const getAllApprovals = () => {
+    const allApprovals: CreativeApproval[] = [];
+    Object.values(approvals).forEach(keyframeApprovals => {
+      allApprovals.push(...keyframeApprovals);
+    });
+    return allApprovals;
+  };
+
+  const getTotalCreatives = () => {
+    return keyframes.reduce((total, keyframe) => {
+      return total + (keyframe.attachments?.length || 0);
+    }, 0);
+  };
+
+  const isFullyApproved = () => {
+    const totalCreatives = getTotalCreatives();
+    const allApprovals = getAllApprovals();
+    const approvedCount = allApprovals.filter(a => a.status === 'approved').length;
+    return totalCreatives > 0 && approvedCount === totalCreatives;
   };
 
   const handleAction = async (action: string) => {
@@ -296,8 +409,13 @@ const ClientApprovalPremium = () => {
       </header>
 
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Download Section - Show after approval */}
-        <DownloadSection project={project} keyframes={keyframes} />
+        {/* Approval Progress */}
+        <ApprovalProgress 
+          approvals={getAllApprovals()}
+          totalCreatives={getTotalCreatives()}
+          onDownloadKit={isFullyApproved() ? handleDownloadKit : undefined}
+          isGeneratingKit={isGenerating}
+        />
         
         {/* Project Overview */}
         <motion.div
@@ -348,8 +466,140 @@ const ClientApprovalPremium = () => {
           </Card>
         </motion.div>
 
-        {/* Instagram Posts Preview */}
+        {/* Individual Creative Approval */}
         {keyframes.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="w-8 h-8 bg-gradient-to-br from-pink-500 via-purple-500 to-yellow-500 rounded-lg p-0.5">
+                      <div className="w-full h-full bg-background rounded-md flex items-center justify-center">
+                        <Instagram className="w-4 h-4 text-foreground" />
+                      </div>
+                    </div>
+                    Aprovação por Criativo
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {getTotalCreatives()} {getTotalCreatives() === 1 ? 'Criativo' : 'Creativos'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Revise cada criativo individualmente com legenda e cronograma de publicação
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                {keyframes.map((keyframe, keyframeIndex) => (
+                  <div key={keyframe.id} className="space-y-6">
+                    {/* Keyframe Title */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-primary">{keyframeIndex + 1}</span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground">{keyframe.title}</h3>
+                    </div>
+                    
+                    {/* Individual Creatives */}
+                    {keyframe.attachments && keyframe.attachments.length > 0 ? (
+                      <div className="space-y-6 ml-11">
+                        {keyframe.attachments.map((attachment, attachmentIndex) => {
+                          const keyframeApprovals = approvals[keyframe.id] || [];
+                          const approval = keyframeApprovals.find(a => a.attachment_index === attachmentIndex);
+                          
+                          return (
+                            <CreativeApprovalCard
+                              key={`${keyframe.id}-${attachmentIndex}`}
+                              keyframeId={keyframe.id}
+                              attachment={attachment}
+                              attachmentIndex={attachmentIndex}
+                              approval={approval}
+                              onApprovalUpdate={(updatedApproval) => 
+                                handleApprovalUpdate(keyframe.id, updatedApproval)
+                              }
+                              profileName="oklab_oficial"
+                            />
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center p-4 text-muted-foreground">
+                        <p className="text-sm">Nenhum arquivo encontrado neste criativo.</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Legacy Project Approval (fallback for old projects) */}
+        {keyframes.length > 0 && project?.status !== 'approved' && !isFullyApproved() && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <MessageSquare className="w-6 h-6 text-primary" />
+                  Aprovação Geral do Projeto
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Use esta seção apenas se preferir aprovar todo o projeto de uma vez (não recomendado)
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                    <label className="text-sm font-medium text-foreground">
+                      Feedback geral (opcional para aprovação, obrigatório para alterações)
+                    </label>
+                  </div>
+                  <Textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Descreva suas observações gerais sobre o projeto..."
+                    className="min-h-[120px] resize-none"
+                  />
+                </div>
+                
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    onClick={() => handleAction('approved')}
+                    disabled={submitting}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    size="lg"
+                  >
+                    <ThumbsUp className="w-5 h-5 mr-2" />
+                    {submitting ? 'Aprovando...' : 'Aprovar Projeto Completo'}
+                  </Button>
+                  <Button
+                    onClick={() => handleAction('changes_requested')}
+                    disabled={submitting}
+                    variant="outline"
+                    className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                    size="lg"
+                  >
+                    <ThumbsDown className="w-5 h-5 mr-2" />
+                    {submitting ? 'Enviando...' : 'Solicitar Alterações'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Old Instagram Preview (for reference) */}
+        {false && keyframes.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -458,77 +708,6 @@ const ClientApprovalPremium = () => {
           </motion.div>
         )}
 
-        {/* Feedback Section */}
-        {!actionCompleted && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <MessageSquare className="w-6 h-6 text-primary" />
-                  Sua Opinião é Fundamental
-                </CardTitle>
-                <p className="text-muted-foreground">
-                  Aprove o projeto ou compartilhe suas solicitações de alteração
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <label htmlFor="feedback" className="text-sm font-medium text-foreground">
-                    Comentários e Sugestões
-                    <span className="text-muted-foreground font-normal ml-1">
-                      (opcional para aprovação, obrigatório para alterações)
-                    </span>
-                  </label>
-                  <Textarea
-                    id="feedback"
-                    placeholder="Descreva suas observações, sugestões ou solicitações de alteração detalhadamente..."
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    rows={4}
-                    className="resize-none border-border focus:border-primary/50 transition-colors"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Seja específico para obtermos os melhores resultados</span>
-                    <span>{feedback.length}/500</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button
-                    onClick={() => handleAction('approved')}
-                    disabled={submitting}
-                    className="flex-1 h-12 bg-success hover:bg-success/90 text-white font-medium text-base shadow-lg hover:shadow-xl transition-all"
-                  >
-                    {submitting ? (
-                      <div className="w-5 h-5 mr-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <ThumbsUp className="w-5 h-5 mr-3" />
-                    )}
-                    ✨ Aprovar Projeto
-                  </Button>
-
-                  <Button
-                    onClick={() => handleAction('changes_requested')}
-                    disabled={submitting}
-                    variant="outline"
-                    className="flex-1 h-12 border-primary/30 text-foreground hover:bg-primary/5 font-medium text-base shadow-lg hover:shadow-xl transition-all"
-                  >
-                    {submitting ? (
-                      <div className="w-5 h-5 mr-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    ) : (
-                      <ThumbsDown className="w-5 h-5 mr-3" />
-                    )}
-                    📝 Solicitar Alterações
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
       </div>
 
       {/* Footer */}

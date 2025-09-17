@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      creative_approvals: {
+        Row: {
+          attachment_index: number
+          caption: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          keyframe_id: string
+          publish_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_index: number
+          caption?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          keyframe_id: string
+          publish_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_index?: number
+          caption?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          keyframe_id?: string
+          publish_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_approvals_keyframe_id_fkey"
+            columns: ["keyframe_id"]
+            isOneToOne: false
+            referencedRelation: "project_keyframes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_reviews: {
         Row: {
           client_email: string

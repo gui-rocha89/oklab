@@ -28,7 +28,7 @@ export const useDeliveryKit = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  const generatePDF = async (project: Project, keyframes: Keyframe[]): Promise<Blob> => {
+  const generatePDF = async (project: Project, keyframes: Keyframe[], approvals: any = {}): Promise<Blob> => {
     const pdf = new jsPDF();
     
     // Configurações de cores
@@ -58,7 +58,7 @@ export const useDeliveryKit = () => {
     pdf.text(project.title, 105, 170, { align: 'center' });
     pdf.setFontSize(12);
     pdf.text(`Cliente: ${project.client}`, 105, 185, { align: 'center' });
-    pdf.text(`Aprovado em: ${format(new Date(project.approval_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`, 105, 200, { align: 'center' });
+    pdf.text(`Aprovado em: ${format(new Date(project.approval_date || Date.now()), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`, 105, 200, { align: 'center' });
     
     // Footer
     pdf.setFontSize(10);
@@ -81,6 +81,8 @@ export const useDeliveryKit = () => {
     let yPosition = 60;
     
     keyframes.forEach((keyframe, index) => {
+      const keyframeApprovals = approvals[keyframe.id] || [];
+      
       if (yPosition > 250) {
         pdf.addPage();
         yPosition = 30;
@@ -99,21 +101,38 @@ export const useDeliveryKit = () => {
           yPosition = 30;
         }
         
-        const publishDate = attachment.publishDate 
-          ? format(new Date(attachment.publishDate), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+        const approval = keyframeApprovals.find(a => a.attachment_index === attachIndex);
+        const publishDate = approval?.publish_date 
+          ? format(new Date(approval.publish_date), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
           : 'Data não especificada';
           
+        const status = approval?.status === 'approved' ? '✅ Aprovado' : 
+                      approval?.status === 'changes_requested' ? '📝 Alterações Solicitadas' : 
+                      '⏳ Pendente';
+        
         // Retângulo para o item
-        pdf.setFillColor(248, 249, 250);
-        pdf.rect(25, yPosition - 5, 160, 25, 'F');
+        const bgColor = approval?.status === 'approved' ? [240, 253, 244] : [248, 249, 250];
+        pdf.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+        pdf.rect(25, yPosition - 5, 160, 35, 'F');
         
         pdf.setFontSize(12);
         pdf.setTextColor(...textColor);
         pdf.text(`📅 ${publishDate}`, 30, yPosition + 5);
         pdf.text(`📁 ${attachment.name}`, 30, yPosition + 12);
         pdf.text(`📱 Instagram Feed`, 30, yPosition + 19);
+        pdf.text(`Status: ${status}`, 30, yPosition + 26);
         
-        yPosition += 35;
+        // Adicionar legenda se houver
+        if (approval?.caption) {
+          yPosition += 10;
+          pdf.setFontSize(10);
+          pdf.setTextColor(...mutedColor);
+          const captionLines = pdf.splitTextToSize(`Legenda: ${approval.caption}`, 150);
+          pdf.text(captionLines, 30, yPosition + 26);
+          yPosition += captionLines.length * 4;
+        }
+        
+        yPosition += 45;
       });
       
       yPosition += 10;
@@ -149,7 +168,7 @@ export const useDeliveryKit = () => {
     return pdf.output('blob');
   };
 
-  const generateZIP = async (project: Project, keyframes: Keyframe[], pdfBlob: Blob): Promise<Blob> => {
+  const generateZIP = async (project: Project, keyframes: Keyframe[], pdfBlob: Blob, approvals: any = {}): Promise<Blob> => {
     const zip = new JSZip();
     
     // Adicionar o PDF ao ZIP
@@ -161,11 +180,15 @@ export const useDeliveryKit = () => {
     // Baixar e adicionar cada imagem ao ZIP
     for (let i = 0; i < keyframes.length; i++) {
       const keyframe = keyframes[i];
+      const keyframeApprovals = approvals[keyframe.id] || [];
       const creativeFolder = imagesFolder!.folder(`${String(i + 1).padStart(2, '0')}_${keyframe.title.replace(/[^a-zA-Z0-9]/g, '_')}`);
       
       for (let j = 0; j < keyframe.attachments.length; j++) {
         const attachment = keyframe.attachments[j];
-        if (attachment.url) {
+        const approval = keyframeApprovals.find(a => a.attachment_index === j);
+        
+        // Só incluir imagens aprovadas
+        if (approval?.status === 'approved' && attachment.url) {
           try {
             const response = await fetch(attachment.url);
             const imageBlob = await response.blob();
@@ -197,7 +220,7 @@ export const useDeliveryKit = () => {
     }
   };
 
-  const generateDeliveryKit = async (project: Project, keyframes: Keyframe[]) => {
+  const generateDeliveryKit = async (project: Project, keyframes: Keyframe[], approvals: any = {}) => {
     setIsGenerating(true);
     
     try {
@@ -207,10 +230,10 @@ export const useDeliveryKit = () => {
       });
 
       // Gerar PDF
-      const pdfBlob = await generatePDF(project, keyframes);
+      const pdfBlob = await generatePDF(project, keyframes, approvals);
       
       // Gerar ZIP com PDF e imagens
-      const zipBlob = await generateZIP(project, keyframes, pdfBlob);
+      const zipBlob = await generateZIP(project, keyframes, pdfBlob, approvals);
       
       // Criar arquivo para download
       const url = URL.createObjectURL(zipBlob);
