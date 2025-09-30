@@ -300,23 +300,33 @@ const ClientReturn = () => {
                     Nenhum comentário específico foi enviado pelo cliente.
                   </p>
                 ) : (
-                  keyframes.filter(k => k.title).map((keyframe, index) => (
-                    <div
-                      key={keyframe.id}
-                      className="p-4 border rounded-lg hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">Momento #{index + 1}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {format(new Date(keyframe.created_at), "dd/MM/yyyy HH:mm")}
-                          </Badge>
+                  keyframes.filter(k => k.title).map((keyframe, index) => {
+                    // Extract timestamp from attachments if available
+                    const timestamp = keyframe.attachments?.[0];
+                    const timeStr = timestamp?.timeStr || '';
+                    
+                    return (
+                      <div
+                        key={keyframe.id}
+                        className="p-4 border rounded-lg hover:border-primary/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-sm">
+                              {timeStr ? `${timeStr}` : `Comentário #${index + 1}`}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {format(new Date(keyframe.created_at), "dd/MM/yyyy HH:mm")}
+                            </Badge>
+                          </div>
+                          {getStatusBadge(keyframe.status)}
                         </div>
-                        {getStatusBadge(keyframe.status)}
+                        <p className="text-sm whitespace-pre-wrap bg-muted/30 p-3 rounded">
+                          {keyframe.title}
+                        </p>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">{keyframe.title}</p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </CardContent>

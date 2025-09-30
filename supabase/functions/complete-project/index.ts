@@ -84,52 +84,33 @@ Deno.serve(async (req) => {
       console.log('[complete-project] Saving', keyframes.length, 'keyframe feedbacks')
       
       for (const kf of keyframes.filter(k => k.comment.trim() !== '')) {
-        const isExistingKeyframe = kf.id.length > 20
+        const minutes = Math.floor(kf.time / 60)
+        const seconds = kf.time % 60
+        const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`
         
-        let keyframeId = kf.id
-        
-        if (!isExistingKeyframe) {
-          // Create new keyframe
-          const minutes = Math.floor(kf.time / 60)
-          const seconds = kf.time % 60
-          const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`
-          
-          const { data: newKeyframe, error: kfError } = await supabase
-            .from('project_keyframes')
-            .insert({
-              project_id: project.id,
-              title: `Feedback em ${timeStr}`,
-              status: 'pending'
-            })
-            .select()
-            .single()
-          
-          if (kfError) {
-            console.error('[complete-project] Error creating keyframe:', kfError)
-            continue
-          }
-          
-          keyframeId = newKeyframe.id
-        }
-        
-        // Create feedback for this keyframe
-        const { error: feedbackError } = await supabase
-          .from('project_feedback')
+        // Create new keyframe with client comment
+        const { error: kfError } = await supabase
+          .from('project_keyframes')
           .insert({
-            keyframe_id: keyframeId,
-            user_id: project.user_id, // Use project owner as feedback recipient
-            comment: kf.comment,
-            x_position: 50,
-            y_position: 50,
-            status: 'pending'
+            project_id: project.id,
+            title: kf.comment, // Save client comment directly in title
+            status: 'pending',
+            attachments: [{
+              type: 'timestamp',
+              time: kf.time,
+              timeStr: timeStr
+            }]
           })
         
-        if (feedbackError) {
-          console.error('[complete-project] Error creating feedback:', feedbackError)
+        if (kfError) {
+          console.error('[complete-project] Error creating keyframe:', kfError)
+          continue
         }
+        
+        console.log('[complete-project] Saved keyframe feedback at', timeStr)
       }
       
-      console.log('[complete-project] Keyframe feedbacks saved')
+      console.log('[complete-project] All keyframe feedbacks saved')
     }
 
     const now = new Date().toISOString()
