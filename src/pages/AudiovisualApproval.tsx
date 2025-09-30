@@ -2,13 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause, Info, Star } from 'lucide-react';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause, Info, Star, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { VideoAnnotationCanvas } from '@/components/VideoAnnotationCanvas';
+import { DrawingToolbar } from '@/components/DrawingToolbar';
+import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 
@@ -57,6 +60,29 @@ export default function AudiovisualApproval() {
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
+
+  // Annotation system
+  const {
+    annotations,
+    currentTool,
+    setCurrentTool,
+    brushColor,
+    setBrushColor,
+    brushWidth,
+    setBrushWidth,
+    isDrawingMode,
+    setIsDrawingMode,
+    loadAnnotations,
+    saveAnnotation,
+    loadAnnotationToCanvas,
+    deleteAnnotation,
+    clearCanvas,
+    undo,
+    redo,
+    setCanvas,
+    canUndo,
+    canRedo,
+  } = useVideoAnnotations(project?.id);
 
   // Fetch project data from Supabase
   useEffect(() => {
@@ -134,6 +160,13 @@ export default function AudiovisualApproval() {
 
     fetchProject();
   }, [shareId]);
+
+  // Load annotations when project is loaded
+  useEffect(() => {
+    if (project?.id) {
+      loadAnnotations();
+    }
+  }, [project?.id, loadAnnotations]);
 
   const handleAddKeyframe = () => {
     if (keyframes.some(k => Math.abs(k.time - currentTime) < 1)) {
@@ -456,7 +489,43 @@ export default function AudiovisualApproval() {
                 >
                   <source src={project.video_url} type="video/mp4" />
                 </video>
+                
+                {/* Annotation Canvas Overlay */}
+                {isDrawingMode && (
+                  <VideoAnnotationCanvas
+                    videoRef={videoRef}
+                    isDrawingMode={isDrawingMode}
+                    currentTool={currentTool}
+                    brushColor={brushColor}
+                    brushWidth={brushWidth}
+                    onCanvasReady={setCanvas}
+                  />
+                )}
               </div>
+              
+              {/* Drawing Toolbar */}
+              {isDrawingMode && (
+                <div className="mt-4">
+                  <DrawingToolbar
+                    currentTool={currentTool}
+                    onToolChange={setCurrentTool}
+                    brushColor={brushColor}
+                    onColorChange={setBrushColor}
+                    brushWidth={brushWidth}
+                    onBrushWidthChange={setBrushWidth}
+                    onUndo={undo}
+                    onRedo={redo}
+                    onClear={clearCanvas}
+                    onSave={async () => {
+                      if (!videoRef.current) return;
+                      await saveAnnotation(Math.floor(videoRef.current.currentTime * 1000));
+                      clearCanvas();
+                    }}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                  />
+                </div>
+              )}
               
               {/* Video Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
@@ -468,6 +537,16 @@ export default function AudiovisualApproval() {
                     className={isMobile ? "touch-manipulation min-h-[44px] px-6" : ""}
                   >
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setIsDrawingMode(!isDrawingMode)}
+                    variant={isDrawingMode ? "default" : "outline"}
+                    size={isMobile ? "default" : "sm"}
+                    className={isMobile ? "touch-manipulation min-h-[44px] px-6" : ""}
+                  >
+                    <Pencil className="w-4 h-4 mr-2" />
+                    {isDrawingMode ? 'Desativar' : 'Desenhar'}
                   </Button>
                   
                   <div className={`text-sm text-muted-foreground ${isMobile ? '' : 'hidden'}`}>
@@ -524,6 +603,50 @@ export default function AudiovisualApproval() {
                         placeholder="Adicione seu comentário aqui..."
                         className={`w-full ${isMobile ? 'min-h-[100px] text-base' : ''}`}
                       />
+                    </motion.div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Visual Annotations */}
+            {annotations.length > 0 && (
+              <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
+                <h3 className={`font-semibold mb-4 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
+                  Anotações Visuais
+                </h3>
+                <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
+                  {annotations.map(annotation => (
+                    <motion.div
+                      key={annotation.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border border-gray-200 rounded-lg p-4 bg-white"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          onClick={async () => {
+                            if (!videoRef.current) return;
+                            videoRef.current.currentTime = annotation.timestamp_ms / 1000;
+                            await loadAnnotationToCanvas(annotation);
+                            setIsDrawingMode(true);
+                          }}
+                          className={`text-primary hover:text-primary/80 font-medium touch-manipulation ${isMobile ? 'min-h-[44px] text-base' : ''}`}
+                        >
+                          {formatTime(annotation.timestamp_ms / 1000)}
+                        </button>
+                        <Button
+                          onClick={() => deleteAnnotation(annotation.id)}
+                          variant="ghost"
+                          size={isMobile ? "default" : "sm"}
+                          className={isMobile ? "touch-manipulation min-h-[44px]" : ""}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      {annotation.comment && (
+                        <p className="text-sm text-gray-600">{annotation.comment}</p>
+                      )}
                     </motion.div>
                   ))}
                 </div>
