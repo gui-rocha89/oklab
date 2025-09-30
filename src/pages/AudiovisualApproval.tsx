@@ -494,10 +494,10 @@ export default function AudiovisualApproval() {
           {/* Video Player Section */}
           <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
             <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+              <div className="relative w-full bg-black rounded-lg overflow-hidden">
                 <video
                   ref={videoRef}
-                  className="absolute inset-0 w-full h-full object-contain"
+                  className="w-full h-auto"
                   onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
                   onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
                   onPlay={() => setIsPlaying(true)}

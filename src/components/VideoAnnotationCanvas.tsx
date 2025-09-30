@@ -27,14 +27,33 @@ export const VideoAnnotationCanvas = ({
 
     const updateDimensions = () => {
       if (!videoRef.current) return;
-      const { offsetWidth, offsetHeight } = videoRef.current;
-      setDimensions({ width: offsetWidth, height: offsetHeight });
+      
+      // Get the actual rendered dimensions of the video element
+      const rect = videoRef.current.getBoundingClientRect();
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+      
+      if (width > 0 && height > 0) {
+        setDimensions({ width, height });
+      }
     };
 
+    // Initial update
     updateDimensions();
+    
+    // Update on video metadata load to get accurate dimensions
+    const handleLoadedMetadata = () => {
+      setTimeout(updateDimensions, 100);
+    };
+    
+    videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
     window.addEventListener('resize', updateDimensions);
 
-    return () => window.removeEventListener('resize', updateDimensions);
+    const currentVideo = videoRef.current;
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      currentVideo?.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
   }, [videoRef]);
 
   useEffect(() => {
@@ -134,12 +153,15 @@ export const VideoAnnotationCanvas = ({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute top-0 left-0 w-full h-full"
+      className="absolute top-0 left-0"
       style={{ 
+        width: `${dimensions.width}px`,
+        height: `${dimensions.height}px`,
         pointerEvents: isDrawingMode ? 'auto' : 'none',
         touchAction: isDrawingMode ? 'none' : 'auto',
         opacity: isDrawingMode ? 1 : 0,
-        transition: 'opacity 0.2s ease-in-out'
+        transition: 'opacity 0.2s ease-in-out',
+        cursor: isDrawingMode ? 'crosshair' : 'default'
       }}
     />
   );
