@@ -23,13 +23,14 @@ export const VideoAnnotationCanvas = ({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    if (!canvasRef.current || !videoRef.current) return;
+    if (!canvasRef.current) return;
 
     const updateDimensions = () => {
-      if (!videoRef.current) return;
+      const parentElement = canvasRef.current?.parentElement;
+      if (!parentElement) return;
       
-      // Get the actual rendered dimensions of the video element
-      const rect = videoRef.current.getBoundingClientRect();
+      // Get dimensions from the parent container (the overlay div)
+      const rect = parentElement.getBoundingClientRect();
       const width = Math.floor(rect.width);
       const height = Math.floor(rect.height);
       
@@ -38,23 +39,16 @@ export const VideoAnnotationCanvas = ({
       }
     };
 
-    // Initial update
-    updateDimensions();
+    // Initial update with a slight delay to ensure parent is rendered
+    setTimeout(updateDimensions, 50);
     
-    // Update on video metadata load to get accurate dimensions
-    const handleLoadedMetadata = () => {
-      setTimeout(updateDimensions, 100);
-    };
-    
-    videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+    // Update on resize
     window.addEventListener('resize', updateDimensions);
 
-    const currentVideo = videoRef.current;
     return () => {
       window.removeEventListener('resize', updateDimensions);
-      currentVideo?.removeEventListener('loadedmetadata', handleLoadedMetadata);
     };
-  }, [videoRef]);
+  }, []);
 
   useEffect(() => {
     if (!canvasRef.current || dimensions.width === 0) return;
@@ -153,15 +147,12 @@ export const VideoAnnotationCanvas = ({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute top-0 left-0"
+      className="absolute top-0 left-0 w-full h-full"
       style={{ 
-        width: `${dimensions.width}px`,
-        height: `${dimensions.height}px`,
         pointerEvents: isDrawingMode ? 'auto' : 'none',
         touchAction: isDrawingMode ? 'none' : 'auto',
-        opacity: isDrawingMode ? 1 : 0,
-        transition: 'opacity 0.2s ease-in-out',
-        cursor: isDrawingMode ? 'crosshair' : 'default'
+        cursor: isDrawingMode ? 'crosshair' : 'default',
+        zIndex: 100
       }}
     />
   );

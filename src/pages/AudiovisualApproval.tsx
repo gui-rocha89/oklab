@@ -495,8 +495,8 @@ export default function AudiovisualApproval() {
           {/* Video Player Section */}
           <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
             <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative">
-                {/* Hidden video element for VideoAnnotationCanvas */}
+              <div className="relative bg-black">
+                {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
                   className="hidden"
@@ -507,32 +507,37 @@ export default function AudiovisualApproval() {
                   onPause={() => setIsPlaying(false)}
                 />
                 
-                <CustomVideoPlayer
-                  src={project.video_url}
-                  currentTime={currentTime}
-                  onTimeUpdate={setCurrentTime}
-                  onDurationChange={setDuration}
-                  annotations={annotations}
-                  onSeek={(time) => {
-                    if (videoRef.current) {
-                      videoRef.current.currentTime = time;
-                    }
-                  }}
-                />
-                
-                {/* Drawing Canvas Overlay */}
-                {isDrawingMode && (
-                  <div className="absolute inset-0" style={{ zIndex: 50 }}>
-                    <VideoAnnotationCanvas
-                      videoRef={videoRef}
-                      isDrawingMode={isDrawingMode}
-                      currentTool={currentTool}
-                      brushColor={brushColor}
-                      brushWidth={brushWidth}
-                      onCanvasReady={setCanvas}
-                    />
-                  </div>
-                )}
+                <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+                  <CustomVideoPlayer
+                    src={project.video_url}
+                    currentTime={currentTime}
+                    onTimeUpdate={setCurrentTime}
+                    onDurationChange={setDuration}
+                    annotations={annotations}
+                    onSeek={(time) => {
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = time;
+                      }
+                    }}
+                  />
+                  
+                  {/* Drawing Canvas Overlay - Positioned absolutely over the video */}
+                  {isDrawingMode && (
+                    <div 
+                      className="absolute top-0 left-0 w-full h-full" 
+                      style={{ zIndex: 50 }}
+                    >
+                      <VideoAnnotationCanvas
+                        videoRef={videoRef}
+                        isDrawingMode={isDrawingMode}
+                        currentTool={currentTool}
+                        brushColor={brushColor}
+                        brushWidth={brushWidth}
+                        onCanvasReady={setCanvas}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Drawing Toolbar - Below Video */}
