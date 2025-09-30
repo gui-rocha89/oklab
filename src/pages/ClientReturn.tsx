@@ -10,6 +10,7 @@ import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail,
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { ClientVideoAnnotationViewer } from "@/components/ClientVideoAnnotationViewer";
 
 interface Project {
   id: string;
@@ -368,16 +369,30 @@ const ClientReturn = () => {
           </Card>
         )}
 
-        {/* Feedback Visual Detalhado */}
+        {/* Preview Visual com Anotações */}
+        {annotations.length > 0 && project.video_url && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Video className="w-5 h-5" />
+              Preview Visual com Feedback do Cliente
+            </h2>
+            <ClientVideoAnnotationViewer 
+              videoUrl={project.video_url}
+              annotations={annotations}
+            />
+          </div>
+        )}
+
+        {/* Feedback Visual Detalhado (Lista) */}
         {annotations.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Video className="w-5 h-5" />
-                Feedback Visual Detalhado ({annotations.length})
+                <MessageSquare className="w-5 h-5" />
+                Detalhamento das Anotações ({annotations.length})
               </CardTitle>
               <CardDescription>
-                Anotações e comentários visuais feitos pelo cliente no vídeo
+                Lista completa de comentários e anotações visuais do cliente
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
