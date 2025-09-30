@@ -11,6 +11,7 @@ import { Logo } from '@/components/ui/logo';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -48,13 +49,58 @@ export default function Auth() {
     checkUser();
   }, [navigate]);
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      console.log('🔄 Iniciando recuperação de senha para:', formData.email);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        console.error('❌ Erro ao enviar email de recuperação:', error);
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('✅ Email de recuperação enviado com sucesso');
+        toast({
+          title: "Email enviado",
+          description: "Verifique seu email para redefinir sua senha.",
+        });
+        setIsResetPassword(false);
+        setFormData({ email: '', password: '', confirmPassword: '' });
+      }
+    } catch (error: any) {
+      console.error('❌ Erro inesperado:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log('🔐 Iniciando processo de autenticação...');
+      console.log('📧 Email:', formData.email);
+      console.log('🔄 Modo:', isSignUp ? 'Cadastro' : 'Login');
+      
       if (isSignUp) {
+        console.log('📝 Verificando senhas...');
         if (formData.password !== formData.confirmPassword) {
+          console.log('❌ Senhas não coincidem');
           toast({
             title: "Erro",
             description: "As senhas não coincidem",
@@ -64,6 +110,7 @@ export default function Auth() {
           return;
         }
 
+        console.log('📤 Enviando requisição de cadastro...');
         const { error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -73,12 +120,14 @@ export default function Auth() {
         });
 
         if (error) {
+          console.error('❌ Erro no cadastro:', error);
           toast({
             title: "Erro no cadastro",
             description: error.message,
             variant: "destructive",
           });
         } else {
+          console.log('✅ Cadastro realizado com sucesso');
           toast({
             title: "Cadastro realizado!",
             description: "Verifique seu email para confirmar a conta.",
@@ -86,27 +135,40 @@ export default function Auth() {
         }
       } else {
         // Clear any existing corrupted data before login
+        console.log('🧹 Limpando dados corrompidos...');
         try {
           await supabase.auth.signOut();
+          console.log('✅ Dados limpos');
         } catch (e) {
-          // Ignore signOut errors
+          console.log('⚠️ Erro ao limpar dados (ignorando)');
         }
         
+        console.log('🔑 Tentando fazer login...');
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
 
         if (error) {
+          console.error('❌ Erro no login:', error);
+          console.error('📊 Detalhes do erro:', {
+            message: error.message,
+            status: error.status,
+            name: error.name
+          });
+          
           // Provide more specific error messages
           let errorMessage = error.message;
           
           if (error.message.includes('Invalid login credentials')) {
             errorMessage = 'Email ou senha incorretos. Verifique suas credenciais.';
+            console.log('🚫 Credenciais inválidas detectadas');
           } else if (error.message.includes('Email not confirmed')) {
             errorMessage = 'Por favor, confirme seu email antes de fazer login.';
+            console.log('📧 Email não confirmado');
           } else if (error.message.includes('refresh_token_not_found')) {
             errorMessage = 'Sessão expirada. Por favor, tente novamente.';
+            console.log('⏰ Token expirado - limpando storage');
             // Clear storage on token errors
             localStorage.clear();
             sessionStorage.clear();
@@ -118,14 +180,21 @@ export default function Auth() {
             variant: "destructive",
           });
         } else if (data.session) {
+          console.log('✅ Login realizado com sucesso!');
+          console.log('👤 Usuário:', data.user?.email);
+          console.log('🎫 Token de acesso gerado');
+          
           toast({
             title: "Login realizado com sucesso!",
             description: "Redirecionando...",
           });
+          
+          console.log('↪️ Navegando para home...');
           navigate('/');
         }
       }
     } catch (error) {
+      console.error('❌ Erro fatal capturado:', error);
       toast({
         title: "Erro",
         description: "Algo deu errado. Tente novamente.",
@@ -133,6 +202,7 @@ export default function Auth() {
       });
     } finally {
       setLoading(false);
+      console.log('✅ Processo finalizado');
     }
   };
 
@@ -179,64 +249,114 @@ export default function Auth() {
             </div>
 
             {/* Form */}
-            <motion.form 
-              onSubmit={handleSubmit} 
-              className="space-y-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Input
-                type="email"
-                placeholder="E-mail"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
-                required
-              />
-
-              <Input
-                type="password"
-                placeholder="Senha"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
-                required
-              />
-
-              {isSignUp && (
+            {isResetPassword ? (
+              <motion.form 
+                onSubmit={handleResetPassword} 
+                className="space-y-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <Input
-                  type="password"
-                  placeholder="Confirmar Senha"
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  type="email"
+                  placeholder="E-mail"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
                   required
                 />
-              )}
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium text-base rounded-xl mt-6 transition-all duration-200"
-              >
-                {loading ? 
-                  (isSignUp ? "CADASTRANDO..." : "ENTRANDO...") : 
-                  (isSignUp ? "CADASTRAR" : "ENTRAR")
-                }
-              </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium text-base rounded-xl mt-6 transition-all duration-200"
+                >
+                  {loading ? "ENVIANDO..." : "ENVIAR EMAIL DE RECUPERAÇÃO"}
+                </Button>
 
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="w-full text-sm text-gray-600 hover:text-primary mt-4 transition-colors"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetPassword(false);
+                    setFormData({ email: '', password: '', confirmPassword: '' });
+                  }}
+                  className="w-full text-sm text-gray-600 hover:text-primary mt-4 transition-colors"
+                >
+                  Voltar ao login
+                </button>
+              </motion.form>
+            ) : (
+              <motion.form 
+                onSubmit={handleSubmit} 
+                className="space-y-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
               >
-                {isSignUp ? 
-                  "Já tem uma conta? Fazer login" : 
-                  "Não tem uma conta? Cadastre-se"
-                }
-              </button>
-            </motion.form>
+                <Input
+                  type="email"
+                  placeholder="E-mail"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                  required
+                />
+
+                <Input
+                  type="password"
+                  placeholder="Senha"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                  required
+                />
+
+                {isSignUp && (
+                  <Input
+                    type="password"
+                    placeholder="Confirmar Senha"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                    required
+                  />
+                )}
+
+                {!isSignUp && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => setIsResetPassword(true)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Esqueceu a senha?
+                    </button>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium text-base rounded-xl mt-6 transition-all duration-200"
+                >
+                  {loading ? 
+                    (isSignUp ? "CADASTRANDO..." : "ENTRANDO...") : 
+                    (isSignUp ? "CADASTRAR" : "ENTRAR")
+                  }
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="w-full text-sm text-gray-600 hover:text-primary mt-4 transition-colors"
+                >
+                  {isSignUp ? 
+                    "Já tem uma conta? Fazer login" : 
+                    "Não tem uma conta? Cadastre-se"
+                  }
+                </button>
+              </motion.form>
+            )}
 
             {/* Footer */}
             <motion.div 
