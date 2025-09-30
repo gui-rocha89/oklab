@@ -135,11 +135,39 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const addProject = async (projectData: any) => {
+    const timestamp = () => `[${new Date().toISOString()}]`;
+    
     try {
-      console.log('📝 [ProjectContext] Dados recebidos:', projectData);
+      console.log('📝 [ProjectContext]', timestamp(), '====================================');
+      console.log('📝 [ProjectContext]', timestamp(), 'INICIANDO INSERÇÃO NO BANCO DE DADOS');
+      console.log('📝 [ProjectContext]', timestamp(), '====================================');
+      console.log('📝 [ProjectContext]', timestamp(), 'Dados recebidos:', projectData);
+      
+      // Validar campos obrigatórios ANTES de processar
+      console.log('🔍 [ProjectContext]', timestamp(), 'Validando campos obrigatórios...');
+      
+      if (!projectData.title || !projectData.title.trim()) {
+        throw new Error('Campo obrigatório ausente: title');
+      }
+      if (!projectData.client || !projectData.client.trim()) {
+        throw new Error('Campo obrigatório ausente: client');
+      }
+      if (!projectData.type) {
+        throw new Error('Campo obrigatório ausente: type');
+      }
+      if (!projectData.user_id) {
+        throw new Error('Campo obrigatório ausente: user_id');
+      }
+      if (!projectData.share_id) {
+        throw new Error('Campo obrigatório ausente: share_id');
+      }
+      
+      console.log('✅ [ProjectContext]', timestamp(), 'Todos os campos obrigatórios presentes');
       
       // Lista EXATA de campos válidos da tabela projects
       const validFields = ['title', 'client', 'description', 'type', 'status', 'priority', 'user_id', 'share_id', 'video_url', 'approval_date'];
+      
+      console.log('🧹 [ProjectContext]', timestamp(), 'Limpando dados - removendo campos inválidos...');
       
       // Criar objeto limpo com APENAS campos válidos
       const cleanData: any = {};
@@ -149,8 +177,13 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
-      console.log('✅ [ProjectContext] Dados limpos:', cleanData);
-      console.log('✅ [ProjectContext] Campos:', Object.keys(cleanData));
+      console.log('✅ [ProjectContext]', timestamp(), 'Dados limpos:', cleanData);
+      console.log('✅ [ProjectContext]', timestamp(), 'Campos válidos:', Object.keys(cleanData));
+      console.log('✅ [ProjectContext]', timestamp(), 'Total de campos:', Object.keys(cleanData).length);
+
+      console.log('💾 [ProjectContext]', timestamp(), 'Executando INSERT no Supabase...');
+      console.log('💾 [ProjectContext]', timestamp(), 'Tabela: projects');
+      console.log('💾 [ProjectContext]', timestamp(), 'Operação: INSERT');
 
       const { data, error } = await supabase
         .from('projects')
@@ -159,22 +192,52 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ [ProjectContext] Erro Supabase:', error);
-        throw error;
+        console.error('❌ [ProjectContext]', timestamp(), '====================================');
+        console.error('❌ [ProjectContext]', timestamp(), 'ERRO NO SUPABASE');
+        console.error('❌ [ProjectContext]', timestamp(), '====================================');
+        console.error('❌ [ProjectContext]', timestamp(), 'Código:', error.code);
+        console.error('❌ [ProjectContext]', timestamp(), 'Mensagem:', error.message);
+        console.error('❌ [ProjectContext]', timestamp(), 'Detalhes:', error.details);
+        console.error('❌ [ProjectContext]', timestamp(), 'Hint:', error.hint);
+        console.error('❌ [ProjectContext]', timestamp(), 'Erro completo:', JSON.stringify(error, null, 2));
+        throw new Error(`Erro no banco de dados: ${error.message}`);
       }
 
-      console.log('✅ [ProjectContext] Sucesso:', data);
+      if (!data) {
+        console.error('❌ [ProjectContext]', timestamp(), 'INSERT não retornou dados');
+        throw new Error('Projeto não foi criado - resposta vazia do banco');
+      }
+
+      console.log('✅ [ProjectContext]', timestamp(), '====================================');
+      console.log('✅ [ProjectContext]', timestamp(), 'PROJETO INSERIDO COM SUCESSO!');
+      console.log('✅ [ProjectContext]', timestamp(), '====================================');
+      console.log('✅ [ProjectContext]', timestamp(), 'ID do projeto:', data.id);
+      console.log('✅ [ProjectContext]', timestamp(), 'Título:', data.title);
+      console.log('✅ [ProjectContext]', timestamp(), 'Cliente:', data.client);
+      console.log('✅ [ProjectContext]', timestamp(), 'Share ID:', data.share_id);
+      console.log('✅ [ProjectContext]', timestamp(), 'Dados completos:', data);
+
+      console.log('🔄 [ProjectContext]', timestamp(), 'Atualizando lista de projetos...');
       await fetchProjects();
+      console.log('✅ [ProjectContext]', timestamp(), 'Lista de projetos atualizada');
       
       toast({
-        title: "Sucesso",
-        description: "Projeto criado com sucesso",
+        title: "✅ Sucesso",
+        description: "Projeto criado com sucesso no banco de dados",
       });
+      
     } catch (error: any) {
-      console.error('❌ [ProjectContext] Erro:', error);
+      console.error('💥 [ProjectContext]', timestamp(), '====================================');
+      console.error('💥 [ProjectContext]', timestamp(), 'ERRO CAPTURADO NO CATCH');
+      console.error('💥 [ProjectContext]', timestamp(), '====================================');
+      console.error('💥 [ProjectContext]', timestamp(), 'Tipo:', error.constructor.name);
+      console.error('💥 [ProjectContext]', timestamp(), 'Mensagem:', error.message);
+      console.error('💥 [ProjectContext]', timestamp(), 'Stack:', error.stack);
+      console.error('💥 [ProjectContext]', timestamp(), 'Erro completo:', error);
+      
       toast({
-        title: "Erro",
-        description: error.message || "Falha ao criar projeto",
+        title: "❌ Erro",
+        description: error.message || "Falha ao criar projeto no banco de dados",
         variant: "destructive",
       });
       throw error;

@@ -53,59 +53,88 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   };
 
   const handleSubmit = async () => {
-    console.log('🎬 [Audiovisual] Iniciando criação de projeto...');
+    const timestamp = () => `[${new Date().toISOString()}]`;
+    console.log('🎬 [Audiovisual]', timestamp(), 'Iniciando criação de projeto...');
     
-    // Validações
+    // ========== ETAPA 1: VALIDAÇÃO DOS DADOS ==========
+    console.log('📋 [Audiovisual]', timestamp(), 'ETAPA 1: Validando dados do formulário...');
+    
     if (!title.trim()) {
-      console.error('❌ [Audiovisual] Título vazio');
+      console.error('❌ [Audiovisual]', timestamp(), 'Validação falhou: Título vazio');
       toast({
-        title: "Erro de Validação",
+        title: "❌ Erro de Validação",
         description: "O título do projeto é obrigatório.",
         variant: "destructive",
       });
       return;
     }
+    console.log('✅ [Audiovisual]', timestamp(), 'Título válido:', title.trim());
     
     if (!clientName.trim()) {
-      console.error('❌ [Audiovisual] Nome do cliente vazio');
+      console.error('❌ [Audiovisual]', timestamp(), 'Validação falhou: Nome do cliente vazio');
       toast({
-        title: "Erro de Validação",
+        title: "❌ Erro de Validação",
         description: "O nome do cliente é obrigatório.",
         variant: "destructive",
       });
       return;
     }
+    console.log('✅ [Audiovisual]', timestamp(), 'Cliente válido:', clientName.trim());
     
     if (!videoFile) {
-      console.error('❌ [Audiovisual] Nenhum vídeo selecionado');
+      console.error('❌ [Audiovisual]', timestamp(), 'Validação falhou: Nenhum vídeo selecionado');
       toast({
-        title: "Erro de Validação",
+        title: "❌ Erro de Validação",
         description: "É necessário anexar um vídeo.",
         variant: "destructive",
       });
       return;
     }
+    console.log('✅ [Audiovisual]', timestamp(), 'Vídeo válido:', {
+      nome: videoFile.name,
+      tamanho: `${(videoFile.size / 1024 / 1024).toFixed(2)} MB`,
+      tipo: videoFile.type
+    });
+    
+    console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 1 CONCLUÍDA: Todos os dados validados');
 
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(10);
 
     try {
-      console.log('📤 [Audiovisual] Iniciando upload do vídeo...', {
-        fileName: videoFile.name,
-        fileSize: videoFile.size,
-        fileType: videoFile.type
-      });
-
-      // Upload do vídeo para o Supabase Storage
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
+      // ========== ETAPA 2: VERIFICAÇÃO DE AUTENTICAÇÃO ==========
+      console.log('🔐 [Audiovisual]', timestamp(), 'ETAPA 2: Verificando autenticação...');
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('❌ [Audiovisual]', timestamp(), 'Erro de autenticação:', authError);
+        throw new Error(`Erro de autenticação: ${authError.message}`);
       }
+      
+      if (!user || !user.id) {
+        console.error('❌ [Audiovisual]', timestamp(), 'Usuário não autenticado ou ID ausente');
+        throw new Error('Você precisa estar logado para criar projetos');
+      }
+      
+      console.log('✅ [Audiovisual]', timestamp(), 'Usuário autenticado:', {
+        id: user.id,
+        email: user.email
+      });
+      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 2 CONCLUÍDA: Autenticação verificada');
+      
+      setUploadProgress(20);
 
+      // ========== ETAPA 3: UPLOAD DO VÍDEO ==========
+      console.log('📤 [Audiovisual]', timestamp(), 'ETAPA 3: Iniciando upload do vídeo...');
+      
       const fileExt = videoFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
-      console.log('📂 [Audiovisual] Fazendo upload para:', fileName);
+      console.log('📂 [Audiovisual]', timestamp(), 'Caminho do arquivo:', fileName);
+      console.log('📂 [Audiovisual]', timestamp(), 'Bucket:', 'audiovisual-projects');
+      
+      setUploadProgress(30);
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('audiovisual-projects')
@@ -115,41 +144,59 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         });
 
       if (uploadError) {
-        console.error('❌ [Audiovisual] Erro no upload:', uploadError);
-        throw uploadError;
+        console.error('❌ [Audiovisual]', timestamp(), 'ERRO NO UPLOAD:', {
+          message: uploadError.message,
+          statusCode: uploadError.statusCode,
+          error: uploadError
+        });
+        throw new Error(`Falha no upload do vídeo: ${uploadError.message}`);
       }
 
-      console.log('✅ [Audiovisual] Upload concluído:', uploadData);
+      if (!uploadData || !uploadData.path) {
+        console.error('❌ [Audiovisual]', timestamp(), 'Upload retornou dados inválidos:', uploadData);
+        throw new Error('Upload do vídeo falhou: resposta inválida do servidor');
+      }
+
+      console.log('✅ [Audiovisual]', timestamp(), 'Upload concluído com sucesso:', {
+        path: uploadData.path,
+        id: uploadData.id,
+        fullPath: uploadData.fullPath
+      });
+      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 3 CONCLUÍDA: Vídeo enviado');
+      
       setUploadProgress(50);
 
-      // Obter URL pública do vídeo
+      // ========== ETAPA 4: OBTENÇÃO DA URL PÚBLICA ==========
+      console.log('🔗 [Audiovisual]', timestamp(), 'ETAPA 4: Obtendo URL pública do vídeo...');
+      
       const { data: { publicUrl } } = supabase.storage
         .from('audiovisual-projects')
         .getPublicUrl(fileName);
 
-      console.log('🔗 [Audiovisual] URL pública:', publicUrl);
-      setUploadProgress(75);
+      if (!publicUrl) {
+        console.error('❌ [Audiovisual]', timestamp(), 'Falha ao obter URL pública');
+        throw new Error('Não foi possível obter a URL do vídeo');
+      }
 
-      // Gerar share_id único
+      console.log('✅ [Audiovisual]', timestamp(), 'URL pública obtida:', publicUrl);
+      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 4 CONCLUÍDA: URL pública gerada');
+      
+      setUploadProgress(70);
+
+      // ========== ETAPA 5: GERAÇÃO DO SHARE_ID ==========
+      console.log('🔑 [Audiovisual]', timestamp(), 'ETAPA 5: Gerando Share ID único...');
+      
       const shareId = `av-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      console.log('🔑 [Audiovisual] Share ID gerado:', shareId);
+      
+      console.log('✅ [Audiovisual]', timestamp(), 'Share ID gerado:', shareId);
+      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 5 CONCLUÍDA: Share ID criado');
+      
+      setUploadProgress(80);
 
-      // Criar objeto do projeto SOMENTE com campos que existem na tabela
-      const newProject = {
-        title: title.trim(),
-        description: comment.trim() || null,
-        client: clientName.trim(),
-        type: 'Audiovisual',
-        status: 'pending',
-        priority: 'medium',
-        user_id: user.id,
-        share_id: shareId,
-        video_url: publicUrl, // Campo correto que existe na tabela
-      };
-
-      // 6. Criar projeto com APENAS campos válidos
-      console.log("💾 Enviando projeto para o banco de dados...");
-      await onProjectCreate({
+      // ========== ETAPA 6: PREPARAÇÃO DOS DADOS DO PROJETO ==========
+      console.log('📦 [Audiovisual]', timestamp(), 'ETAPA 6: Preparando dados do projeto...');
+      
+      const projectData = {
         title: title.trim(),
         description: comment.trim() || null,
         client: clientName.trim(),
@@ -159,27 +206,71 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         user_id: user.id,
         share_id: shareId,
         video_url: publicUrl,
-      });
+      };
       
-      console.log("✅ Projeto criado com sucesso no banco de dados!");
+      console.log('✅ [Audiovisual]', timestamp(), 'Dados preparados:', {
+        title: projectData.title,
+        client: projectData.client,
+        type: projectData.type,
+        status: projectData.status,
+        priority: projectData.priority,
+        user_id: projectData.user_id,
+        share_id: projectData.share_id,
+        video_url_length: projectData.video_url?.length,
+        hasDescription: !!projectData.description
+      });
+      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 6 CONCLUÍDA: Dados validados');
+      
+      setUploadProgress(90);
+
+      // ========== ETAPA 7: CRIAÇÃO DO PROJETO NO BANCO ==========
+      console.log('💾 [Audiovisual]', timestamp(), 'ETAPA 7: Criando projeto no banco de dados...');
+      console.log('💾 [Audiovisual]', timestamp(), 'Chamando onProjectCreate...');
+      
+      await onProjectCreate(projectData);
+      
+      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 7 CONCLUÍDA: Projeto criado no banco');
+      
+      setUploadProgress(100);
+
+      // ========== SUCESSO TOTAL ==========
+      console.log('🎉 [Audiovisual]', timestamp(), '====================================');
+      console.log('🎉 [Audiovisual]', timestamp(), 'TODAS AS ETAPAS CONCLUÍDAS COM SUCESSO!');
+      console.log('🎉 [Audiovisual]', timestamp(), '====================================');
+      console.log('📊 [Audiovisual]', timestamp(), 'Resumo do projeto criado:', {
+        título: projectData.title,
+        cliente: projectData.client,
+        shareId: projectData.share_id,
+        videoUrl: publicUrl
+      });
 
       toast({
-        title: "✅ Projeto Criado!",
-        description: `O projeto "${title}" foi criado com sucesso.`,
-        duration: 3000,
+        title: "✅ Projeto Criado com Sucesso!",
+        description: `O projeto "${title}" foi criado e está pronto para aprovação.`,
+        duration: 5000,
       });
 
       setIsOpen(false);
+      
     } catch (error) {
-      console.error('❌ [Audiovisual] Erro ao criar projeto:', error);
+      console.error('💥 [Audiovisual]', timestamp(), '====================================');
+      console.error('💥 [Audiovisual]', timestamp(), 'ERRO DURANTE A CRIAÇÃO DO PROJETO');
+      console.error('💥 [Audiovisual]', timestamp(), '====================================');
+      console.error('💥 [Audiovisual]', timestamp(), 'Tipo do erro:', error.constructor.name);
+      console.error('💥 [Audiovisual]', timestamp(), 'Mensagem:', error.message);
+      console.error('💥 [Audiovisual]', timestamp(), 'Stack:', error.stack);
+      console.error('💥 [Audiovisual]', timestamp(), 'Erro completo:', error);
+      
       toast({
-        title: "Erro ao Criar Projeto",
-        description: error.message || "Ocorreu um erro ao criar o projeto. Tente novamente.",
+        title: "❌ Erro ao Criar Projeto",
+        description: error.message || "Ocorreu um erro inesperado. Verifique o console para mais detalhes.",
         variant: "destructive",
+        duration: 7000,
       });
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
+      console.log('🏁 [Audiovisual]', timestamp(), 'Processo finalizado');
     }
   };
 
