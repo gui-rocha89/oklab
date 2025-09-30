@@ -147,15 +147,21 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         video_url: publicUrl, // Campo correto que existe na tabela
       };
 
-      console.log('📝 [Audiovisual] Dados do projeto (SOMENTE campos válidos):', newProject);
-      console.log('🔍 [Audiovisual] Campos enviados:', Object.keys(newProject));
-      setUploadProgress(90);
-
-      // Chamar a função de criação do projeto
-      await onProjectCreate(newProject);
+      // 6. Criar projeto com APENAS campos válidos
+      console.log("💾 Enviando projeto para o banco de dados...");
+      await onProjectCreate({
+        title: title.trim(),
+        description: comment.trim() || null,
+        client: clientName.trim(),
+        type: 'Audiovisual',
+        status: 'pending',
+        priority: 'medium',
+        user_id: user.id,
+        share_id: shareId,
+        video_url: publicUrl,
+      });
       
-      setUploadProgress(100);
-      console.log('✅ [Audiovisual] Projeto criado com sucesso!');
+      console.log("✅ Projeto criado com sucesso no banco de dados!");
 
       toast({
         title: "✅ Projeto Criado!",

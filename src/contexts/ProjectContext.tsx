@@ -134,64 +134,47 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     fetchProjects();
   }, []);
 
-  const addProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => {
+  const addProject = async (projectData: any) => {
     try {
-      console.log('📝 [ProjectContext] Iniciando addProject');
-      console.log('📝 [ProjectContext] Dados recebidos:', JSON.stringify(project, null, 2));
-      console.log('📝 [ProjectContext] Campos recebidos:', Object.keys(project));
+      console.log('📝 [ProjectContext] Dados recebidos:', projectData);
       
-      // Campos válidos da tabela projects
-      const validFields = [
-        'title', 'client', 'description', 'type', 'status', 
-        'priority', 'user_id', 'share_id', 'video_url', 'approval_date'
-      ];
+      // Lista EXATA de campos válidos da tabela projects
+      const validFields = ['title', 'client', 'description', 'type', 'status', 'priority', 'user_id', 'share_id', 'video_url', 'approval_date'];
       
-      // Filtrar apenas campos válidos
-      const validProjectData: any = {};
+      // Criar objeto limpo com APENAS campos válidos
+      const cleanData: any = {};
       validFields.forEach(field => {
-        if (field in project) {
-          validProjectData[field] = (project as any)[field];
+        if (field in projectData && projectData[field] !== undefined) {
+          cleanData[field] = projectData[field];
         }
       });
       
-      console.log('✅ [ProjectContext] Dados validados (apenas campos da tabela):', JSON.stringify(validProjectData, null, 2));
-      console.log('✅ [ProjectContext] Campos validados:', Object.keys(validProjectData));
-      
-      // Verificar se user_id está presente
-      if (!validProjectData.user_id) {
-        console.error('❌ [ProjectContext] user_id ausente nos dados');
-        throw new Error('user_id é obrigatório');
-      }
+      console.log('✅ [ProjectContext] Dados limpos:', cleanData);
+      console.log('✅ [ProjectContext] Campos:', Object.keys(cleanData));
 
-      console.log('💾 [ProjectContext] Inserindo no Supabase...');
       const { data, error } = await supabase
         .from('projects')
-        .insert(validProjectData)
+        .insert(cleanData)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('❌ [ProjectContext] ERRO DO SUPABASE:');
-        console.error('Código:', error.code);
-        console.error('Mensagem:', error.message);
-        console.error('Detalhes:', error.details);
-        console.error('Hint:', error.hint);
-        console.error('Objeto completo:', JSON.stringify(error, null, 2));
+        console.error('❌ [ProjectContext] Erro Supabase:', error);
         throw error;
       }
 
-      console.log('✅ [ProjectContext] Projeto inserido com sucesso:', data);
-
+      console.log('✅ [ProjectContext] Sucesso:', data);
       await fetchProjects();
+      
       toast({
         title: "Sucesso",
         description: "Projeto criado com sucesso",
       });
-    } catch (error) {
-      console.error('❌ [ProjectContext] ERRO GERAL:', error);
+    } catch (error: any) {
+      console.error('❌ [ProjectContext] Erro:', error);
       toast({
         title: "Erro",
-        description: "Falha ao criar projeto",
+        description: error.message || "Falha ao criar projeto",
         variant: "destructive",
       });
       throw error;
