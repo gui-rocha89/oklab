@@ -50,7 +50,12 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   };
 
   const togglePlayPause = useCallback(() => {
-    if (!videoRef.current || isDrawingMode) return;
+    if (!videoRef.current) return;
+    
+    // Block play/pause when in drawing mode
+    if (isDrawingMode) {
+      return;
+    }
     
     const newPlayingState = !isPlaying;
     
@@ -220,6 +225,23 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
       video.removeEventListener('canplay', handleCanPlay);
     };
   }, [onTimeUpdate, onDurationChange, onPlayPauseChange]);
+
+  // Force pause when drawing mode is active - CRITICAL for drawing functionality
+  useEffect(() => {
+    if (!videoRef.current) return;
+    
+    if (isDrawingMode) {
+      // FORCE pause the video immediately
+      videoRef.current.pause();
+      
+      // Update the playing state
+      if (onPlayPauseChange) {
+        onPlayPauseChange(false);
+      } else {
+        setInternalIsPlaying(false);
+      }
+    }
+  }, [isDrawingMode, onPlayPauseChange]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 

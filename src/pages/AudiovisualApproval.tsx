@@ -337,9 +337,12 @@ export default function AudiovisualApproval() {
 
   const handleSaveAnnotation = () => {
     if (videoRef.current) {
-      const currentTime = Math.floor(videoRef.current.currentTime * 1000);
-      setPendingAnnotationTime(currentTime);
-      setPendingAnnotationTimestamp(currentTime);
+      const currentTimeMs = Math.floor(videoRef.current.currentTime * 1000);
+      setPendingAnnotationTime(currentTimeMs);
+      setPendingAnnotationTimestamp(currentTimeMs);
+      
+      console.log('Salvando anotação no tempo:', currentTimeMs, 'ms (', formatTime(currentTimeMs / 1000), ')');
+      
       setShowCommentModal(true);
     }
   };
@@ -347,12 +350,24 @@ export default function AudiovisualApproval() {
   const handleSaveAnnotationWithComment = async (comment: string) => {
     try {
       const screenshot = await captureVideoScreenshot();
-      // Save annotation with screenshot data (if needed in the future)
+      
+      console.log('Salvando anotação com comentário:', {
+        time: pendingAnnotationTime,
+        timeFormatted: formatTime(pendingAnnotationTime / 1000),
+        comment: comment,
+        hasScreenshot: !!screenshot
+      });
+      
+      // Save annotation with the exact timestamp captured when user clicked "Salvar"
       await saveAnnotation(pendingAnnotationTime, comment);
       clearCanvas();
+      
+      // Turn off drawing mode after saving
+      setIsDrawingMode(false);
+      
       toast({
         title: "Anotação salva!",
-        description: "Sua marcação visual foi salva com sucesso.",
+        description: `Marcação visual salva em ${formatTime(pendingAnnotationTime / 1000)}`,
       });
     } catch (error) {
       console.error("Erro ao salvar anotação:", error);
@@ -617,18 +632,21 @@ export default function AudiovisualApproval() {
                     const newMode = !isDrawingMode;
                     
                     if (newMode) {
-                      // FIRST: Force pause the video BEFORE activating drawing mode
+                      // CRITICAL: Force BOTH videos to pause before drawing mode
                       setIsPlaying(false);
                       if (videoRef.current) {
                         videoRef.current.pause();
                       }
-                      // THEN: Activate drawing mode
-                      setTimeout(() => {
-                        setIsDrawingMode(true);
-                      }, 50);
-                    } else {
-                      // Simply deactivate drawing mode
-                      setIsDrawingMode(false);
+                    }
+                    
+                    // Set drawing mode immediately (no setTimeout)
+                    setIsDrawingMode(newMode);
+                    
+                    if (newMode) {
+                      toast({
+                        title: "Modo Desenho Ativado",
+                        description: "Vídeo pausado. Desenhe suas anotações e clique em Salvar.",
+                      });
                     }
                   }}
                   variant={isDrawingMode ? "default" : "outline"}
