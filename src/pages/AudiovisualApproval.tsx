@@ -310,37 +310,38 @@ export default function AudiovisualApproval() {
 
   if (showConfirmation) {
     const isApproved = project.status === 'approved';
-    
-    const confirmationContent = isApproved ? {
-      icon: <ThumbsUp className="w-20 h-20 text-green-500 mx-auto animate-bounce" />,
-      title: 'Projeto Aprovado!',
-      message: 'Obrigado pela sua colaboração. A equipe já foi notificada.',
-      bg: 'from-green-50 to-emerald-100',
-    } : {
-      icon: <Send className="w-20 h-20 text-blue-500 mx-auto" />,
-      title: 'Feedback Enviado!',
-      message: 'Seu feedback foi recebido. Nossa equipe analisará os pontos.',
-      bg: 'from-blue-50 to-sky-100',
-    };
 
     return (
-      <div className={`flex flex-col items-center justify-center min-h-screen bg-gradient-to-br ${confirmationContent.bg} text-center p-6`}>
+      <div className="min-h-screen bg-gradient-to-br from-primary/90 to-primary flex items-center justify-center p-4">
         <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
+          initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="bg-card rounded-2xl shadow-xl p-8 max-w-md w-full"
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          className="text-center max-w-2xl"
         >
-          {confirmationContent.icon}
-          <h2 className="text-2xl font-bold mb-2">{confirmationContent.title}</h2>
-          <p className="text-muted-foreground mb-6">{confirmationContent.message}</p>
-          <Button 
-            variant="outline" 
-            onClick={() => setShowConfirmation(false)}
-            className="w-full"
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="mb-8 inline-block"
           >
-            Revisar Novamente
-          </Button>
+            <img 
+              src={logoWhite} 
+              alt="OK Lab Logo" 
+              className="h-24 w-auto"
+            />
+          </motion.div>
+          <h1 className="text-5xl font-bold text-white mb-6 font-['Inter']">
+            {isApproved ? "Projeto Aprovado!" : "Feedback Enviado!"}
+          </h1>
+          <p className="text-xl text-white/90 mb-4 font-['Inter']">
+            {isApproved
+              ? "Obrigado por aprovar o projeto! Nossa equipe foi notificada e dará continuidade ao trabalho."
+              : "Obrigado pelo seu feedback detalhado! Nossa equipe irá analisar cada ponto e retornar em até 48 horas."}
+          </p>
+          <p className="text-lg text-white/75 font-['Inter']">
+            Você receberá atualizações por e-mail.
+          </p>
         </motion.div>
       </div>
     );
