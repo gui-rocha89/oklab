@@ -15,7 +15,8 @@ import {
   BarChart3,
   TrendingUp,
   AlertTriangle,
-  MessageSquare
+  MessageSquare,
+  Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useProjects } from '@/contexts/ProjectContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { AudiovisualFeedbackPanel } from './AudiovisualFeedbackPanel';
+import { supabase } from '@/integrations/supabase/client';
 
 const FeedbackList = () => {
   // Estados para filtros conforme Task 1
@@ -35,6 +38,8 @@ const FeedbackList = () => {
   const [projectFilter, setProjectFilter] = useState('all');
   const [responseText, setResponseText] = useState('');
   const [respondingTo, setRespondingTo] = useState(null);
+  const [audiovisualProjects, setAudiovisualProjects] = useState({});
+  const [selectedAudiovisual, setSelectedAudiovisual] = useState(null);
   
   const { projects, addFeedbackResponse, updateFeedbackStatus, getAllFeedbacks } = useProjects();
   const { toast } = useToast();
@@ -42,6 +47,31 @@ const FeedbackList = () => {
 
   // Task 1: Buscar todos os feedbacks de todos os projetos usando o contexto
   const allFeedbacks = getAllFeedbacks();
+
+  // Carregar informações de projetos audiovisuais
+  useEffect(() => {
+    const loadAudiovisualProjects = async () => {
+      const projectIds = [...new Set(allFeedbacks.map(f => f.projectId))];
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, video_url, share_id, type')
+        .in('id', projectIds)
+        .not('video_url', 'is', null);
+
+      if (data && !error) {
+        const projectsMap = {};
+        data.forEach(p => {
+          projectsMap[p.id] = p;
+        });
+        setAudiovisualProjects(projectsMap);
+      }
+    };
+
+    if (allFeedbacks.length > 0) {
+      loadAudiovisualProjects();
+    }
+  }, [allFeedbacks.length]);
 
   // Utility functions para status e cores
   const getStatusConfig = (status) => {
@@ -158,6 +188,40 @@ const FeedbackList = () => {
       description: "Feedback marcado como rejeitado.",
     });
   };
+
+  // Se um projeto audiovisual está selecionado, mostrar painel específico
+  if (selectedAudiovisual) {
+    const project = projects.find(p => p.id === selectedAudiovisual);
+    const avInfo = audiovisualProjects[selectedAudiovisual];
+    
+    if (project && avInfo?.video_url) {
+      return (
+        <div className="space-y-4">
+          <Button
+            variant="outline"
+            onClick={() => setSelectedAudiovisual(null)}
+            className="mb-4"
+          >
+            ← Voltar para lista de feedbacks
+          </Button>
+          
+          <AudiovisualFeedbackPanel
+            projectId={selectedAudiovisual}
+            projectTitle={project.title}
+            projectDescription={project.description}
+            videoUrl={avInfo.video_url}
+            shareId={avInfo.share_id}
+            onStatusChange={(status) => {
+              toast({
+                title: "Status Atualizado",
+                description: `Feedback marcado como ${status}`,
+              });
+            }}
+          />
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -406,13 +470,25 @@ const FeedbackList = () => {
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-2">
-                              <Button 
-                                variant="link" 
-                                className="p-0 h-auto font-semibold text-primary hover:underline text-left"
-                                onClick={() => handleViewProject(feedback.shareId, feedback.time)}
-                              >
-                                {feedback.projectTitle}
-                              </Button>
+                              {/* Se é projeto audiovisual, abrir painel específico */}
+                              {audiovisualProjects[feedback.projectId] ? (
+                                <Button 
+                                  variant="link" 
+                                  className="p-0 h-auto font-semibold text-primary hover:underline text-left flex items-center gap-2"
+                                  onClick={() => setSelectedAudiovisual(feedback.projectId)}
+                                >
+                                  <Video className="w-4 h-4" />
+                                  {feedback.projectTitle}
+                                </Button>
+                              ) : (
+                                <Button 
+                                  variant="link" 
+                                  className="p-0 h-auto font-semibold text-primary hover:underline text-left"
+                                  onClick={() => handleViewProject(feedback.shareId, feedback.time)}
+                                >
+                                  {feedback.projectTitle}
+                                </Button>
+                              )}
                               {feedback.time > 0 && (
                                 <Badge variant="outline" className="text-xs">
                                   {formatTime(feedback.time)}
