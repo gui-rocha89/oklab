@@ -25,25 +25,72 @@ export function UserProvider({ children }: UserProviderProps) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log('Auth state changed:', event);
+        
+        // Handle token refresh errors
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed successfully');
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          // Clear any corrupted data on sign out
+          localStorage.removeItem('supabase.auth.token');
+          sessionStorage.clear();
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // THEN check for existing session with error handling
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.warn('Session error, clearing storage:', error.message);
+          // Clear potentially corrupted tokens
+          await supabase.auth.signOut();
+          localStorage.clear();
+          sessionStorage.clear();
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        // Clear storage on error
+        localStorage.clear();
+        sessionStorage.clear();
+        setSession(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      // Clear all storage to ensure clean logout
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force clear even on error
+      localStorage.clear();
+      sessionStorage.clear();
+    }
   };
 
   const value: UserContextType = {

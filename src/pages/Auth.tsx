@@ -20,12 +20,29 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already logged in
+  // Check if user is already logged in and clear invalid tokens
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/');
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        // If there's an error with the session, clear local storage
+        if (error) {
+          console.warn('Session error detected, clearing storage:', error.message);
+          await supabase.auth.signOut();
+          localStorage.clear();
+          sessionStorage.clear();
+          return;
+        }
+        
+        if (session) {
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        // Clear potentially corrupted data
+        localStorage.clear();
+        sessionStorage.clear();
       }
     };
     checkUser();
@@ -68,18 +85,39 @@ export default function Auth() {
           });
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        // Clear any existing corrupted data before login
+        try {
+          await supabase.auth.signOut();
+        } catch (e) {
+          // Ignore signOut errors
+        }
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
 
         if (error) {
+          // Provide more specific error messages
+          let errorMessage = error.message;
+          
+          if (error.message.includes('Invalid login credentials')) {
+            errorMessage = 'Email ou senha incorretos. Verifique suas credenciais.';
+          } else if (error.message.includes('Email not confirmed')) {
+            errorMessage = 'Por favor, confirme seu email antes de fazer login.';
+          } else if (error.message.includes('refresh_token_not_found')) {
+            errorMessage = 'Sessão expirada. Por favor, tente novamente.';
+            // Clear storage on token errors
+            localStorage.clear();
+            sessionStorage.clear();
+          }
+          
           toast({
             title: "Erro no login",
-            description: error.message,
+            description: errorMessage,
             variant: "destructive",
           });
-        } else {
+        } else if (data.session) {
           toast({
             title: "Login realizado com sucesso!",
             description: "Redirecionando...",
