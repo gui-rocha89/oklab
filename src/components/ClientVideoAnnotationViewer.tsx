@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Canvas as FabricCanvas } from "fabric";
+import { Canvas as FabricCanvas, util } from "fabric";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,22 +91,37 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     }
   }, [currentTime, annotations]);
 
-  const loadAnnotationToCanvas = (annotation: VideoAnnotation) => {
-    if (!fabricCanvasRef.current || !annotation.canvas_data) return;
+  const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
+    if (!fabricCanvasRef.current || !annotation.canvas_data) {
+      console.log("❌ Canvas ou canvas_data não disponível");
+      return;
+    }
 
     const canvas = fabricCanvasRef.current;
     canvas.clear();
 
-    // Carregar os objetos do canvas_data
-    if (annotation.canvas_data.objects) {
-      canvas.loadFromJSON(annotation.canvas_data, () => {
-        canvas.renderAll();
-        // Desabilitar interação com objetos
-        canvas.forEachObject((obj) => {
+    // Carregar os objetos do canvas_data usando API do Fabric.js v6
+    if (annotation.canvas_data.objects && annotation.canvas_data.objects.length > 0) {
+      console.log(`📝 Carregando ${annotation.canvas_data.objects.length} objeto(s) no canvas`);
+      
+      try {
+        // Fabric.js v6: usar enlivenObjects para converter JSON em objetos Fabric
+        const objects = await util.enlivenObjects(annotation.canvas_data.objects);
+        
+        // Adicionar cada objeto ao canvas
+        objects.forEach((obj: any) => {
           obj.selectable = false;
           obj.evented = false;
+          canvas.add(obj);
         });
-      });
+        
+        canvas.renderAll();
+        console.log(`✅ ${objects.length} objeto(s) renderizado(s) com sucesso`);
+      } catch (error) {
+        console.error("❌ Erro ao carregar objetos no canvas:", error);
+      }
+    } else {
+      console.log("ℹ️ Nenhum objeto para carregar");
     }
   };
 
@@ -128,7 +143,22 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       // Detectar aspect ratio nativo do vídeo
       const video = videoRef.current;
       if (video.videoWidth && video.videoHeight) {
-        setVideoAspectRatio(video.videoWidth / video.videoHeight);
+        const aspectRatio = video.videoWidth / video.videoHeight;
+        console.log(`📹 Vídeo carregado: ${video.videoWidth}x${video.videoHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
+        setVideoAspectRatio(aspectRatio);
+        
+        // Atualizar canvas após o aspect ratio ser definido
+        setTimeout(() => {
+          if (fabricCanvasRef.current && videoRef.current) {
+            const rect = videoRef.current.getBoundingClientRect();
+            fabricCanvasRef.current.setDimensions({
+              width: rect.width,
+              height: rect.height,
+            });
+            fabricCanvasRef.current.renderAll();
+            console.log(`📐 Canvas redimensionado: ${rect.width}x${rect.height}`);
+          }
+        }, 100);
       }
     }
   };
