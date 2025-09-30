@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 
@@ -42,6 +43,7 @@ interface Project {
 export default function AudiovisualApproval() {
   const { shareId } = useParams<{ shareId: string }>();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -385,46 +387,46 @@ export default function AudiovisualApproval() {
       </Helmet>
 
       {/* Header Laranja Fixo - Estilo Frame.io */}
-      <header className="bg-gradient-to-r from-primary to-primary/90 py-6 px-6 shadow-lg">
+      <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-lg ${isMobile ? 'py-3 px-4' : 'py-6 px-6'}`}>
         <div className="container mx-auto flex items-center justify-center">
-          <h1 className="text-2xl font-bold text-white font-['Inter']">
+          <h1 className={`font-bold text-white font-['Inter'] ${isMobile ? 'text-lg' : 'text-2xl'}`}>
             Aprove Seu Vídeo
           </h1>
         </div>
       </header>
 
       {/* Logo Grande Centralizada */}
-      <div className="bg-white py-8">
+      <div className={`bg-white ${isMobile ? 'py-4' : 'py-8'}`}>
         <img 
           src={logoDark} 
           alt="OK Lab Logo" 
-          className="h-24 w-auto mx-auto"
+          className={`w-auto mx-auto ${isMobile ? 'h-16' : 'h-24'}`}
         />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
+      <div className={`flex-1 container mx-auto max-w-6xl ${isMobile ? 'px-3 py-4' : 'px-4 py-6'}`}>
         {/* Project Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="p-6 bg-white border-gray-200 shadow-sm">
+        <div className={`grid grid-cols-1 md:grid-cols-3 mb-6 ${isMobile ? 'gap-3' : 'gap-4'}`}>
+          <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
             <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Nome do Projeto</h3>
             <p className="text-base font-['Inter'] text-gray-900">{project.title}</p>
           </Card>
           
-          <Card className="p-6 bg-white border-gray-200 shadow-sm">
+          <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
             <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Descrição</h3>
             <p className="text-sm font-['Inter'] text-gray-900">{project.description || 'Sem descrição'}</p>
           </Card>
           
-          <Card className="p-6 bg-primary/5 border-primary/20 shadow-sm">
+          <Card className={`bg-primary/5 border-primary/20 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
             <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Cliente</h3>
             <p className="text-xl font-bold text-primary font-['Inter']">{project.client}</p>
           </Card>
         </div>
 
         {/* Instructions Card - Frame.io style */}
-        <Card className="mb-8 border-gray-200 shadow-sm bg-white">
-          <div className="p-6 flex items-start gap-4">
+        <Card className={`border-gray-200 shadow-sm bg-white ${isMobile ? 'mb-4' : 'mb-8'}`}>
+          <div className={`flex items-start ${isMobile ? 'p-4 gap-3' : 'p-6 gap-4'}`}>
             <div className="flex-shrink-0 mt-1">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Info className="h-5 w-5 text-primary" />
@@ -439,10 +441,10 @@ export default function AudiovisualApproval() {
           </div>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-3 gap-6'}`}>
           {/* Video Player Section */}
-          <div className="lg:col-span-2 space-y-4">
-            <Card className="p-6 bg-white border-gray-200 shadow-sm">
+          <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
+            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
               <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
                 <video
                   ref={videoRef}
@@ -457,24 +459,32 @@ export default function AudiovisualApproval() {
               </div>
               
               {/* Video Controls */}
-              <div className="mt-4 flex items-center space-x-4">
-                <Button
-                  onClick={togglePlayPause}
-                  variant="outline"
-                  size="sm"
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
+              <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
+                <div className={`flex ${isMobile ? 'justify-between' : 'items-center gap-4'}`}>
+                  <Button
+                    onClick={togglePlayPause}
+                    variant="outline"
+                    size={isMobile ? "default" : "sm"}
+                    className={isMobile ? "touch-manipulation min-h-[44px] px-6" : ""}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </Button>
+                  
+                  <div className={`text-sm text-muted-foreground ${isMobile ? '' : 'hidden'}`}>
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </div>
+                </div>
                 
                 <Button
                   onClick={handleAddKeyframe}
-                  className="bg-primary hover:bg-primary/90"
+                  className={`bg-primary hover:bg-primary/90 touch-manipulation ${isMobile ? 'w-full min-h-[44px]' : ''}`}
+                  size={isMobile ? "default" : "sm"}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Comentário
                 </Button>
                 
-                <div className="text-sm text-muted-foreground">
+                <div className={`text-sm text-muted-foreground ${isMobile ? 'hidden' : ''}`}>
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               </div>
@@ -482,9 +492,9 @@ export default function AudiovisualApproval() {
 
             {/* Keyframes */}
             {keyframes.length > 0 && (
-              <Card className="p-6 bg-white border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Comentários no Vídeo</h3>
-                <div className="space-y-4">
+              <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
+                <h3 className={`font-semibold mb-4 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>Comentários no Vídeo</h3>
+                <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                   {keyframes.map(keyframe => (
                     <motion.div
                       key={keyframe.id}
@@ -495,14 +505,15 @@ export default function AudiovisualApproval() {
                       <div className="flex items-center justify-between mb-2">
                         <button
                           onClick={() => seekTo(keyframe.time)}
-                          className="text-primary hover:text-primary/80 font-medium"
+                          className={`text-primary hover:text-primary/80 font-medium touch-manipulation ${isMobile ? 'min-h-[44px] text-base' : ''}`}
                         >
                           {formatTime(keyframe.time)}
                         </button>
                         <Button
                           onClick={() => handleRemoveKeyframe(keyframe.id)}
                           variant="ghost"
-                          size="sm"
+                          size={isMobile ? "default" : "sm"}
+                          className={isMobile ? "touch-manipulation min-h-[44px]" : ""}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -511,7 +522,7 @@ export default function AudiovisualApproval() {
                         value={keyframe.comment}
                         onChange={(e) => handleKeyframeCommentChange(keyframe.id, e.target.value)}
                         placeholder="Adicione seu comentário aqui..."
-                        className="w-full"
+                        className={`w-full ${isMobile ? 'min-h-[100px] text-base' : ''}`}
                       />
                     </motion.div>
                   ))}
@@ -522,8 +533,8 @@ export default function AudiovisualApproval() {
 
           {/* Actions Sidebar */}
           <div className="space-y-4">
-            <Card className="p-6 bg-white border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
+              <h3 className={`font-semibold mb-4 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
                 <MessageSquare className="w-5 h-5 text-gray-700" />
                 Ações
               </h3>
@@ -532,7 +543,7 @@ export default function AudiovisualApproval() {
                 <Button
                   onClick={() => handleAction('approved')}
                   disabled={submitting || !canApprove || project.status === 'approved'}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className={`w-full bg-green-600 hover:bg-green-700 touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
                   title={hasComments ? "Não é possível aprovar com comentários pendentes" : "Aprovar projeto na íntegra"}
                 >
                   {submitting ? (
@@ -546,7 +557,7 @@ export default function AudiovisualApproval() {
                 <Button
                   onClick={() => handleAction('send_feedback')}
                   disabled={submitting || !canSendFeedback || project.status === 'feedback-sent'}
-                  className="w-full"
+                  className={`w-full touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
                   variant="outline"
                   title={!hasComments ? "Adicione comentários antes de enviar feedback" : "Enviar feedback para a equipe"}
                 >
@@ -574,9 +585,9 @@ export default function AudiovisualApproval() {
         </div>
 
         {/* Rating Section */}
-        <Card className="p-8 mt-8 bg-white border-gray-200 shadow-sm">
-          <h3 className="text-2xl font-bold mb-4 text-center text-gray-900">Avalie sua Experiência</h3>
-          <p className="text-gray-600 text-center mb-6">
+        <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4 mt-6' : 'p-8 mt-8'}`}>
+          <h3 className={`font-bold mb-4 text-center text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Avalie sua Experiência</h3>
+          <p className={`text-gray-600 text-center ${isMobile ? 'text-sm mb-4' : 'mb-6'}`}>
             Sua opinião é muito importante para melhorarmos nossa plataforma inovadora
           </p>
 
@@ -604,15 +615,17 @@ export default function AudiovisualApproval() {
                 <label className="block text-sm font-medium mb-3 text-center">
                   Como você avalia sua experiência?
                 </label>
-                <div className="flex justify-center gap-2">
+                <div className={`flex justify-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       onClick={() => setRating(star)}
-                      className="transition-transform hover:scale-110"
+                      className={`transition-transform hover:scale-110 touch-manipulation ${isMobile ? 'p-2' : ''}`}
                     >
                       <Star
-                        className={`w-10 h-10 cursor-pointer transition-colors ${
+                        className={`cursor-pointer transition-colors ${
+                          isMobile ? 'w-8 h-8' : 'w-10 h-10'
+                        } ${
                           star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
                         }`}
                       />
@@ -636,7 +649,7 @@ export default function AudiovisualApproval() {
               <Button
                 onClick={handleRatingSubmit}
                 disabled={rating === 0}
-                className="w-full"
+                className={`w-full touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
               >
                 Enviar Avaliação
               </Button>
