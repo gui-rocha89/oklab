@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { motion, AnimatePresence } from 'framer-motion';
-import ReactPlayer from 'react-player';
-import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause, Rewind, FastForward } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
 
 const formatTime = (seconds: number): string => {
   if (isNaN(seconds) || seconds < 0) {
@@ -17,66 +17,104 @@ const formatTime = (seconds: number): string => {
   return date.toISOString().substr(14, 5);
 };
 
-const mockProjects = [
-  {
-    id: 1,
-    shareId: "abc123",
-    title: "Campanha Verão 2024",
-    description: "Vídeo promocional para a nova coleção de verão",
-    status: "pending",
-    priority: "high",
-    author: "Maria Silva",
-    type: "Vídeo",
-    createdAt: "2024-01-15",
-    keyframes: [
-      { id: 1, time: 30, comment: "Ajustar cor do logo", timestamp: "2024-01-15T10:30:00Z" },
-      { id: 2, time: 60, comment: "Música muito alta", timestamp: "2024-01-15T11:00:00Z" }
-    ],
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-  },
-  {
-    id: 2,
-    shareId: "def456",
-    title: "Banner Black Friday",
-    description: "Design para banner da promoção Black Friday",
-    status: "approved",
-    priority: "medium", 
-    author: "João Santos",
-    type: "Design",
-    createdAt: "2024-01-10",
-    keyframes: [],
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
-  }
-];
+interface Keyframe {
+  id: string;
+  time: number;
+  comment: string;
+  created_at?: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  client: string;
+  status: string;
+  video_url: string;
+  share_id: string;
+  type: string;
+  created_at: string;
+}
 
 export default function AudiovisualApproval() {
   const { shareId } = useParams<{ shareId: string }>();
   const { toast } = useToast();
   
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const playerRef = useRef<any>(null);
-  const [keyframes, setKeyframes] = useState<any[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState({ playedSeconds: 0, played: 0 });
+  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isReady, setIsReady] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
+  // Fetch project data from Supabase
   useEffect(() => {
-    const foundProject = mockProjects.find(p => p.shareId === shareId);
-    if (foundProject) {
-      setProject(foundProject);
-      setKeyframes(foundProject.keyframes || []);
-      if (foundProject.status === 'approved' || foundProject.status === 'feedback-sent' || foundProject.status === 'rejected') {
-        setShowConfirmation(true);
+    const fetchProject = async () => {
+      if (!shareId) {
+        setLoading(false);
+        return;
       }
-    }
-    setLoading(false);
+
+      try {
+        // Fetch project by share_id
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('share_id', shareId)
+          .single();
+
+        if (projectError) {
+          console.error('Error fetching project:', projectError);
+          setLoading(false);
+          return;
+        }
+
+        if (!projectData) {
+          setLoading(false);
+          return;
+        }
+
+        setProject(projectData);
+
+        // Fetch existing keyframes for this project
+        const { data: keyframesData, error: keyframesError } = await supabase
+          .from('project_keyframes')
+          .select('*')
+          .eq('project_id', projectData.id)
+          .order('created_at', { ascending: true });
+
+        if (keyframesError) {
+          console.error('Error fetching keyframes:', keyframesError);
+        } else if (keyframesData && keyframesData.length > 0) {
+          // Convert database keyframes to component format
+          const formattedKeyframes: Keyframe[] = keyframesData.map(kf => ({
+            id: kf.id,
+            time: 0, // Initialize with 0, would need to parse from title or store separately
+            comment: kf.title,
+            created_at: kf.created_at
+          }));
+          setKeyframes(formattedKeyframes);
+        }
+
+        // Check if project has already been actioned
+        if (projectData.status === 'approved' || projectData.status === 'feedback-sent') {
+          setShowConfirmation(true);
+        }
+
+      } catch (error) {
+        console.error('Error loading project:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
   }, [shareId]);
 
   const handleAddKeyframe = () => {
-    const currentTime = progress.playedSeconds;
     if (keyframes.some(k => Math.abs(k.time - currentTime) < 1)) {
         toast({
             title: "Atenção",
@@ -87,8 +125,8 @@ export default function AudiovisualApproval() {
         return;
     }
 
-    const newKeyframe = {
-      id: Date.now(),
+    const newKeyframe: Keyframe = {
+      id: Date.now().toString(),
       time: currentTime,
       comment: '',
     };
@@ -96,36 +134,104 @@ export default function AudiovisualApproval() {
     setIsPlaying(false);
   };
 
-  const handleKeyframeCommentChange = (id: number, comment: string) => {
+  const handleKeyframeCommentChange = (id: string, comment: string) => {
     setKeyframes(keyframes.map(k => k.id === id ? { ...k, comment } : k));
   };
   
-  const handleRemoveKeyframe = (id: number) => {
+  const handleRemoveKeyframe = (id: string) => {
     setKeyframes(keyframes.filter(k => k.id !== id));
   };
 
   const seekTo = (time: number) => {
-    if (!playerRef.current) return;
-    playerRef.current.seekTo(time, 'seconds');
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = time;
     setIsPlaying(true);
+    videoRef.current.play();
   };
   
-  const handleAction = (action: string) => {
-    if (action === 'approved') {
+  const handleAction = async (action: string) => {
+    if (!project || submitting) return;
+
+    setSubmitting(true);
+
+    try {
+      // Save all keyframes with comments to the database
+      if (action === 'send_feedback' && keyframes.length > 0) {
+        const keyframesToSave = keyframes.filter(kf => kf.comment.trim() !== '');
+        
+        for (const keyframe of keyframesToSave) {
+          // Check if keyframe already exists (has a UUID format id)
+          const isExistingKeyframe = keyframe.id.length > 20;
+          
+          if (isExistingKeyframe) {
+            // Update existing keyframe
+            await supabase
+              .from('project_keyframes')
+              .update({ title: keyframe.comment })
+              .eq('id', keyframe.id);
+          } else {
+            // Insert new keyframe
+            await supabase
+              .from('project_keyframes')
+              .insert({
+                project_id: project.id,
+                title: `${formatTime(keyframe.time)} - ${keyframe.comment}`,
+                status: 'pending'
+              });
+          }
+        }
+      }
+
+      // Update project status
+      const newStatus = action === 'approved' ? 'approved' : 'feedback-sent';
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ 
+          status: newStatus,
+          approval_date: action === 'approved' ? new Date().toISOString() : null
+        })
+        .eq('id', project.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setShowConfirmation(true);
+      
+      if (action === 'approved') {
         toast({
             title: "✅ Aprovação Enviada!",
             description: "Obrigado! Sua aprovação foi registrada com sucesso.",
             duration: 6000,
         });
-    } else if (action === 'send_feedback') {
-        const feedbackData = { keyframes: keyframes.filter(k => k.comment.trim() !== '') };
+      } else {
         toast({
             title: "👍 Feedback Enviado!",
             description: "A equipe foi notificada sobre seus apontamentos.",
             duration: 6000,
         });
+      }
+    } catch (error) {
+      console.error('Error saving action:', error);
+      toast({
+        title: "Erro ao processar",
+        description: "Não foi possível salvar sua ação. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
     }
-    setShowConfirmation(true);
+  };
+
+  const togglePlayPause = () => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
   };
 
   if (loading) {
@@ -150,26 +256,18 @@ export default function AudiovisualApproval() {
 
   if (showConfirmation) {
     const isApproved = project.status === 'approved';
-    const isFeedback = project.status === 'feedback-sent' || project.status === 'rejected';
     
-    let confirmationContent;
-    if (isApproved) {
-        confirmationContent = {
-            icon: <ThumbsUp className="w-20 h-20 text-green-500 mx-auto animate-bounce" />,
-            title: 'Projeto Aprovado!',
-            message: 'Obrigado pela sua colaboração. A equipe já foi notificada.',
-            bg: 'from-green-50 to-emerald-100',
-        };
-    } else if (isFeedback) {
-        confirmationContent = {
-            icon: <Send className="w-20 h-20 text-blue-500 mx-auto" />,
-            title: 'Feedback Enviado!',
-            message: 'Seu feedback foi recebido. Nossa equipe analisará os pontos.',
-            bg: 'from-blue-50 to-sky-100',
-        };
-    } else {
-        return null;
-    }
+    const confirmationContent = isApproved ? {
+      icon: <ThumbsUp className="w-20 h-20 text-green-500 mx-auto animate-bounce" />,
+      title: 'Projeto Aprovado!',
+      message: 'Obrigado pela sua colaboração. A equipe já foi notificada.',
+      bg: 'from-green-50 to-emerald-100',
+    } : {
+      icon: <Send className="w-20 h-20 text-blue-500 mx-auto" />,
+      title: 'Feedback Enviado!',
+      message: 'Seu feedback foi recebido. Nossa equipe analisará os pontos.',
+      bg: 'from-blue-50 to-sky-100',
+    };
 
     return (
       <div className={`flex flex-col items-center justify-center min-h-screen bg-gradient-to-br ${confirmationContent.bg} text-center p-6`}>
@@ -182,18 +280,13 @@ export default function AudiovisualApproval() {
           {confirmationContent.icon}
           <h2 className="text-2xl font-bold text-gray-800 mb-2">{confirmationContent.title}</h2>
           <p className="text-gray-600 mb-6">{confirmationContent.message}</p>
-          <div className="space-y-3">
-            <Button className="w-full bg-orange-500 hover:bg-orange-600">
-              Voltar ao Dashboard
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowConfirmation(false)}
-              className="w-full"
-            >
-              Revisar Novamente
-            </Button>
-          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowConfirmation(false)}
+            className="w-full"
+          >
+            Revisar Novamente
+          </Button>
         </motion.div>
       </div>
     );
@@ -215,8 +308,8 @@ export default function AudiovisualApproval() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{project.title}</h1>
           <p className="text-gray-600 mb-4">{project.description}</p>
           <div className="flex items-center space-x-4 text-sm text-gray-500">
-            <span>Por {project.author}</span>
-            <span>{new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+            <span>Cliente: {project.client}</span>
+            <span>{new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{project.type}</span>
           </div>
         </motion.div>
@@ -228,20 +321,23 @@ export default function AudiovisualApproval() {
           transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl p-6 shadow-lg"
         >
-          <div className="relative w-full bg-black rounded-lg" style={{ paddingBottom: '56.25%' }}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-white text-center">
-                <Play className="w-16 h-16 mx-auto mb-4" />
-                <p className="text-lg font-medium">{project.title}</p>
-                <p className="text-sm opacity-60">Player integrado com funcionalidades avançadas</p>
-              </div>
-            </div>
+          <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+            <video
+              ref={videoRef}
+              className="absolute inset-0 w-full h-full object-contain"
+              onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            >
+              <source src={project.video_url} type="video/mp4" />
+            </video>
           </div>
           
           {/* Video Controls */}
           <div className="mt-4 flex items-center space-x-4">
             <Button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={togglePlayPause}
               variant="outline"
               size="sm"
             >
@@ -250,7 +346,6 @@ export default function AudiovisualApproval() {
             
             <Button
               onClick={handleAddKeyframe}
-              disabled={!isReady}
               className="bg-orange-500 hover:bg-orange-600"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -258,7 +353,7 @@ export default function AudiovisualApproval() {
             </Button>
             
             <div className="text-sm text-gray-500">
-              {formatTime(progress.playedSeconds)} / {formatTime(duration)}
+              {formatTime(currentTime)} / {formatTime(duration)}
             </div>
           </div>
         </motion.div>
@@ -318,19 +413,20 @@ export default function AudiovisualApproval() {
             <Button
               onClick={() => handleAction('approved')}
               className="flex-1 bg-green-600 hover:bg-green-700"
+              disabled={submitting}
             >
               <CheckCircle className="w-5 h-5 mr-2" />
-              Aprovar Projeto
+              {submitting ? 'Processando...' : 'Aprovar Projeto'}
             </Button>
             
             <Button
               onClick={() => handleAction('send_feedback')}
               variant="outline"
               className="flex-1"
-              disabled={keyframes.filter(k => k.comment.trim() !== '').length === 0}
+              disabled={keyframes.filter(k => k.comment.trim() !== '').length === 0 || submitting}
             >
               <Send className="w-5 h-5 mr-2" />
-              Enviar Feedback ({keyframes.filter(k => k.comment.trim() !== '').length})
+              {submitting ? 'Enviando...' : `Enviar Feedback (${keyframes.filter(k => k.comment.trim() !== '').length})`}
             </Button>
           </div>
         </motion.div>

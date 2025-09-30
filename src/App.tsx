@@ -43,13 +43,7 @@ const App = () => (
               </Layout>
             </ProtectedRoute>
           } />
-          <Route path="/aprovacao-audiovisual/:shareId" element={
-            <ProtectedRoute>
-              <Layout>
-                <AudiovisualApproval />
-              </Layout>
-            </ProtectedRoute>
-          } />
+          <Route path="/aprovacao-audiovisual/:shareId" element={<AudiovisualApproval />} />
           <Route path="/projeto/:shareId" element={<ClientApproval />} />
           <Route path="/projetos" element={
             <ProtectedRoute>
