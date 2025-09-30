@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import logoWhite from '@/assets/logo-white-bg.png';
+import logoDark from '@/assets/logo-dark-mode.svg';
 
 const formatTime = (seconds: number): string => {
   if (isNaN(seconds) || seconds < 0) {
@@ -384,21 +385,25 @@ export default function AudiovisualApproval() {
       </Helmet>
 
       {/* Header Laranja Fixo - Estilo Frame.io */}
-      <header className="bg-gradient-to-r from-primary to-primary/90 py-4 px-6 shadow-lg">
-        <div className="container mx-auto flex items-center justify-between">
-          <img 
-            src={logoWhite} 
-            alt="OK Lab Logo" 
-            className="h-10 w-auto"
-          />
+      <header className="bg-gradient-to-r from-primary to-primary/90 py-6 px-6 shadow-lg">
+        <div className="container mx-auto flex items-center justify-center">
           <h1 className="text-2xl font-bold text-white font-['Inter']">
             Aprove Seu Vídeo
           </h1>
         </div>
       </header>
 
+      {/* Logo Grande Centralizada */}
+      <div className="bg-white py-8">
+        <img 
+          src={logoDark} 
+          alt="OK Lab Logo" 
+          className="h-24 w-auto mx-auto"
+        />
+      </div>
+
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+      <div className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
         {/* Project Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card className="p-6 bg-white border-gray-200 shadow-sm">
