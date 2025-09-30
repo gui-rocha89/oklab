@@ -134,20 +134,21 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       const shareId = `av-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       console.log('🔑 [Audiovisual] Share ID gerado:', shareId);
 
-      // Criar objeto do projeto com campos corretos
+      // Criar objeto do projeto SOMENTE com campos que existem na tabela
       const newProject = {
         title: title.trim(),
         description: comment.trim() || null,
-        client: clientName.trim(), // Mapear para 'client' em vez de 'clientName'
+        client: clientName.trim(),
         type: 'Audiovisual',
         status: 'pending',
         priority: 'medium',
+        user_id: user.id,
         share_id: shareId,
-        videoUrl: publicUrl,
-        clientEmail: clientEmail.trim() || null,
+        video_url: publicUrl, // Campo correto que existe na tabela
       };
 
-      console.log('📝 [Audiovisual] Dados do projeto:', newProject);
+      console.log('📝 [Audiovisual] Dados do projeto (SOMENTE campos válidos):', newProject);
+      console.log('🔍 [Audiovisual] Campos enviados:', Object.keys(newProject));
       setUploadProgress(90);
 
       // Chamar a função de criação do projeto

@@ -276,6 +276,7 @@ export type Database = {
           type: string
           updated_at: string
           user_id: string
+          video_url: string | null
         }
         Insert: {
           approval_date?: string | null
@@ -290,6 +291,7 @@ export type Database = {
           type: string
           updated_at?: string
           user_id: string
+          video_url?: string | null
         }
         Update: {
           approval_date?: string | null
@@ -304,6 +306,7 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+          video_url?: string | null
         }
         Relationships: [
           {

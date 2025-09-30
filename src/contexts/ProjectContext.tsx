@@ -134,37 +134,49 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     fetchProjects();
   }, []);
 
-  const addProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+  const addProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      console.log('📝 [ProjectContext] Iniciando addProject:', project);
+      console.log('📝 [ProjectContext] Iniciando addProject');
+      console.log('📝 [ProjectContext] Dados recebidos:', JSON.stringify(project, null, 2));
+      console.log('📝 [ProjectContext] Campos recebidos:', Object.keys(project));
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('❌ [ProjectContext] Usuário não autenticado');
-        throw new Error('User not authenticated');
+      // Campos válidos da tabela projects
+      const validFields = [
+        'title', 'client', 'description', 'type', 'status', 
+        'priority', 'user_id', 'share_id', 'video_url', 'approval_date'
+      ];
+      
+      // Filtrar apenas campos válidos
+      const validProjectData: any = {};
+      validFields.forEach(field => {
+        if (field in project) {
+          validProjectData[field] = (project as any)[field];
+        }
+      });
+      
+      console.log('✅ [ProjectContext] Dados validados (apenas campos da tabela):', JSON.stringify(validProjectData, null, 2));
+      console.log('✅ [ProjectContext] Campos validados:', Object.keys(validProjectData));
+      
+      // Verificar se user_id está presente
+      if (!validProjectData.user_id) {
+        console.error('❌ [ProjectContext] user_id ausente nos dados');
+        throw new Error('user_id é obrigatório');
       }
 
-      console.log('👤 [ProjectContext] Usuário autenticado:', user.id);
-
-      // Remove fields that don't exist in the database table
-      const { approvalLink, creatives, videoUrl, clientEmail, ...projectData } = project as any;
-
-      console.log('💾 [ProjectContext] Dados para inserção (após limpeza):', {
-        ...projectData,
-        user_id: user.id
-      });
-
+      console.log('💾 [ProjectContext] Inserindo no Supabase...');
       const { data, error } = await supabase
         .from('projects')
-        .insert({
-          ...projectData,
-          user_id: user.id
-        })
+        .insert(validProjectData)
         .select()
         .single();
 
       if (error) {
-        console.error('❌ [ProjectContext] Erro ao inserir no banco:', error);
+        console.error('❌ [ProjectContext] ERRO DO SUPABASE:');
+        console.error('Código:', error.code);
+        console.error('Mensagem:', error.message);
+        console.error('Detalhes:', error.details);
+        console.error('Hint:', error.hint);
+        console.error('Objeto completo:', JSON.stringify(error, null, 2));
         throw error;
       }
 
@@ -176,12 +188,13 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         description: "Projeto criado com sucesso",
       });
     } catch (error) {
-      console.error('Error adding project:', error);
+      console.error('❌ [ProjectContext] ERRO GERAL:', error);
       toast({
         title: "Erro",
         description: "Falha ao criar projeto",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
