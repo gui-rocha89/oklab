@@ -392,49 +392,47 @@ export default function AudiovisualApproval() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white flex flex-col">
       <Helmet>
         <title>Aprovação de Vídeo - {project.title}</title>
       </Helmet>
 
-      {/* Header com identidade visual */}
-      <div className="bg-primary py-8 shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-4">
-            <img 
-              src={logoWhite} 
-              alt="OK Lab Logo" 
-              className="h-12 w-auto"
-            />
-            <h1 className="text-4xl font-bold text-white font-['Inter']">
-              Aprove Seu Vídeo
-            </h1>
-          </div>
+      {/* Header Laranja Fixo - Estilo Frame.io */}
+      <header className="bg-gradient-to-r from-primary to-primary/90 py-4 px-6 shadow-lg">
+        <div className="container mx-auto flex items-center justify-between">
+          <img 
+            src={logoWhite} 
+            alt="OK Lab Logo" 
+            className="h-10 w-auto"
+          />
+          <h1 className="text-2xl font-bold text-white font-['Inter']">
+            Aprove Seu Vídeo
+          </h1>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
         {/* Project Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="p-6">
-            <h3 className="text-sm font-bold font-['Inter'] mb-2">Nome do Projeto</h3>
-            <p className="text-base font-['Inter']">{project.title}</p>
+          <Card className="p-6 bg-white border-gray-200 shadow-sm">
+            <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Nome do Projeto</h3>
+            <p className="text-base font-['Inter'] text-gray-900">{project.title}</p>
           </Card>
           
-          <Card className="p-6">
-            <h3 className="text-sm font-bold font-['Inter'] mb-2">Descrição</h3>
-            <p className="text-sm font-['Inter']">{project.description || 'Sem descrição'}</p>
+          <Card className="p-6 bg-white border-gray-200 shadow-sm">
+            <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Descrição</h3>
+            <p className="text-sm font-['Inter'] text-gray-900">{project.description || 'Sem descrição'}</p>
           </Card>
           
-          <Card className="p-6 bg-primary/5 border-primary/20">
-            <h3 className="text-sm font-bold font-['Inter'] mb-2">Cliente</h3>
+          <Card className="p-6 bg-primary/5 border-primary/20 shadow-sm">
+            <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Cliente</h3>
             <p className="text-xl font-bold text-primary font-['Inter']">{project.client}</p>
           </Card>
         </div>
 
-        {/* Instructions Card - Apple-inspired minimal design */}
-        <Card className="mb-8 border-border/50">
+        {/* Instructions Card - Frame.io style */}
+        <Card className="mb-8 border-gray-200 shadow-sm bg-white">
           <div className="p-6 flex items-start gap-4">
             <div className="flex-shrink-0 mt-1">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -442,8 +440,8 @@ export default function AudiovisualApproval() {
               </div>
             </div>
             <div className="flex-1">
-              <h3 className="font-bold font-['Inter'] text-base mb-2">Como Usar</h3>
-              <p className="text-muted-foreground font-['Inter'] text-sm leading-relaxed">
+              <h3 className="font-bold font-['Inter'] text-base mb-2 text-gray-900">Como Usar</h3>
+              <p className="text-gray-600 font-['Inter'] text-sm leading-relaxed">
                 Basta você adicionar um comentário. A plataforma fará automaticamente a marcação no tempo exato que você parar o vídeo.
               </p>
             </div>
@@ -453,7 +451,7 @@ export default function AudiovisualApproval() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video Player Section */}
           <div className="lg:col-span-2 space-y-4">
-            <Card className="p-6">
+            <Card className="p-6 bg-white border-gray-200 shadow-sm">
               <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
                 <video
                   ref={videoRef}
@@ -493,15 +491,15 @@ export default function AudiovisualApproval() {
 
             {/* Keyframes */}
             {keyframes.length > 0 && (
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Comentários no Vídeo</h3>
+              <Card className="p-6 bg-white border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">Comentários no Vídeo</h3>
                 <div className="space-y-4">
                   {keyframes.map(keyframe => (
                     <motion.div
                       key={keyframe.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="border rounded-lg p-4"
+                      className="border border-gray-200 rounded-lg p-4 bg-white"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <button
@@ -533,9 +531,9 @@ export default function AudiovisualApproval() {
 
           {/* Actions Sidebar */}
           <div className="space-y-4">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
+            <Card className="p-6 bg-white border-gray-200 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+                <MessageSquare className="w-5 h-5 text-gray-700" />
                 Ações
               </h3>
 
@@ -570,12 +568,12 @@ export default function AudiovisualApproval() {
                 </Button>
 
                 {!canApprove && hasComments && (
-                  <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-sm text-gray-600 text-center">
                     Para aprovar, não deve haver comentários no vídeo
                   </p>
                 )}
                 {!canSendFeedback && !hasComments && (
-                  <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-sm text-gray-600 text-center">
                     Adicione comentários para enviar feedback
                   </p>
                 )}
@@ -585,9 +583,9 @@ export default function AudiovisualApproval() {
         </div>
 
         {/* Rating Section */}
-        <Card className="p-8 mt-8">
-          <h3 className="text-2xl font-bold mb-4 text-center">Avalie sua Experiência</h3>
-          <p className="text-muted-foreground text-center mb-6">
+        <Card className="p-8 mt-8 bg-white border-gray-200 shadow-sm">
+          <h3 className="text-2xl font-bold mb-4 text-center text-gray-900">Avalie sua Experiência</h3>
+          <p className="text-gray-600 text-center mb-6">
             Sua opinião é muito importante para melhorarmos nossa plataforma inovadora
           </p>
 
@@ -604,7 +602,7 @@ export default function AudiovisualApproval() {
                 ))}
               </div>
               {ratingComment && (
-                <p className="text-sm text-muted-foreground mt-4 max-w-md mx-auto">
+                <p className="text-sm text-gray-600 mt-4 max-w-md mx-auto">
                   "{ratingComment}"
                 </p>
               )}
