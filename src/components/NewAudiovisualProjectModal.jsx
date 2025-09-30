@@ -17,6 +17,8 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [videoFile, setVideoFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [approvalLink, setApprovalLink] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef(null);
   const { toast } = useToast();
 
@@ -31,6 +33,8 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       setClientName('');
       setClientEmail('');
       setVideoFile(null);
+      setApprovalLink('');
+      setShowSuccess(false);
     }
   }, [isOpen]);
 
@@ -221,13 +225,17 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       
       setUploadProgress(100);
 
+      // ========== ETAPA 8: GERAÇÃO DO LINK DE APROVAÇÃO ==========
+      const baseUrl = window.location.origin;
+      const generatedLink = `${baseUrl}/audiovisual-approval/${shareId}`;
+      setApprovalLink(generatedLink);
+      setShowSuccess(true);
+
       toast({
         title: "✅ Projeto Criado com Sucesso!",
-        description: `O projeto "${title}" foi criado e está pronto para aprovação.`,
+        description: `O projeto "${title}" foi criado. Link de aprovação gerado!`,
         duration: 5000,
       });
-
-      setIsOpen(false);
       
     } catch (error) {
       console.error('❌ [Audiovisual]', timestamp(), 'Erro ao criar projeto:', error.message);
@@ -267,6 +275,69 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
             </div>
 
             <div className="overflow-y-auto p-8 space-y-8 flex-1">
+              {showSuccess ? (
+                // Tela de Sucesso com Link
+                <div className="flex flex-col items-center justify-center space-y-6 py-12">
+                  <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <CheckCircle className="h-12 w-12 text-green-500" />
+                  </div>
+                  
+                  <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-bold text-foreground">Projeto Criado com Sucesso!</h3>
+                    <p className="text-muted-foreground">
+                      Compartilhe o link abaixo com seu cliente para aprovação do vídeo
+                    </p>
+                  </div>
+
+                  <div className="w-full max-w-2xl space-y-4">
+                    <div className="p-4 bg-muted/50 rounded-xl border border-border">
+                      <Label className="text-sm font-medium mb-2 block">Link de Aprovação</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={approvalLink}
+                          readOnly
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(approvalLink);
+                            toast({
+                              title: "✅ Link Copiado!",
+                              description: "O link foi copiado para a área de transferência.",
+                              duration: 3000,
+                            });
+                          }}
+                          className="whitespace-nowrap"
+                        >
+                          Copiar Link
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg">
+                      <p className="font-semibold text-foreground">📌 Próximos Passos:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Envie este link para o cliente via WhatsApp ou e-mail</li>
+                        <li>O cliente poderá assistir e aprovar o vídeo</li>
+                        <li>Você receberá notificações sobre o status da aprovação</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => {
+                      setShowSuccess(false);
+                      setIsOpen(false);
+                    }}
+                    size="lg"
+                    className="mt-4"
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              ) : (
+                // Formulário Normal
+                <>
               <div className="p-6 bg-muted/50 rounded-xl border border-border space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="av-title">Nome do projeto</Label>
@@ -317,8 +388,11 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                   )}
                 </div>
               </div>
+              </>
+              )}
             </div>
 
+            {!showSuccess && (
             <div className="flex justify-end p-6 border-t border-border sticky bottom-0 bg-background rounded-b-2xl z-10">
               <div className="flex gap-4">
                 <Button variant="outline" size="lg" onClick={() => setIsOpen(false)} disabled={isUploading}>
@@ -339,6 +413,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                 </Button>
               </div>
             </div>
+            )}
           </div>
         </motion.div>
       )}
