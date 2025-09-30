@@ -226,6 +226,11 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       // ========== ETAPA 7: CRIAÇÃO DO PROJETO NO BANCO ==========
       console.log('💾 [Audiovisual]', timestamp(), 'ETAPA 7: Criando projeto no banco de dados...');
       console.log('💾 [Audiovisual]', timestamp(), 'Chamando onProjectCreate...');
+      console.log('💾 [ÚLTIMA VERIFICAÇÃO]', timestamp(), 'Objeto final que SERÁ ENVIADO:', projectData);
+      console.log('💾 [ÚLTIMA VERIFICAÇÃO]', timestamp(), 'Stringified:', JSON.stringify(projectData));
+      
+      // ⚠️ BREAKPOINT FORÇADO - Garante que novo código está rodando
+      debugger;
       
       await onProjectCreate(projectData);
       

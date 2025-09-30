@@ -137,6 +137,11 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const addProject = async (projectData: any) => {
     const timestamp = () => `[${new Date().toISOString()}]`;
     
+    // ⚠️ VERSÃO DO CÓDIGO: v2.0 - Sistema de Debug Completo
+    console.log('🚨 [VERSION CHECK]', timestamp(), 'VERSÃO DO ProjectContext: v2.0 - Debug Completo');
+    console.log('🚨 [VERSION CHECK]', timestamp(), 'Se você não vê esta mensagem, o cache do browser não foi limpo!');
+    console.log('🚨 [VERSION CHECK]', timestamp(), 'Pressione Ctrl+Shift+R (ou Cmd+Shift+R no Mac) para forçar reload!');
+    
     try {
       console.log('🎯 [ProjectContext]', timestamp(), '========================================');
       console.log('🎯 [ProjectContext]', timestamp(), 'addProject CHAMADO');
