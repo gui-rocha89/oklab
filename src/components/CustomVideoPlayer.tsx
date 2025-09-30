@@ -9,12 +9,13 @@ interface CustomVideoPlayerProps {
   currentTime: number;
   onTimeUpdate: (time: number) => void;
   onDurationChange: (duration: number) => void;
-  annotations?: Array<{ timestamp_ms: number; id: string }>;
+  annotations?: Array<{ timestamp_ms: number; id: string; comment?: string | null }>;
   onSeek?: (time: number) => void;
   className?: string;
   isPlaying?: boolean;
   onPlayPauseChange?: (isPlaying: boolean) => void;
   isDrawingMode?: boolean;
+  onAnnotationClick?: (annotationId: string) => void;
 }
 
 export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
@@ -28,6 +29,7 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   isPlaying: externalIsPlaying,
   onPlayPauseChange,
   isDrawingMode = false,
+  onAnnotationClick,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -314,8 +316,13 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
               return (
                 <div
                   key={annotation.id}
-                  className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-400 rounded-full border border-white shadow-lg"
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform z-10"
                   style={{ left: `${position}%` }}
+                  title={annotation.comment || 'Anotação visual'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAnnotationClick?.(annotation.id);
+                  }}
                 />
               );
             })}

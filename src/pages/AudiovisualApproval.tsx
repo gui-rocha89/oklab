@@ -65,6 +65,8 @@ export default function AudiovisualApproval() {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [pendingAnnotationTime, setPendingAnnotationTime] = useState<number>(0);
   const [pendingAnnotationTimestamp, setPendingAnnotationTimestamp] = useState<number | null>(null);
+  const [currentAnnotationId, setCurrentAnnotationId] = useState<string | null>(null);
+  const [showAnnotationOverlay, setShowAnnotationOverlay] = useState(false);
 
   // Annotation system
   const {
@@ -172,6 +174,32 @@ export default function AudiovisualApproval() {
       loadAnnotations();
     }
   }, [project?.id, loadAnnotations]);
+
+  // Auto-load annotations during playback
+  useEffect(() => {
+    if (!isDrawingMode && annotations.length > 0 && duration > 0) {
+      // Find annotation at current time (within 500ms window)
+      const currentAnnotation = annotations.find(ann => {
+        const annTime = ann.timestamp_ms / 1000;
+        return Math.abs(currentTime - annTime) < 0.5;
+      });
+
+      if (currentAnnotation && currentAnnotation.id !== currentAnnotationId) {
+        setCurrentAnnotationId(currentAnnotation.id);
+        loadAnnotationToCanvas(currentAnnotation);
+        setShowAnnotationOverlay(true);
+        
+        // Hide overlay after 3 seconds if video is playing
+        if (isPlaying) {
+          setTimeout(() => {
+            setShowAnnotationOverlay(false);
+          }, 3000);
+        }
+      } else if (!currentAnnotation && showAnnotationOverlay && isPlaying) {
+        setShowAnnotationOverlay(false);
+      }
+    }
+  }, [currentTime, annotations, isDrawingMode, isPlaying, currentAnnotationId, loadAnnotationToCanvas, duration, showAnnotationOverlay]);
 
   const handleAddKeyframe = () => {
     if (keyframes.some(k => Math.abs(k.time - currentTime) < 1)) {
@@ -378,6 +406,37 @@ export default function AudiovisualApproval() {
     }
   };
 
+  const handleAnnotationClick = (annotationId: string) => {
+    const annotation = annotations.find(a => a.id === annotationId);
+    if (annotation) {
+      const timeInSeconds = annotation.timestamp_ms / 1000;
+      seekTo(timeInSeconds);
+      setIsPlaying(false);
+      loadAnnotationToCanvas(annotation);
+      setCurrentAnnotationId(annotationId);
+      setShowAnnotationOverlay(true);
+    }
+  };
+
+  const navigateToAnnotation = (direction: 'prev' | 'next') => {
+    const sortedAnnotations = [...annotations].sort((a, b) => a.timestamp_ms - b.timestamp_ms);
+    const currentIndex = sortedAnnotations.findIndex(a => a.id === currentAnnotationId);
+    
+    let targetIndex: number;
+    if (currentIndex === -1) {
+      // If no current annotation, go to first or last
+      targetIndex = direction === 'next' ? 0 : sortedAnnotations.length - 1;
+    } else {
+      targetIndex = direction === 'next' 
+        ? Math.min(currentIndex + 1, sortedAnnotations.length - 1)
+        : Math.max(currentIndex - 1, 0);
+    }
+    
+    if (sortedAnnotations[targetIndex]) {
+      handleAnnotationClick(sortedAnnotations[targetIndex].id);
+    }
+  };
+
   const togglePlayPause = () => {
     if (!videoRef.current || isDrawingMode) return;
     
@@ -575,22 +634,23 @@ export default function AudiovisualApproval() {
                     isPlaying={isPlaying}
                     onPlayPauseChange={setIsPlaying}
                     isDrawingMode={isDrawingMode}
+                    onAnnotationClick={handleAnnotationClick}
                   />
                   
                   {/* Drawing Canvas Overlay - Positioned absolutely over the video */}
-                  {isDrawingMode && (
+                  {(isDrawingMode || showAnnotationOverlay) && (
                     <div 
                       className="absolute top-0 left-0 w-full h-full" 
                       style={{ zIndex: 50 }}
                     >
-                      <VideoAnnotationCanvas
-                        videoRef={videoRef}
-                        isDrawingMode={isDrawingMode}
-                        currentTool={currentTool}
-                        brushColor={brushColor}
-                        brushWidth={brushWidth}
-                        onCanvasReady={setCanvas}
-                      />
+              <VideoAnnotationCanvas
+                videoRef={videoRef}
+                isDrawingMode={isDrawingMode || showAnnotationOverlay}
+                currentTool={currentTool}
+                brushColor={brushColor}
+                brushWidth={brushWidth}
+                onCanvasReady={setCanvas}
+              />
                     </div>
                   )}
                 </div>
@@ -710,40 +770,74 @@ export default function AudiovisualApproval() {
             {/* Visual Annotations */}
             {annotations.length > 0 && (
               <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
-                <h3 className={`font-semibold mb-4 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
-                  Anotações Visuais
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`font-semibold text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
+                    Anotações Visuais ({annotations.length})
+                  </h3>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigateToAnnotation('prev')}
+                      disabled={annotations.length === 0}
+                      title="Anotação Anterior"
+                    >
+                      ←
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigateToAnnotation('next')}
+                      disabled={annotations.length === 0}
+                      title="Próxima Anotação"
+                    >
+                      →
+                    </Button>
+                  </div>
+                </div>
                 <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
-                  {annotations.map(annotation => (
+                  {annotations
+                    .sort((a, b) => a.timestamp_ms - b.timestamp_ms)
+                    .map((annotation, index) => (
                     <motion.div
                       key={annotation.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="border border-gray-200 rounded-lg p-4 bg-white"
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        currentAnnotationId === annotation.id
+                          ? 'border-yellow-400 bg-yellow-50'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                      onClick={() => handleAnnotationClick(annotation.id)}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <button
-                          onClick={async () => {
-                            if (!videoRef.current) return;
-                            videoRef.current.currentTime = annotation.timestamp_ms / 1000;
-                            await loadAnnotationToCanvas(annotation);
-                            setIsDrawingMode(true);
-                          }}
-                          className={`text-primary hover:text-primary/80 font-medium touch-manipulation ${isMobile ? 'min-h-[44px] text-base' : ''}`}
-                        >
-                          {formatTime(annotation.timestamp_ms / 1000)}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
+                            #{index + 1}
+                          </span>
+                          <span className={`font-medium touch-manipulation ${isMobile ? 'text-base' : ''}`}>
+                            {formatTime(annotation.timestamp_ms / 1000)}
+                          </span>
+                          {currentAnnotationId === annotation.id && (
+                            <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-medium">
+                              Visualizando
+                            </span>
+                          )}
+                        </div>
                         <Button
-                          onClick={() => deleteAnnotation(annotation.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteAnnotation(annotation.id);
+                          }}
                           variant="ghost"
                           size={isMobile ? "default" : "sm"}
-                          className={isMobile ? "touch-manipulation min-h-[44px]" : ""}
+                          className={`hover:bg-red-100 hover:text-red-600 ${isMobile ? 'touch-manipulation min-h-[44px]' : ''}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                       {annotation.comment && (
-                        <p className="text-sm text-gray-600">{annotation.comment}</p>
+                        <p className="text-sm text-gray-600 ml-8">{annotation.comment}</p>
                       )}
                     </motion.div>
                   ))}
