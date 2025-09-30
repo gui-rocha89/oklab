@@ -506,17 +506,15 @@ export default function AudiovisualApproval() {
                   <source src={project.video_url} type="video/mp4" />
                 </video>
                 
-                {/* Annotation Canvas Overlay */}
-                {isDrawingMode && (
-                  <VideoAnnotationCanvas
-                    videoRef={videoRef}
-                    isDrawingMode={isDrawingMode}
-                    currentTool={currentTool}
-                    brushColor={brushColor}
-                    brushWidth={brushWidth}
-                    onCanvasReady={setCanvas}
-                  />
-                )}
+                {/* Annotation Canvas Overlay - Always rendered but only interactive when drawing */}
+                <VideoAnnotationCanvas
+                  videoRef={videoRef}
+                  isDrawingMode={isDrawingMode}
+                  currentTool={currentTool}
+                  brushColor={brushColor}
+                  brushWidth={brushWidth}
+                  onCanvasReady={setCanvas}
+                />
               </div>
               
               {/* Drawing Toolbar - Below Video */}

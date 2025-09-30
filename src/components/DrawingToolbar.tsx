@@ -44,53 +44,58 @@ export const DrawingToolbar = ({
   canRedo,
 }: DrawingToolbarProps) => {
   return (
-    <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-1.5 shadow-lg">
-      <div className="flex items-center gap-1.5">
+    <div className="bg-background/98 backdrop-blur-sm border border-border/50 rounded-md p-1 shadow-md">
+      <div className="flex items-center gap-1 flex-wrap">
         {/* Tools */}
         <div className="flex gap-0.5">
           <Button
             variant={currentTool === 'select' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('select')}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
+            title="Selecionar"
           >
-            <MousePointer className="w-3.5 h-3.5" />
+            <MousePointer className="w-3 h-3" />
           </Button>
           <Button
             variant={currentTool === 'pen' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('pen')}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
+            title="Caneta"
           >
-            <Pen className="w-3.5 h-3.5" />
+            <Pen className="w-3 h-3" />
           </Button>
           <Button
             variant={currentTool === 'circle' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('circle')}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
+            title="Círculo"
           >
-            <Circle className="w-3.5 h-3.5" />
+            <Circle className="w-3 h-3" />
           </Button>
           <Button
             variant={currentTool === 'rectangle' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('rectangle')}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
+            title="Retângulo"
           >
-            <Square className="w-3.5 h-3.5" />
+            <Square className="w-3 h-3" />
           </Button>
           <Button
             variant={currentTool === 'text' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('text')}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
+            title="Texto"
           >
-            <Type className="w-3.5 h-3.5" />
+            <Type className="w-3 h-3" />
           </Button>
         </div>
 
-        <Separator orientation="vertical" className="h-6" />
+        <Separator orientation="vertical" className="h-5 mx-0.5" />
 
         {/* Colors */}
         <div className="flex gap-0.5">
@@ -98,16 +103,17 @@ export const DrawingToolbar = ({
             <button
               key={color}
               onClick={() => onColorChange(color)}
-              className={`w-6 h-6 rounded-full border-2 transition-all ${
-                brushColor === color ? 'border-primary scale-110' : 'border-border'
+              className={`w-5 h-5 rounded-full border transition-all ${
+                brushColor === color ? 'border-primary ring-1 ring-primary/30 scale-105' : 'border-border/50'
               }`}
               style={{ backgroundColor: color }}
-              aria-label={`Select ${color} color`}
+              aria-label={`Cor ${color}`}
+              title={`Cor ${color}`}
             />
           ))}
         </div>
 
-        <Separator orientation="vertical" className="h-6" />
+        <Separator orientation="vertical" className="h-5 mx-0.5" />
 
         {/* Brush Width */}
         <div className="flex gap-0.5">
@@ -117,17 +123,18 @@ export const DrawingToolbar = ({
               variant={brushWidth === size ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onBrushWidthChange(size)}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
+              title={`Espessura ${size}px`}
             >
               <div
                 className="rounded-full bg-current"
-                style={{ width: size, height: size }}
+                style={{ width: Math.min(size, 10), height: Math.min(size, 10) }}
               />
             </Button>
           ))}
         </div>
 
-        <Separator orientation="vertical" className="h-6" />
+        <Separator orientation="vertical" className="h-5 mx-0.5" />
 
         {/* Actions */}
         <div className="flex gap-0.5">
@@ -136,35 +143,38 @@ export const DrawingToolbar = ({
             size="sm"
             onClick={onUndo}
             disabled={!canUndo}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
+            title="Desfazer"
           >
-            <Undo className="w-3.5 h-3.5" />
+            <Undo className="w-3 h-3" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={onRedo}
             disabled={!canRedo}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
+            title="Refazer"
           >
-            <Redo className="w-3.5 h-3.5" />
+            <Redo className="w-3 h-3" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClear}
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+            title="Limpar tudo"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3 h-3" />
           </Button>
           <Button
             variant="default"
             size="sm"
             onClick={onSave}
-            className="h-8 px-3"
+            className="h-7 px-2 ml-0.5"
           >
-            <Save className="w-3.5 h-3.5 mr-1.5" />
-            Salvar
+            <Save className="w-3 h-3 mr-1" />
+            <span className="text-xs">Salvar</span>
           </Button>
         </div>
       </div>

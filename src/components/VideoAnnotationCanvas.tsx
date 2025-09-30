@@ -134,10 +134,12 @@ export const VideoAnnotationCanvas = ({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute top-0 left-0 w-full h-full pointer-events-auto"
+      className="absolute top-0 left-0 w-full h-full"
       style={{ 
         pointerEvents: isDrawingMode ? 'auto' : 'none',
-        touchAction: 'none'
+        touchAction: isDrawingMode ? 'none' : 'auto',
+        opacity: isDrawingMode ? 1 : 0,
+        transition: 'opacity 0.2s ease-in-out'
       }}
     />
   );
