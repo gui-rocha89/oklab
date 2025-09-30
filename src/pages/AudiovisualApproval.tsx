@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause, Info, Star, Pencil } from 'lucide-react';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Info, Star, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,7 @@ import { VideoAnnotationCanvas } from '@/components/VideoAnnotationCanvas';
 import { DrawingToolbar } from '@/components/DrawingToolbar';
 import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
 import { AnnotationCommentModal } from '@/components/AnnotationCommentModal';
+import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 
@@ -494,33 +495,44 @@ export default function AudiovisualApproval() {
           {/* Video Player Section */}
           <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
             <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative w-full rounded-lg overflow-hidden bg-gray-950" style={{ lineHeight: 0 }}>
+              <div className="relative">
+                {/* Hidden video element for VideoAnnotationCanvas */}
                 <video
                   ref={videoRef}
-                  className="w-full h-full block"
-                  style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+                  className="hidden"
+                  src={project.video_url}
                   onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
                   onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
-                >
-                  <source src={project.video_url} type="video/mp4" />
-                </video>
-                
-                {/* Timecode Overlay */}
-                <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1.5 rounded text-sm font-mono font-medium backdrop-blur-sm z-10">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </div>
-                
-                {/* Annotation Canvas Overlay - Always rendered but only interactive when drawing */}
-                <VideoAnnotationCanvas
-                  videoRef={videoRef}
-                  isDrawingMode={isDrawingMode}
-                  currentTool={currentTool}
-                  brushColor={brushColor}
-                  brushWidth={brushWidth}
-                  onCanvasReady={setCanvas}
                 />
+                
+                <CustomVideoPlayer
+                  src={project.video_url}
+                  currentTime={currentTime}
+                  onTimeUpdate={setCurrentTime}
+                  onDurationChange={setDuration}
+                  annotations={annotations}
+                  onSeek={(time) => {
+                    if (videoRef.current) {
+                      videoRef.current.currentTime = time;
+                    }
+                  }}
+                />
+                
+                {/* Drawing Canvas Overlay */}
+                {isDrawingMode && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50 }}>
+                    <VideoAnnotationCanvas
+                      videoRef={videoRef}
+                      isDrawingMode={isDrawingMode}
+                      currentTool={currentTool}
+                      brushColor={brushColor}
+                      brushWidth={brushWidth}
+                      onCanvasReady={setCanvas}
+                    />
+                  </div>
+                )}
               </div>
               
               {/* Drawing Toolbar - Below Video */}
@@ -551,28 +563,17 @@ export default function AudiovisualApproval() {
                 timestamp={pendingAnnotationTime}
               />
               
-              {/* Video Controls */}
+              {/* Drawing and Comment Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
-                <div className={`flex ${isMobile ? 'justify-between' : 'items-center gap-4'}`}>
-                  <Button
-                    onClick={togglePlayPause}
-                    variant="outline"
-                    size={isMobile ? "default" : "sm"}
-                    className={isMobile ? "touch-manipulation min-h-[44px] px-6" : ""}
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setIsDrawingMode(!isDrawingMode)}
-                    variant={isDrawingMode ? "default" : "outline"}
-                    size={isMobile ? "default" : "sm"}
-                    className={isMobile ? "touch-manipulation min-h-[44px] px-6" : ""}
-                  >
-                    <Pencil className="w-4 h-4 mr-2" />
-                    {isDrawingMode ? 'Desativar' : 'Desenhar'}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setIsDrawingMode(!isDrawingMode)}
+                  variant={isDrawingMode ? "default" : "outline"}
+                  size={isMobile ? "default" : "sm"}
+                  className={isMobile ? "touch-manipulation min-h-[44px] px-6 flex-1" : ""}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  {isDrawingMode ? 'Desativar Desenho' : 'Modo Desenho'}
+                </Button>
                 
                 <Button
                   onClick={handleAddKeyframe}
