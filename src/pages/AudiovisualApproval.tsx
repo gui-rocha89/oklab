@@ -312,37 +312,81 @@ export default function AudiovisualApproval() {
     const isApproved = project.status === 'approved';
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/90 to-primary flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 20 }}
-          className="text-center max-w-2xl"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="mb-8 inline-block"
-          >
+      <div className="min-h-screen bg-white flex flex-col">
+        {/* Header Laranja Fixo - Estilo Frame.io */}
+        <header className="bg-gradient-to-r from-primary to-primary/90 py-4 px-6 shadow-lg">
+          <div className="container mx-auto">
             <img 
               src={logoWhite} 
               alt="OK Lab Logo" 
-              className="h-24 w-auto"
+              className="h-10 w-auto"
+            />
+          </div>
+        </header>
+
+        {/* Área de Conteúdo Branca */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="text-center max-w-3xl"
+          >
+            {/* Logo Grande Centralizada */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="mb-12 inline-block"
+            >
+              <img 
+                src={logoWhite} 
+                alt="OK Lab Logo" 
+                className="h-32 w-auto"
+              />
+            </motion.div>
+
+            {/* Título em Laranja */}
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="text-6xl font-bold text-primary mb-8 font-['Inter']"
+            >
+              {isApproved ? "Projeto Aprovado!" : "Feedback Enviado!"}
+            </motion.h1>
+
+            {/* Texto Descritivo - Cor Escura */}
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="text-2xl text-gray-700 mb-6 font-['Inter'] leading-relaxed"
+            >
+              {isApproved
+                ? "Obrigado por aprovar o projeto! Nossa equipe foi notificada e dará continuidade ao trabalho."
+                : "Obrigado pelo seu feedback detalhado! Nossa equipe irá analisar cada ponto e retornar em até 48 horas."}
+            </motion.p>
+
+            {/* Subtexto */}
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="text-lg text-gray-500 font-['Inter']"
+            >
+              Você receberá atualizações por e-mail.
+            </motion.p>
+
+            {/* Detalhe Laranja Decorativo */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
+              className="mt-12 h-1 w-32 bg-gradient-to-r from-primary to-primary/60 mx-auto rounded-full"
             />
           </motion.div>
-          <h1 className="text-5xl font-bold text-white mb-6 font-['Inter']">
-            {isApproved ? "Projeto Aprovado!" : "Feedback Enviado!"}
-          </h1>
-          <p className="text-xl text-white/90 mb-4 font-['Inter']">
-            {isApproved
-              ? "Obrigado por aprovar o projeto! Nossa equipe foi notificada e dará continuidade ao trabalho."
-              : "Obrigado pelo seu feedback detalhado! Nossa equipe irá analisar cada ponto e retornar em até 48 horas."}
-          </p>
-          <p className="text-lg text-white/75 font-['Inter']">
-            Você receberá atualizações por e-mail.
-          </p>
-        </motion.div>
+        </div>
       </div>
     );
   }
