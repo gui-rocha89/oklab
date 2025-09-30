@@ -494,10 +494,10 @@ export default function AudiovisualApproval() {
           {/* Video Player Section */}
           <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
             <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative w-full bg-black rounded-lg overflow-hidden">
+              <div className="relative w-full rounded-lg overflow-hidden">
                 <video
                   ref={videoRef}
-                  className="w-full h-auto"
+                  className="w-full h-auto block bg-gray-950"
                   onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
                   onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
                   onPlay={() => setIsPlaying(true)}
@@ -505,6 +505,11 @@ export default function AudiovisualApproval() {
                 >
                   <source src={project.video_url} type="video/mp4" />
                 </video>
+                
+                {/* Timecode Overlay */}
+                <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1.5 rounded text-sm font-mono font-medium backdrop-blur-sm">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </div>
                 
                 {/* Annotation Canvas Overlay - Always rendered but only interactive when drawing */}
                 <VideoAnnotationCanvas
@@ -566,10 +571,6 @@ export default function AudiovisualApproval() {
                     <Pencil className="w-4 h-4 mr-2" />
                     {isDrawingMode ? 'Desativar' : 'Desenhar'}
                   </Button>
-                  
-                  <div className={`text-sm text-muted-foreground ${isMobile ? '' : 'hidden'}`}>
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                  </div>
                 </div>
                 
                 <Button
@@ -580,10 +581,6 @@ export default function AudiovisualApproval() {
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Comentário
                 </Button>
-                
-                <div className={`text-sm text-muted-foreground ${isMobile ? 'hidden' : ''}`}>
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </div>
               </div>
             </Card>
 
