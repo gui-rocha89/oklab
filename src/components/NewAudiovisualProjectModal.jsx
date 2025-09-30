@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, Film, FileText, CheckCircle } from "lucide-react";
+import { X, Upload, Film, FileText, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useModalBlur } from "@/hooks/useModalBlur";
+import { supabase } from "@/integrations/supabase/client";
 
 const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [title, setTitle] = useState('');
@@ -14,6 +15,8 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [videoFile, setVideoFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef(null);
   const { toast } = useToast();
 
@@ -49,8 +52,12 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    console.log('🎬 [Audiovisual] Iniciando criação de projeto...');
+    
+    // Validações
     if (!title.trim()) {
+      console.error('❌ [Audiovisual] Título vazio');
       toast({
         title: "Erro de Validação",
         description: "O título do projeto é obrigatório.",
@@ -58,25 +65,115 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       });
       return;
     }
+    
+    if (!clientName.trim()) {
+      console.error('❌ [Audiovisual] Nome do cliente vazio');
+      toast({
+        title: "Erro de Validação",
+        description: "O nome do cliente é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!videoFile) {
-        toast({
-          title: "Erro de Validação",
-          description: "É necessário anexar um vídeo.",
-          variant: "destructive",
-        });
-        return;
+      console.error('❌ [Audiovisual] Nenhum vídeo selecionado');
+      toast({
+        title: "Erro de Validação",
+        description: "É necessário anexar um vídeo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      console.log('📤 [Audiovisual] Iniciando upload do vídeo...', {
+        fileName: videoFile.name,
+        fileSize: videoFile.size,
+        fileType: videoFile.type
+      });
+
+      // Upload do vídeo para o Supabase Storage
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
       }
 
-    const newProject = {
-      title,
-      comment,
-      clientName,
-      clientEmail,
-      videoFile,
-      type: 'Audiovisual',
-    };
-    onProjectCreate(newProject);
-    setIsOpen(false);
+      const fileExt = videoFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      
+      console.log('📂 [Audiovisual] Fazendo upload para:', fileName);
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('audiovisual-projects')
+        .upload(fileName, videoFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('❌ [Audiovisual] Erro no upload:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('✅ [Audiovisual] Upload concluído:', uploadData);
+      setUploadProgress(50);
+
+      // Obter URL pública do vídeo
+      const { data: { publicUrl } } = supabase.storage
+        .from('audiovisual-projects')
+        .getPublicUrl(fileName);
+
+      console.log('🔗 [Audiovisual] URL pública:', publicUrl);
+      setUploadProgress(75);
+
+      // Gerar share_id único
+      const shareId = `av-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      console.log('🔑 [Audiovisual] Share ID gerado:', shareId);
+
+      // Criar objeto do projeto com campos corretos
+      const newProject = {
+        title: title.trim(),
+        description: comment.trim() || null,
+        client: clientName.trim(), // Mapear para 'client' em vez de 'clientName'
+        type: 'Audiovisual',
+        status: 'pending',
+        priority: 'medium',
+        share_id: shareId,
+        videoUrl: publicUrl,
+        clientEmail: clientEmail.trim() || null,
+      };
+
+      console.log('📝 [Audiovisual] Dados do projeto:', newProject);
+      setUploadProgress(90);
+
+      // Chamar a função de criação do projeto
+      await onProjectCreate(newProject);
+      
+      setUploadProgress(100);
+      console.log('✅ [Audiovisual] Projeto criado com sucesso!');
+
+      toast({
+        title: "✅ Projeto Criado!",
+        description: `O projeto "${title}" foi criado com sucesso.`,
+        duration: 3000,
+      });
+
+      setIsOpen(false);
+    } catch (error) {
+      console.error('❌ [Audiovisual] Erro ao criar projeto:', error);
+      toast({
+        title: "Erro ao Criar Projeto",
+        description: error.message || "Ocorreu um erro ao criar o projeto. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   if (!isOpen) return null;
@@ -156,10 +253,21 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
             <div className="flex justify-end p-6 border-t border-border sticky bottom-0 bg-background rounded-b-2xl z-10">
               <div className="flex gap-4">
-                <Button variant="outline" size="lg" onClick={() => setIsOpen(false)}>Cancelar</Button>
-                <Button className="btn-primary" onClick={handleSubmit}>
-                  <FileText className="w-5 h-5 mr-2" />
-                  Criar Projeto
+                <Button variant="outline" size="lg" onClick={() => setIsOpen(false)} disabled={isUploading}>
+                  Cancelar
+                </Button>
+                <Button className="btn-primary" onClick={handleSubmit} disabled={isUploading}>
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Criando... {uploadProgress}%
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-5 h-5 mr-2" />
+                      Criar Projeto
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

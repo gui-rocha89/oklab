@@ -136,11 +136,23 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   const addProject = async (project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
     try {
+      console.log('📝 [ProjectContext] Iniciando addProject:', project);
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        console.error('❌ [ProjectContext] Usuário não autenticado');
+        throw new Error('User not authenticated');
+      }
+
+      console.log('👤 [ProjectContext] Usuário autenticado:', user.id);
 
       // Remove fields that don't exist in the database table
-      const { approvalLink, creatives, ...projectData } = project as any;
+      const { approvalLink, creatives, videoUrl, clientEmail, ...projectData } = project as any;
+
+      console.log('💾 [ProjectContext] Dados para inserção (após limpeza):', {
+        ...projectData,
+        user_id: user.id
+      });
 
       const { data, error } = await supabase
         .from('projects')
@@ -151,7 +163,12 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [ProjectContext] Erro ao inserir no banco:', error);
+        throw error;
+      }
+
+      console.log('✅ [ProjectContext] Projeto inserido com sucesso:', data);
 
       await fetchProjects();
       toast({
