@@ -168,6 +168,16 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       const validFields = ['title', 'client', 'description', 'type', 'status', 'priority', 'user_id', 'share_id', 'video_url', 'approval_date'];
       
       console.log('🧹 [ProjectContext]', timestamp(), 'Limpando dados - removendo campos inválidos...');
+      console.log('🧹 [ProjectContext]', timestamp(), 'Campos recebidos ANTES da limpeza:', Object.keys(projectData));
+      
+      // VALIDAÇÃO EXTRA: Verificar se há campos inválidos
+      const receivedFields = Object.keys(projectData);
+      const invalidFields = receivedFields.filter(f => !validFields.includes(f));
+      
+      if (invalidFields.length > 0) {
+        console.warn('⚠️ [ProjectContext]', timestamp(), 'CAMPOS INVÁLIDOS DETECTADOS:', invalidFields);
+        console.warn('⚠️ [ProjectContext]', timestamp(), 'Estes campos serão REMOVIDOS!');
+      }
       
       // Criar objeto limpo com APENAS campos válidos
       const cleanData: any = {};
@@ -177,9 +187,18 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
-      console.log('✅ [ProjectContext]', timestamp(), 'Dados limpos:', cleanData);
-      console.log('✅ [ProjectContext]', timestamp(), 'Campos válidos:', Object.keys(cleanData));
-      console.log('✅ [ProjectContext]', timestamp(), 'Total de campos:', Object.keys(cleanData).length);
+      console.log('✅ [ProjectContext]', timestamp(), 'Dados LIMPOS (apenas campos válidos):', cleanData);
+      console.log('✅ [ProjectContext]', timestamp(), 'Campos após limpeza:', Object.keys(cleanData));
+      console.log('✅ [ProjectContext]', timestamp(), 'Total de campos válidos:', Object.keys(cleanData).length);
+      
+      // VALIDAÇÃO FINAL: Garantir que não há campos extras
+      const finalFields = Object.keys(cleanData);
+      const extraFields = finalFields.filter(f => !validFields.includes(f));
+      
+      if (extraFields.length > 0) {
+        console.error('🚨 [ProjectContext]', timestamp(), 'ERRO CRÍTICO: Campos inválidos após limpeza:', extraFields);
+        throw new Error(`Campos inválidos detectados após limpeza: ${extraFields.join(', ')}`);
+      }
 
       console.log('💾 [ProjectContext]', timestamp(), 'Executando INSERT no Supabase...');
       console.log('💾 [ProjectContext]', timestamp(), 'Tabela: projects');

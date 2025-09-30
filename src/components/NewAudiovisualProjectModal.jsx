@@ -13,7 +13,6 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
   const [clientName, setClientName] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
   const [videoFile, setVideoFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -29,7 +28,6 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       setTitle('');
       setComment('');
       setClientName('');
-      setClientEmail('');
       setVideoFile(null);
     }
   }, [isOpen]);
@@ -306,15 +304,9 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                   <Label htmlFor="av-comment">Descrição do projeto</Label>
                   <Textarea id="av-comment" placeholder="Adicione uma descrição, observações ou o roteiro do vídeo aqui..." value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="client-name">Nome do cliente</Label>
-                    <Input id="client-name" placeholder="Nome do Cliente" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client-email">E-mail do cliente</Label>
-                    <Input type="email" id="client-email" placeholder="email@cliente.com" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="client-name">Nome do cliente</Label>
+                  <Input id="client-name" placeholder="Nome do Cliente" value={clientName} onChange={(e) => setClientName(e.target.value)} />
                 </div>
               </div>
 
