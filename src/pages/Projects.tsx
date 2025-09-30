@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare, Video } from "lucide-react";
+import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare, Video, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
@@ -103,8 +103,13 @@ export default function Projects() {
     }).length;
   };
 
-  const handleViewProject = (shareId: string) => {
-    navigate(`/projeto/${shareId}`);
+  const handleViewProject = (project: any) => {
+    // Audiovisual projects go to client return page, others go to feedbacks
+    if (project.type === 'Audiovisual') {
+      navigate(`/retorno-cliente/${project.id}`);
+    } else {
+      navigate(`/feedbacks?projectId=${project.id}`);
+    }
   };
 
   const handleEditProject = (projectId: string) => {
@@ -397,10 +402,18 @@ export default function Projects() {
                         
                         {/* Audiovisual Tag */}
                         {isAudiovisual && (
-                          <Badge className="mt-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs font-bold">
-                            <Video className="w-3 h-3 mr-1" />
-                            AUDIOVISUAL
-                          </Badge>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs font-bold">
+                              <Video className="w-3 h-3 mr-1" />
+                              AUDIOVISUAL
+                            </Badge>
+                            {project.completed_at && (
+                              <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 text-xs font-bold">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                RETORNO RECEBIDO
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </div>
                       
@@ -481,16 +494,12 @@ export default function Projects() {
                           size="sm" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isAudiovisual) {
-                              navigate('/feedbacks');
-                            } else {
-                              handleViewProject(project.share_id);
-                            }
+                            handleViewProject(project);
                           }}
                           className={`ml-2 ${isAudiovisual ? 'bg-purple-600 hover:bg-purple-700' : 'bg-primary hover:bg-primary/90'} text-white shadow-md hover:shadow-lg transition-all`}
                         >
                           {isAudiovisual ? <MessageSquare className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-                          {isAudiovisual ? 'Ver Feedback' : 'Ver Projeto'}
+                          {isAudiovisual ? 'Ver Retorno do Cliente' : 'Ver Projeto'}
                         </Button>
                       </div>
                     </div>
@@ -572,16 +581,12 @@ export default function Projects() {
                           size="sm" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isAudiovisual) {
-                              navigate('/feedbacks');
-                            } else {
-                              handleViewProject(project.share_id);
-                            }
+                            handleViewProject(project);
                           }}
                           className={isAudiovisual ? 'bg-purple-600 hover:bg-purple-700' : ''}
                         >
                           {isAudiovisual ? <MessageSquare className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                          {isAudiovisual ? 'Ver Feedback' : 'Ver Projeto'}
+                          {isAudiovisual ? 'Ver Retorno' : 'Ver Projeto'}
                         </Button>
                         <Button 
                           size="sm" 
