@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { VideoAnnotationCanvas } from '@/components/VideoAnnotationCanvas';
 import { DrawingToolbar } from '@/components/DrawingToolbar';
 import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
+import { AnnotationCommentModal } from '@/components/AnnotationCommentModal';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 
@@ -60,6 +61,8 @@ export default function AudiovisualApproval() {
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [pendingAnnotationTime, setPendingAnnotationTime] = useState<number>(0);
 
   // Annotation system
   const {
@@ -309,6 +312,19 @@ export default function AudiovisualApproval() {
     }
   };
 
+  const handleSaveAnnotation = () => {
+    if (videoRef.current) {
+      const currentTime = Math.floor(videoRef.current.currentTime * 1000);
+      setPendingAnnotationTime(currentTime);
+      setShowCommentModal(true);
+    }
+  };
+
+  const handleSaveAnnotationWithComment = async (comment: string) => {
+    await saveAnnotation(pendingAnnotationTime, comment);
+    clearCanvas();
+  };
+
   const togglePlayPause = () => {
     if (!videoRef.current) return;
     
@@ -503,9 +519,9 @@ export default function AudiovisualApproval() {
                 )}
               </div>
               
-              {/* Drawing Toolbar */}
+              {/* Drawing Toolbar - Below Video */}
               {isDrawingMode && (
-                <div className="mt-4">
+                <div className="mt-2">
                   <DrawingToolbar
                     currentTool={currentTool}
                     onToolChange={setCurrentTool}
@@ -516,16 +532,20 @@ export default function AudiovisualApproval() {
                     onUndo={undo}
                     onRedo={redo}
                     onClear={clearCanvas}
-                    onSave={async () => {
-                      if (!videoRef.current) return;
-                      await saveAnnotation(Math.floor(videoRef.current.currentTime * 1000));
-                      clearCanvas();
-                    }}
+                    onSave={handleSaveAnnotation}
                     canUndo={canUndo}
                     canRedo={canRedo}
                   />
                 </div>
               )}
+
+              {/* Annotation Comment Modal */}
+              <AnnotationCommentModal
+                isOpen={showCommentModal}
+                onClose={() => setShowCommentModal(false)}
+                onSave={handleSaveAnnotationWithComment}
+                timestamp={pendingAnnotationTime}
+              />
               
               {/* Video Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>

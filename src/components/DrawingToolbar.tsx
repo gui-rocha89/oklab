@@ -44,61 +44,61 @@ export const DrawingToolbar = ({
   canRedo,
 }: DrawingToolbarProps) => {
   return (
-    <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-2 shadow-lg">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-1.5 shadow-lg">
+      <div className="flex items-center gap-1.5">
         {/* Tools */}
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           <Button
             variant={currentTool === 'select' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('select')}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 w-8 p-0"
           >
-            <MousePointer className="w-4 h-4" />
+            <MousePointer className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant={currentTool === 'pen' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('pen')}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 w-8 p-0"
           >
-            <Pen className="w-4 h-4" />
+            <Pen className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant={currentTool === 'circle' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('circle')}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 w-8 p-0"
           >
-            <Circle className="w-4 h-4" />
+            <Circle className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant={currentTool === 'rectangle' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('rectangle')}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 w-8 p-0"
           >
-            <Square className="w-4 h-4" />
+            <Square className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant={currentTool === 'text' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onToolChange('text')}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 w-8 p-0"
           >
-            <Type className="w-4 h-4" />
+            <Type className="w-3.5 h-3.5" />
           </Button>
         </div>
 
-        <Separator orientation="vertical" className="h-8" />
+        <Separator orientation="vertical" className="h-6" />
 
         {/* Colors */}
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           {COLORS.map((color) => (
             <button
               key={color}
               onClick={() => onColorChange(color)}
-              className={`w-8 h-8 rounded-full border-2 transition-all touch-manipulation ${
+              className={`w-6 h-6 rounded-full border-2 transition-all ${
                 brushColor === color ? 'border-primary scale-110' : 'border-border'
               }`}
               style={{ backgroundColor: color }}
@@ -107,17 +107,17 @@ export const DrawingToolbar = ({
           ))}
         </div>
 
-        <Separator orientation="vertical" className="h-8" />
+        <Separator orientation="vertical" className="h-6" />
 
         {/* Brush Width */}
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           {BRUSH_SIZES.map((size) => (
             <Button
               key={size}
               variant={brushWidth === size ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onBrushWidthChange(size)}
-              className="touch-manipulation min-h-[44px] min-w-[44px]"
+              className="h-8 w-8 p-0"
             >
               <div
                 className="rounded-full bg-current"
@@ -127,43 +127,43 @@ export const DrawingToolbar = ({
           ))}
         </div>
 
-        <Separator orientation="vertical" className="h-8" />
+        <Separator orientation="vertical" className="h-6" />
 
         {/* Actions */}
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={onUndo}
             disabled={!canUndo}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 w-8 p-0"
           >
-            <Undo className="w-4 h-4" />
+            <Undo className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={onRedo}
             disabled={!canRedo}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 w-8 p-0"
           >
-            <Redo className="w-4 h-4" />
+            <Redo className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClear}
-            className="touch-manipulation min-h-[44px] text-destructive hover:text-destructive"
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="default"
             size="sm"
             onClick={onSave}
-            className="touch-manipulation min-h-[44px]"
+            className="h-8 px-3"
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-3.5 h-3.5 mr-1.5" />
             Salvar
           </Button>
         </div>
