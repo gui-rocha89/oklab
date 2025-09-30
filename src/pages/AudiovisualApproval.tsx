@@ -522,7 +522,7 @@ export default function AudiovisualApproval() {
                 
                 {/* Drawing Canvas Overlay */}
                 {isDrawingMode && (
-                  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50 }}>
+                  <div className="absolute inset-0" style={{ zIndex: 50 }}>
                     <VideoAnnotationCanvas
                       videoRef={videoRef}
                       isDrawingMode={isDrawingMode}
@@ -566,7 +566,15 @@ export default function AudiovisualApproval() {
               {/* Drawing and Comment Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
                 <Button
-                  onClick={() => setIsDrawingMode(!isDrawingMode)}
+                  onClick={() => {
+                    const newMode = !isDrawingMode;
+                    setIsDrawingMode(newMode);
+                    // Pausar o vídeo quando ativar modo desenho
+                    if (newMode && videoRef.current) {
+                      videoRef.current.pause();
+                      setIsPlaying(false);
+                    }
+                  }}
                   variant={isDrawingMode ? "default" : "outline"}
                   size={isMobile ? "default" : "sm"}
                   className={isMobile ? "touch-manipulation min-h-[44px] px-6 flex-1" : ""}
