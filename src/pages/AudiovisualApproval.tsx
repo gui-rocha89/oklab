@@ -95,7 +95,10 @@ export default function AudiovisualApproval() {
   // Fetch project data from Supabase
   useEffect(() => {
     const fetchProject = async () => {
+      console.log('🔍 Carregando projeto com shareId:', shareId);
+      
       if (!shareId) {
+        console.log('❌ ShareId não fornecido');
         setLoading(false);
         return;
       }
@@ -108,25 +111,31 @@ export default function AudiovisualApproval() {
           .eq('share_id', shareId)
           .single();
 
+        console.log('📥 Dados do projeto:', { projectData, error: projectError });
+
         if (projectError) {
-          console.error('Error fetching project:', projectError);
+          console.error('❌ Erro ao buscar projeto:', projectError);
           setLoading(false);
           return;
         }
 
         if (!projectData) {
+          console.log('❌ Projeto não encontrado');
           setLoading(false);
           return;
         }
 
         // Check if project has already been completed
         if (projectData.completed_at) {
+          console.log('⚠️ Projeto já foi completado em:', projectData.completed_at);
+          console.log('🚫 Bloqueando acesso ao formulário');
           setProject(projectData);
           setShowConfirmation(true);
           setLoading(false);
           return;
         }
 
+        console.log('✅ Projeto carregado, permitindo acesso');
         setProject(projectData);
 
         // Fetch existing keyframes for this project
@@ -241,10 +250,16 @@ export default function AudiovisualApproval() {
   };
   
   const handleAction = async (action: string) => {
-    if (!project || submitting) return;
+    console.log('🎯 handleAction iniciado:', { action, hasProject: !!project, submitting, rating });
+    
+    if (!project || submitting) {
+      console.log('❌ handleAction bloqueado:', { hasProject: !!project, submitting });
+      return;
+    }
 
     // Validar que avaliação foi preenchida
     if (rating === 0) {
+      console.log('❌ Avaliação não preenchida');
       toast({
         title: "Avaliação obrigatória",
         description: "Por favor, avalie sua experiência antes de continuar.",
@@ -253,11 +268,13 @@ export default function AudiovisualApproval() {
       return;
     }
 
+    console.log('✅ Validações passaram, iniciando submissão');
     setSubmitting(true);
 
     try {
       // Save all keyframes with comments to the database
       if (action === 'send_feedback' && keyframes.length > 0) {
+        console.log('💾 Salvando keyframes:', keyframes.length);
         const keyframesToSave = keyframes.filter(kf => kf.comment.trim() !== '');
         
         for (const keyframe of keyframesToSave) {
@@ -281,9 +298,11 @@ export default function AudiovisualApproval() {
               });
           }
         }
+        console.log('✅ Keyframes salvos');
       }
 
       // Save rating to platform_reviews
+      console.log('💾 Salvando avaliação:', { projectId: project.id, rating, comment: ratingComment });
       const { error: ratingError } = await supabase
         .from('platform_reviews')
         .insert({
@@ -295,39 +314,55 @@ export default function AudiovisualApproval() {
         });
 
       if (ratingError) {
-        console.error('Error saving rating:', ratingError);
-        // Continue even if rating fails
+        console.error('❌ Erro ao salvar avaliação:', ratingError);
+      } else {
+        console.log('✅ Avaliação salva');
       }
 
       // Update project status and mark as completed
       const newStatus = action === 'approved' ? 'approved' : 'feedback-sent';
-      console.log('🔄 Atualizando projeto:', {
+      const completedAt = new Date().toISOString();
+      
+      console.log('💾 Atualizando projeto com completed_at:', {
         projectId: project.id,
         newStatus,
-        completed_at: new Date().toISOString()
+        completedAt,
+        approvalDate: action === 'approved' ? completedAt : null
       });
       
-      const { error: updateError } = await supabase
+      const updateData = { 
+        status: newStatus,
+        approval_date: action === 'approved' ? completedAt : null,
+        completed_at: completedAt
+      };
+      
+      console.log('📤 Enviando UPDATE para Supabase:', updateData);
+      
+      const { data: updatedData, error: updateError } = await supabase
         .from('projects')
-        .update({ 
-          status: newStatus,
-          approval_date: action === 'approved' ? new Date().toISOString() : null,
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', project.id);
+        .update(updateData)
+        .eq('id', project.id)
+        .select();
+
+      console.log('📥 Resposta do UPDATE:', { updatedData, updateError });
 
       if (updateError) {
         console.error('❌ Erro ao atualizar projeto:', updateError);
         throw updateError;
       }
       
-      console.log('✅ Projeto atualizado com sucesso, completed_at salvo');
+      if (!updatedData || updatedData.length === 0) {
+        console.error('❌ UPDATE não retornou dados!');
+        throw new Error('Falha ao atualizar projeto - nenhum registro afetado');
+      }
+      
+      console.log('✅ Projeto atualizado com sucesso:', updatedData[0]);
 
       // Atualizar o estado local do projeto
       setProject({
         ...project,
         status: newStatus,
-        completed_at: new Date().toISOString()
+        completed_at: completedAt
       });
       
       setShowConfirmation(true);
