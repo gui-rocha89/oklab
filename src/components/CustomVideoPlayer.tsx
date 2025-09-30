@@ -12,6 +12,9 @@ interface CustomVideoPlayerProps {
   annotations?: Array<{ timestamp_ms: number; id: string }>;
   onSeek?: (time: number) => void;
   className?: string;
+  isPlaying?: boolean;
+  onPlayPauseChange?: (isPlaying: boolean) => void;
+  isDrawingMode?: boolean;
 }
 
 export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
@@ -22,12 +25,16 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   annotations = [],
   onSeek,
   className,
+  isPlaying: externalIsPlaying,
+  onPlayPauseChange,
+  isDrawingMode = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [internalIsPlaying, setInternalIsPlaying] = useState(false);
+  const isPlaying = externalIsPlaying !== undefined ? externalIsPlaying : internalIsPlaying;
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
@@ -43,14 +50,22 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   };
 
   const togglePlayPause = useCallback(() => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
+    if (!videoRef.current || isDrawingMode) return;
+    
+    const newPlayingState = !isPlaying;
+    
+    if (newPlayingState) {
+      videoRef.current.play();
+    } else {
+      videoRef.current.pause();
     }
-  }, [isPlaying]);
+    
+    if (onPlayPauseChange) {
+      onPlayPauseChange(newPlayingState);
+    } else {
+      setInternalIsPlaying(newPlayingState);
+    }
+  }, [isPlaying, isDrawingMode, onPlayPauseChange]);
 
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
@@ -167,8 +182,20 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => {
+      if (onPlayPauseChange) {
+        onPlayPauseChange(true);
+      } else {
+        setInternalIsPlaying(true);
+      }
+    };
+    const handlePause = () => {
+      if (onPlayPauseChange) {
+        onPlayPauseChange(false);
+      } else {
+        setInternalIsPlaying(false);
+      }
+    };
     const handleTimeUpdate = () => onTimeUpdate(video.currentTime);
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
@@ -192,7 +219,19 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
       video.removeEventListener('waiting', handleWaiting);
       video.removeEventListener('canplay', handleCanPlay);
     };
-  }, [onTimeUpdate, onDurationChange]);
+  }, [onTimeUpdate, onDurationChange, onPlayPauseChange]);
+
+  // Force pause when drawing mode is active
+  useEffect(() => {
+    if (isDrawingMode && videoRef.current && isPlaying) {
+      videoRef.current.pause();
+      if (onPlayPauseChange) {
+        onPlayPauseChange(false);
+      } else {
+        setInternalIsPlaying(false);
+      }
+    }
+  }, [isDrawingMode, isPlaying, onPlayPauseChange]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -204,6 +243,16 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
+      {/* Drawing Mode Indicator */}
+      {isDrawingMode && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
+            <span className="text-sm font-medium">Modo Desenho Ativo - Vídeo Pausado</span>
+          </div>
+        </div>
+      )}
+
       <video
         ref={videoRef}
         src={src}
@@ -234,7 +283,8 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
           variant="ghost"
           size="icon"
           onClick={togglePlayPause}
-          className="w-20 h-20 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm"
+          disabled={isDrawingMode}
+          className="w-20 h-20 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPlaying ? <Pause className="w-10 h-10" /> : <Play className="w-10 h-10 ml-1" />}
         </Button>
@@ -285,7 +335,8 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
               variant="ghost"
               size="icon"
               onClick={togglePlayPause}
-              className="text-white hover:bg-white/10 h-9 w-9"
+              disabled={isDrawingMode}
+              className="text-white hover:bg-white/10 h-9 w-9 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </Button>

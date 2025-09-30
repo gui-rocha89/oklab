@@ -64,6 +64,7 @@ export default function AudiovisualApproval() {
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [pendingAnnotationTime, setPendingAnnotationTime] = useState<number>(0);
+  const [pendingAnnotationTimestamp, setPendingAnnotationTimestamp] = useState<number | null>(null);
 
   // Annotation system
   const {
@@ -203,8 +204,8 @@ export default function AudiovisualApproval() {
   const seekTo = (time: number) => {
     if (!videoRef.current) return;
     videoRef.current.currentTime = time;
-    setIsPlaying(true);
-    videoRef.current.play();
+    // Don't automatically resume playback after seeking
+    setIsPlaying(false);
   };
   
   const handleAction = async (action: string) => {
@@ -313,28 +314,66 @@ export default function AudiovisualApproval() {
     }
   };
 
+  const captureVideoScreenshot = async (): Promise<string | null> => {
+    if (!videoRef.current) return null;
+
+    try {
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.error("Erro ao capturar screenshot:", error);
+      return null;
+    }
+  };
+
   const handleSaveAnnotation = () => {
     if (videoRef.current) {
       const currentTime = Math.floor(videoRef.current.currentTime * 1000);
       setPendingAnnotationTime(currentTime);
+      setPendingAnnotationTimestamp(currentTime);
       setShowCommentModal(true);
     }
   };
 
   const handleSaveAnnotationWithComment = async (comment: string) => {
-    await saveAnnotation(pendingAnnotationTime, comment);
-    clearCanvas();
+    try {
+      const screenshot = await captureVideoScreenshot();
+      // Save annotation with screenshot data (if needed in the future)
+      await saveAnnotation(pendingAnnotationTime, comment);
+      clearCanvas();
+      toast({
+        title: "Anotação salva!",
+        description: "Sua marcação visual foi salva com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar anotação:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a anotação.",
+        variant: "destructive",
+      });
+    }
   };
 
   const togglePlayPause = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || isDrawingMode) return;
     
     if (isPlaying) {
       videoRef.current.pause();
+      setIsPlaying(false);
     } else {
       videoRef.current.play();
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const hasComments = keyframes.some(k => k.comment.trim().length > 0);
@@ -519,6 +558,9 @@ export default function AudiovisualApproval() {
                         videoRef.current.currentTime = time;
                       }
                     }}
+                    isPlaying={isPlaying}
+                    onPlayPauseChange={setIsPlaying}
+                    isDrawingMode={isDrawingMode}
                   />
                   
                   {/* Drawing Canvas Overlay - Positioned absolutely over the video */}
@@ -574,10 +616,12 @@ export default function AudiovisualApproval() {
                   onClick={() => {
                     const newMode = !isDrawingMode;
                     setIsDrawingMode(newMode);
-                    // Pausar o vídeo quando ativar modo desenho
-                    if (newMode && videoRef.current) {
-                      videoRef.current.pause();
+                    // Force pause when entering drawing mode
+                    if (newMode) {
                       setIsPlaying(false);
+                      if (videoRef.current) {
+                        videoRef.current.pause();
+                      }
                     }
                   }}
                   variant={isDrawingMode ? "default" : "outline"}
