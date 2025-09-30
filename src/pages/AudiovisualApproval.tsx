@@ -494,10 +494,11 @@ export default function AudiovisualApproval() {
           {/* Video Player Section */}
           <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
             <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative w-full rounded-lg overflow-hidden">
+              <div className="relative w-full rounded-lg overflow-hidden bg-gray-950" style={{ lineHeight: 0 }}>
                 <video
                   ref={videoRef}
-                  className="w-full h-auto block bg-gray-950"
+                  className="w-full h-full block"
+                  style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
                   onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
                   onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
                   onPlay={() => setIsPlaying(true)}
@@ -507,7 +508,7 @@ export default function AudiovisualApproval() {
                 </video>
                 
                 {/* Timecode Overlay */}
-                <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1.5 rounded text-sm font-mono font-medium backdrop-blur-sm">
+                <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1.5 rounded text-sm font-mono font-medium backdrop-blur-sm z-10">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
                 
