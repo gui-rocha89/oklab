@@ -7,8 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Logo } from '@/components/ui/logo';
 import { supabase } from '@/integrations/supabase/client';
+import logoWhite from '@/assets/logo-white-bg.png';
 
 const formatTime = (seconds: number): string => {
   if (isNaN(seconds) || seconds < 0) {
@@ -291,7 +291,7 @@ export default function AudiovisualApproval() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-4">
-        <Loader2 className="w-16 h-16 text-[#FF6B2C] animate-spin mb-4" />
+        <Loader2 className="w-16 h-16 text-primary animate-spin mb-4" />
         <h1 className="text-2xl font-bold">Carregando Projeto...</h1>
         <p className="text-muted-foreground">Estamos preparando tudo para você.</p>
       </div>
@@ -353,14 +353,18 @@ export default function AudiovisualApproval() {
       </Helmet>
 
       {/* Header com identidade visual */}
-      <div className="bg-gradient-to-r from-[#FF6B2C] to-[#FF8C5A] py-8 shadow-lg">
+      <div className="bg-primary py-8 shadow-lg">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <Logo className="h-12 w-auto" />
+          <div className="flex items-center justify-center gap-4">
+            <img 
+              src={logoWhite} 
+              alt="OK Lab Logo" 
+              className="h-12 w-auto"
+            />
+            <h1 className="text-4xl font-bold text-white font-['Inter']">
+              Aprove Seu Vídeo
+            </h1>
           </div>
-          <h1 className="text-4xl font-bold text-white text-center">
-            Aprove Seu Vídeo
-          </h1>
         </div>
       </div>
 
@@ -369,31 +373,33 @@ export default function AudiovisualApproval() {
         {/* Project Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card className="p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Nome do Projeto</h3>
-            <p className="text-lg font-semibold">{project.title}</p>
+            <h3 className="text-sm font-bold font-['Inter'] mb-2">Nome do Projeto</h3>
+            <p className="text-base font-['Inter']">{project.title}</p>
           </Card>
           
           <Card className="p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Descrição</h3>
-            <p className="text-sm">{project.description || 'Sem descrição'}</p>
+            <h3 className="text-sm font-bold font-['Inter'] mb-2">Descrição</h3>
+            <p className="text-sm font-['Inter']">{project.description || 'Sem descrição'}</p>
           </Card>
           
-          <Card className="p-6 bg-gradient-to-br from-[#FF6B2C]/10 to-[#FF8C5A]/10 border-[#FF6B2C]/20">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Cliente</h3>
-            <p className="text-xl font-bold text-[#FF6B2C]">{project.client}</p>
+          <Card className="p-6 bg-primary/5 border-primary/20">
+            <h3 className="text-sm font-bold font-['Inter'] mb-2">Cliente</h3>
+            <p className="text-xl font-bold text-primary font-['Inter']">{project.client}</p>
           </Card>
         </div>
 
-        {/* Instructions Card */}
-        <Card className="p-6 mb-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
-          <div className="flex items-start gap-4">
-            <div className="bg-blue-500/20 p-3 rounded-lg">
-              <Info className="w-6 h-6 text-blue-600" />
+        {/* Instructions Card - Apple-inspired minimal design */}
+        <Card className="mb-8 border-border/50">
+          <div className="p-6 flex items-start gap-4">
+            <div className="flex-shrink-0 mt-1">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Info className="h-5 w-5 text-primary" />
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Como Usar</h3>
-              <p className="text-muted-foreground">
-                Basta você adicionar um comentário, a plataforma vai fazer automaticamente a marcação no tempo exato que você parar o vídeo.
+            <div className="flex-1">
+              <h3 className="font-bold font-['Inter'] text-base mb-2">Como Usar</h3>
+              <p className="text-muted-foreground font-['Inter'] text-sm leading-relaxed">
+                Basta você adicionar um comentário. A plataforma fará automaticamente a marcação no tempo exato que você parar o vídeo.
               </p>
             </div>
           </div>
@@ -428,7 +434,7 @@ export default function AudiovisualApproval() {
                 
                 <Button
                   onClick={handleAddKeyframe}
-                  className="bg-[#FF6B2C] hover:bg-[#FF8C5A]"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Comentário
@@ -455,7 +461,7 @@ export default function AudiovisualApproval() {
                       <div className="flex items-center justify-between mb-2">
                         <button
                           onClick={() => seekTo(keyframe.time)}
-                          className="text-[#FF6B2C] hover:text-[#FF8C5A] font-medium"
+                          className="text-primary hover:text-primary/80 font-medium"
                         >
                           {formatTime(keyframe.time)}
                         </button>
