@@ -138,10 +138,26 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     const timestamp = () => `[${new Date().toISOString()}]`;
     
     try {
-      console.log('📝 [ProjectContext]', timestamp(), '====================================');
-      console.log('📝 [ProjectContext]', timestamp(), 'INICIANDO INSERÇÃO NO BANCO DE DADOS');
-      console.log('📝 [ProjectContext]', timestamp(), '====================================');
-      console.log('📝 [ProjectContext]', timestamp(), 'Dados recebidos:', projectData);
+      console.log('🎯 [ProjectContext]', timestamp(), '========================================');
+      console.log('🎯 [ProjectContext]', timestamp(), 'addProject CHAMADO');
+      console.log('🎯 [ProjectContext]', timestamp(), '========================================');
+      
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), '==========================================');
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'DADOS RECEBIDOS NO ProjectContext:');
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Tipo do parâmetro:', typeof projectData);
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'É array?', Array.isArray(projectData));
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'É null?', projectData === null);
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'É undefined?', projectData === undefined);
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Constructor:', projectData?.constructor?.name);
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Object.keys():', Object.keys(projectData));
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'JSON.stringify():', JSON.stringify(projectData, null, 2));
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Verificação campo por campo:');
+      for (const [key, value] of Object.entries(projectData)) {
+        console.log('🔍 [DEBUG ENTRADA]', timestamp(), `  - "${key}": ${typeof value} = ${JSON.stringify(value)}`);
+      }
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'TEM clientEmail?', 'clientEmail' in projectData);
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Valor de clientEmail:', projectData.clientEmail);
+      console.log('🔍 [DEBUG ENTRADA]', timestamp(), '==========================================');
       
       // Validar campos obrigatórios ANTES de processar
       console.log('🔍 [ProjectContext]', timestamp(), 'Validando campos obrigatórios...');
@@ -168,6 +184,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       const validFields = ['title', 'client', 'description', 'type', 'status', 'priority', 'user_id', 'share_id', 'video_url', 'approval_date'];
       
       console.log('🧹 [ProjectContext]', timestamp(), 'Limpando dados - removendo campos inválidos...');
+      console.log('🧹 [ProjectContext]', timestamp(), 'Campos VÁLIDOS permitidos:', validFields);
       console.log('🧹 [ProjectContext]', timestamp(), 'Campos recebidos ANTES da limpeza:', Object.keys(projectData));
       
       // VALIDAÇÃO EXTRA: Verificar se há campos inválidos
@@ -175,8 +192,14 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       const invalidFields = receivedFields.filter(f => !validFields.includes(f));
       
       if (invalidFields.length > 0) {
-        console.warn('⚠️ [ProjectContext]', timestamp(), 'CAMPOS INVÁLIDOS DETECTADOS:', invalidFields);
-        console.warn('⚠️ [ProjectContext]', timestamp(), 'Estes campos serão REMOVIDOS!');
+        console.warn('⚠️ [ProjectContext]', timestamp(), '==========================================');
+        console.warn('⚠️ [ProjectContext]', timestamp(), 'CAMPOS INVÁLIDOS DETECTADOS!');
+        console.warn('⚠️ [ProjectContext]', timestamp(), 'Campos inválidos:', invalidFields);
+        invalidFields.forEach(field => {
+          console.warn('⚠️ [ProjectContext]', timestamp(), `  - Campo "${field}" = ${JSON.stringify(projectData[field])}`);
+        });
+        console.warn('⚠️ [ProjectContext]', timestamp(), 'Estes campos serão REMOVIDOS antes do INSERT!');
+        console.warn('⚠️ [ProjectContext]', timestamp(), '==========================================');
       }
       
       // Criar objeto limpo com APENAS campos válidos
@@ -187,9 +210,13 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
-      console.log('✅ [ProjectContext]', timestamp(), 'Dados LIMPOS (apenas campos válidos):', cleanData);
-      console.log('✅ [ProjectContext]', timestamp(), 'Campos após limpeza:', Object.keys(cleanData));
-      console.log('✅ [ProjectContext]', timestamp(), 'Total de campos válidos:', Object.keys(cleanData).length);
+      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), '==========================================');
+      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'DADOS APÓS LIMPEZA:');
+      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'Object.keys():', Object.keys(cleanData));
+      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'JSON.stringify():', JSON.stringify(cleanData, null, 2));
+      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'Total de campos:', Object.keys(cleanData).length);
+      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'TEM clientEmail após limpeza?', 'clientEmail' in cleanData);
+      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), '==========================================');
       
       // VALIDAÇÃO FINAL: Garantir que não há campos extras
       const finalFields = Object.keys(cleanData);
@@ -200,9 +227,12 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(`Campos inválidos detectados após limpeza: ${extraFields.join(', ')}`);
       }
 
-      console.log('💾 [ProjectContext]', timestamp(), 'Executando INSERT no Supabase...');
+      console.log('💾 [ProjectContext]', timestamp(), '==========================================');
+      console.log('💾 [ProjectContext]', timestamp(), 'EXECUTANDO INSERT NO SUPABASE');
       console.log('💾 [ProjectContext]', timestamp(), 'Tabela: projects');
       console.log('💾 [ProjectContext]', timestamp(), 'Operação: INSERT');
+      console.log('💾 [ProjectContext]', timestamp(), 'Dados que SERÃO ENVIADOS:', JSON.stringify(cleanData, null, 2));
+      console.log('💾 [ProjectContext]', timestamp(), '==========================================');
 
       const { data, error } = await supabase
         .from('projects')

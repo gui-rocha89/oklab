@@ -208,17 +208,17 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         video_url: publicUrl,
       };
       
-      console.log('✅ [Audiovisual]', timestamp(), 'Dados preparados:', {
-        title: projectData.title,
-        client: projectData.client,
-        type: projectData.type,
-        status: projectData.status,
-        priority: projectData.priority,
-        user_id: projectData.user_id,
-        share_id: projectData.share_id,
-        video_url_length: projectData.video_url?.length,
-        hasDescription: !!projectData.description
-      });
+      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), '==========================================');
+      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'DADOS PREPARADOS NO MODAL:');
+      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'Object.keys():', Object.keys(projectData));
+      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'JSON.stringify():', JSON.stringify(projectData, null, 2));
+      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'Verificação campo por campo:');
+      for (const [key, value] of Object.entries(projectData)) {
+        console.log('🔍 [DEBUG CRÍTICO]', timestamp(), `  - ${key}: ${typeof value} = ${value}`);
+      }
+      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'TEM clientEmail?', 'clientEmail' in projectData);
+      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), '==========================================');
+      
       console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 6 CONCLUÍDA: Dados validados');
       
       setUploadProgress(90);
