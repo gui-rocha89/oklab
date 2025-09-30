@@ -450,8 +450,10 @@ export default function AudiovisualApproval() {
   };
 
   const hasComments = keyframes.some(k => k.comment.trim().length > 0);
-  const canApprove = !hasComments;
-  const canSendFeedback = hasComments;
+  const hasAnnotations = annotations.length > 0;
+  const hasFeedback = hasComments || hasAnnotations;
+  const canApprove = !hasFeedback;
+  const canSendFeedback = hasFeedback;
 
   if (loading) {
     return (
@@ -939,7 +941,11 @@ export default function AudiovisualApproval() {
                   onClick={() => handleAction('approved')}
                   disabled={submitting || !canApprove || project.status === 'approved'}
                   className={`w-full bg-green-600 hover:bg-green-700 touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
-                  title={hasComments ? "Não é possível aprovar com comentários pendentes" : "Aprovar projeto na íntegra"}
+                  title={
+                    hasFeedback 
+                      ? "Não é possível aprovar com comentários ou anotações visuais pendentes" 
+                      : "Aprovar projeto na íntegra"
+                  }
                 >
                   {submitting ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -954,7 +960,11 @@ export default function AudiovisualApproval() {
                   disabled={submitting || !canSendFeedback || project.status === 'feedback-sent'}
                   className={`w-full touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
                   variant="outline"
-                  title={!hasComments ? "Adicione comentários antes de enviar feedback" : "Enviar feedback para a equipe"}
+                  title={
+                    !hasFeedback 
+                      ? "Adicione comentários ou anotações visuais antes de enviar feedback" 
+                      : "Enviar feedback para a equipe"
+                  }
                 >
                   {submitting ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -964,14 +974,14 @@ export default function AudiovisualApproval() {
                   Enviar Feedback
                 </Button>
 
-                {!canApprove && hasComments && (
+                {!canApprove && hasFeedback && (
                   <p className="text-sm text-gray-600 text-center">
-                    Para aprovar, não deve haver comentários no vídeo
+                    Para aprovar, não deve haver comentários ou anotações visuais
                   </p>
                 )}
-                {!canSendFeedback && !hasComments && (
+                {!canSendFeedback && !hasFeedback && (
                   <p className="text-sm text-gray-600 text-center">
-                    Adicione comentários para enviar feedback
+                    Adicione comentários ou anotações visuais para enviar feedback
                   </p>
                 )}
               </div>
