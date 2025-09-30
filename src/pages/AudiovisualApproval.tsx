@@ -854,6 +854,86 @@ export default function AudiovisualApproval() {
                 Ações
               </h3>
 
+              {/* Rating Section - Inside Actions Card */}
+              <div className={`mb-6 pb-6 border-b border-gray-200`}>
+                <h4 className={`font-semibold mb-2 text-center text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
+                  Avalie sua Experiência
+                </h4>
+                <p className={`text-gray-600 text-center ${isMobile ? 'text-xs mb-3' : 'text-sm mb-4'}`}>
+                  Sua opinião é muito importante para melhorarmos nossa plataforma inovadora
+                </p>
+
+                {hasSubmittedRating ? (
+                  <div className="text-center">
+                    <CheckCircle className={`text-green-600 mx-auto mb-2 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`} />
+                    <p className={`font-semibold text-green-600 ${isMobile ? 'text-sm' : 'text-base'}`}>
+                      Obrigado por sua avaliação!
+                    </p>
+                    <div className="flex justify-center gap-1 mt-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${
+                            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    {ratingComment && (
+                      <p className="text-xs text-gray-600 mt-3">
+                        "{ratingComment}"
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className={`block font-medium mb-2 text-center ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        Como você avalia sua experiência?
+                      </label>
+                      <div className="flex justify-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setRating(star)}
+                            className="transition-transform hover:scale-110 touch-manipulation p-1"
+                          >
+                            <Star
+                              className={`cursor-pointer transition-colors ${
+                                isMobile ? 'w-6 h-6' : 'w-7 h-7'
+                              } ${
+                                star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={`block font-medium mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        Comentários (opcional)
+                      </label>
+                      <Textarea
+                        value={ratingComment}
+                        onChange={(e) => setRatingComment(e.target.value)}
+                        placeholder="Conte-nos mais sobre sua experiência..."
+                        className={isMobile ? 'min-h-[80px] text-sm' : 'min-h-[100px]'}
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleRatingSubmit}
+                      disabled={rating === 0}
+                      className={`w-full bg-primary hover:bg-primary/90 touch-manipulation ${isMobile ? 'min-h-[44px]' : ''}`}
+                    >
+                      Enviar Avaliação
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
               <div className="space-y-3">
                 <Button
                   onClick={() => handleAction('approved')}
@@ -899,78 +979,6 @@ export default function AudiovisualApproval() {
           </div>
         </div>
 
-        {/* Rating Section */}
-        <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4 mt-6' : 'p-8 mt-8'}`}>
-          <h3 className={`font-bold mb-4 text-center text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Avalie sua Experiência</h3>
-          <p className={`text-gray-600 text-center ${isMobile ? 'text-sm mb-4' : 'mb-6'}`}>
-            Sua opinião é muito importante para melhorarmos nossa plataforma inovadora
-          </p>
-
-          {hasSubmittedRating ? (
-            <div className="text-center">
-              <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-              <p className="text-lg font-semibold text-green-600">Obrigado por sua avaliação!</p>
-              <div className="flex justify-center gap-1 mt-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-6 h-6 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                  />
-                ))}
-              </div>
-              {ratingComment && (
-                <p className="text-sm text-gray-600 mt-4 max-w-md mx-auto">
-                  "{ratingComment}"
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="max-w-md mx-auto space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-3 text-center">
-                  Como você avalia sua experiência?
-                </label>
-                <div className={`flex justify-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setRating(star)}
-                      className={`transition-transform hover:scale-110 touch-manipulation ${isMobile ? 'p-2' : ''}`}
-                    >
-                      <Star
-                        className={`cursor-pointer transition-colors ${
-                          isMobile ? 'w-8 h-8' : 'w-10 h-10'
-                        } ${
-                          star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Comentários (opcional)
-                </label>
-                <Textarea
-                  value={ratingComment}
-                  onChange={(e) => setRatingComment(e.target.value)}
-                  placeholder="Conte-nos mais sobre sua experiência..."
-                  className="min-h-[100px]"
-                />
-              </div>
-
-              <Button
-                onClick={handleRatingSubmit}
-                disabled={rating === 0}
-                className={`w-full touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
-              >
-                Enviar Avaliação
-              </Button>
-            </div>
-          )}
-        </Card>
       </div>
     </div>
   );
