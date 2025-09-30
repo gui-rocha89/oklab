@@ -23,6 +23,7 @@ import {
   Filter,
   ChevronDown,
   X,
+  Video,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -290,13 +291,28 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
 
     const isRejectedOrSent = project.sharedAt || project.status === 'rejected';
     const isDownloading = downloadingId === project.id;
+    const isAudiovisual = project.type === 'Audiovisual';
+    
+    const handleCardClick = (e) => {
+      // Não abrir link se clicar em botões ou inputs
+      if (e.target.closest('button') || e.target.closest('input')) {
+        return;
+      }
+      
+      // Abrir link do projeto para o cliente
+      if (project.share_id) {
+        const clientLink = `${window.location.origin}/audiovisual-approval/${project.share_id}`;
+        window.open(clientLink, '_blank');
+      }
+    };
 
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
-        className={`project-card card-hover ${config.bgColor} ${config.borderColor}`}
+        onClick={handleCardClick}
+        className={`project-card card-hover ${config.bgColor} ${config.borderColor} cursor-pointer`}
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -329,9 +345,16 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
         </div>
 
         <div className="flex items-center space-x-2 mb-4">
-          <span className="text-xs bg-white bg-opacity-70 text-gray-700 px-3 py-1 rounded-full border">
-            {project.type}
-          </span>
+          {isAudiovisual ? (
+            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs font-bold flex items-center space-x-1">
+              <Video className="w-3 h-3" />
+              <span>AUDIOVISUAL</span>
+            </Badge>
+          ) : (
+            <span className="text-xs bg-white bg-opacity-70 text-gray-700 px-3 py-1 rounded-full border">
+              {project.type}
+            </span>
+          )}
           <Badge className={`${getPriorityConfig(project.priority).color} border text-xs font-medium`}>
             <span className="flex items-center space-x-1">
               <span>{getPriorityConfig(project.priority).icon}</span>
@@ -394,23 +417,35 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
                <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setViewingProject(project)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isAudiovisual) {
+                    // Ver feedback na página de Feedbacks
+                    setActiveTab('feedbacks');
+                  } else {
+                    setViewingProject(project);
+                  }
+                }}
+                className={`px-4 py-2 ${isAudiovisual ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 hover:bg-gray-700'} text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-2`}
               >
-                <Eye className="w-4 h-4" />
-                <span>Ver Online</span>
+                {isAudiovisual ? <MessageSquare className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>{isAudiovisual ? 'Ver Feedback' : 'Ver Online'}</span>
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleDownload(project)}
-                disabled={isDownloading}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 disabled:bg-green-300"
-              >
-                {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                <span>{isDownloading ? 'Baixando...' : 'Baixar PDF'}</span>
-              </motion.button>
-              
+              {!isAudiovisual && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownload(project);
+                  }}
+                  disabled={isDownloading}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 disabled:bg-green-300"
+                >
+                  {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  <span>{isDownloading ? 'Baixando...' : 'Baixar PDF'}</span>
+                </motion.button>
+              )}
             </div>
           )}
         </div>
