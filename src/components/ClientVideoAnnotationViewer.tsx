@@ -180,15 +180,15 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const currentAnnotation = currentAnnotationIndex !== null ? annotations[currentAnnotationIndex] : null;
 
   return (
-    <div className="space-y-4">
-      {/* Video Player com Canvas Sobreposto */}
-      <Card>
-        <CardContent className="p-0">
-          <div ref={containerRef} className="relative bg-black aspect-video">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Video Player - Área Principal */}
+      <div className="lg:col-span-2 space-y-4">
+        <Card className="overflow-hidden border-0 shadow-lg">
+          <div ref={containerRef} className="relative bg-black group">
             <video
               ref={videoRef}
               src={videoUrl}
-              className="w-full h-full"
+              className="w-full h-auto max-h-[70vh] object-contain"
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
               onPlay={() => setIsPlaying(true)}
@@ -202,133 +202,212 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               style={{ zIndex: 10 }}
             />
 
-            {/* Informação da anotação atual */}
-            {currentAnnotation && (
-              <div className="absolute top-4 left-4 right-4 z-20">
-                <div className="bg-background/95 backdrop-blur-sm border rounded-lg p-3 shadow-lg">
-                  <div className="flex items-start gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
-                      {(currentAnnotationIndex || 0) + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {currentAnnotation.comment && (
-                        <p className="text-sm leading-relaxed mb-2">{currentAnnotation.comment}</p>
-                      )}
-                      <div className="flex gap-2 flex-wrap">
-                        {currentAnnotation.canvas_data?.objects?.length > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Pencil className="w-3 h-3 mr-1" />
-                            {currentAnnotation.canvas_data.objects.length} desenho(s)
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {formatTimestamp(currentAnnotation.timestamp_ms)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* Overlay para controles - aparece no hover */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20" />
+
+            {/* Play/Pause Central */}
+            {!isPlaying && (
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <Button
+                  size="icon"
+                  onClick={togglePlay}
+                  className="w-20 h-20 rounded-full bg-primary/90 hover:bg-primary backdrop-blur-sm shadow-2xl"
+                >
+                  <Play className="w-10 h-10 ml-1" />
+                </Button>
               </div>
             )}
 
-            {/* Controles do Player */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 z-20">
-              <div className="flex items-center gap-2 mb-3">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={skipToPrevAnnotation}
-                  disabled={currentAnnotationIndex === null || currentAnnotationIndex === 0}
-                  className="text-white hover:bg-white/20"
-                >
-                  <SkipBack className="w-5 h-5" />
-                </Button>
-                
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={togglePlay}
-                  className="text-white hover:bg-white/20"
-                >
-                  {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                </Button>
-                
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={skipToNextAnnotation}
-                  disabled={currentAnnotationIndex === null || currentAnnotationIndex >= annotations.length - 1}
-                  className="text-white hover:bg-white/20"
-                >
-                  <SkipForward className="w-5 h-5" />
-                </Button>
+            {/* Controles Inferiores */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              {/* Timeline com marcadores */}
+              <div className="mb-3">
+                <div className="relative h-2 bg-white/10 rounded-full backdrop-blur-sm overflow-visible cursor-pointer group/timeline">
+                  {/* Progresso */}
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                  />
+                  
+                  {/* Marcadores de anotações */}
+                  {annotations.map((annotation, index) => (
+                    <button
+                      key={annotation.id}
+                      className={cn(
+                        "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all z-10",
+                        "w-3 h-3 rounded-full border-2 border-white shadow-lg",
+                        "hover:scale-150 hover:shadow-xl",
+                        currentAnnotationIndex === index 
+                          ? "bg-primary scale-125 shadow-primary/50" 
+                          : "bg-warning hover:bg-warning/80"
+                      )}
+                      style={{ left: `${(annotation.timestamp_ms / duration) * 100}%` }}
+                      onClick={() => seekToAnnotation(annotation, index)}
+                      title={`${index + 1}. ${formatTimestamp(annotation.timestamp_ms)}`}
+                    />
+                  ))}
+                </div>
+              </div>
 
-                <div className="flex-1 px-3">
-                  <div className="relative">
-                    <div className="h-1 bg-white/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${(currentTime / duration) * 100}%` }}
-                      />
-                    </div>
-                    {/* Marcadores de anotações */}
-                    {annotations.map((annotation, index) => (
-                      <div
-                        key={annotation.id}
-                        className={cn(
-                          "absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white cursor-pointer transition-all hover:scale-125",
-                          currentAnnotationIndex === index ? "bg-primary" : "bg-warning"
-                        )}
-                        style={{ left: `${(annotation.timestamp_ms / duration) * 100}%` }}
-                        onClick={() => seekToAnnotation(annotation, index)}
-                        title={`Anotação ${index + 1}: ${formatTimestamp(annotation.timestamp_ms)}`}
-                      />
-                    ))}
-                  </div>
+              {/* Controles */}
+              <div className="flex items-center gap-3">
+                {/* Controles de navegação */}
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={skipToPrevAnnotation}
+                    disabled={currentAnnotationIndex === null || currentAnnotationIndex === 0}
+                    className="h-9 w-9 text-white hover:bg-white/20 disabled:opacity-30"
+                  >
+                    <SkipBack className="w-4 h-4" />
+                  </Button>
+                  
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={togglePlay}
+                    className="h-10 w-10 text-white hover:bg-white/20"
+                  >
+                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                  </Button>
+                  
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={skipToNextAnnotation}
+                    disabled={currentAnnotationIndex === null || currentAnnotationIndex >= annotations.length - 1}
+                    className="h-9 w-9 text-white hover:bg-white/20 disabled:opacity-30"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </Button>
                 </div>
 
-                <span className="text-white text-sm font-mono min-w-[80px] text-right">
+                {/* Timestamp */}
+                <span className="text-white text-sm font-mono px-2 py-1 bg-black/30 rounded backdrop-blur-sm">
                   {formatTimestamp(currentTime)} / {formatTimestamp(duration)}
                 </span>
 
+                <div className="flex-1" />
+
+                {/* Fullscreen */}
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={toggleFullscreen}
-                  className="text-white hover:bg-white/20"
+                  className="h-9 w-9 text-white hover:bg-white/20"
                 >
-                  <Maximize className="w-5 h-5" />
+                  <Maximize className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
 
-      {/* Lista de Anotações */}
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            Navegação Rápida ({annotations.length} anotações)
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {annotations.map((annotation, index) => (
-              <Button
-                key={annotation.id}
-                variant={currentAnnotationIndex === index ? "default" : "outline"}
-                size="sm"
-                onClick={() => seekToAnnotation(annotation, index)}
-                className="flex flex-col h-auto py-2"
-              >
-                <span className="font-bold text-lg">{index + 1}</span>
-                <span className="text-xs font-mono">{formatTimestamp(annotation.timestamp_ms)}</span>
-              </Button>
-            ))}
+      {/* Painel Lateral - Lista de Anotações */}
+      <div className="lg:col-span-1">
+        <Card className="sticky top-4 max-h-[70vh] flex flex-col">
+          <CardContent className="p-4 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Anotações
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {annotations.length} comentário{annotations.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Lista scrollável */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 -mr-2">
+              {annotations.map((annotation, index) => {
+                const hasDrawing = annotation.canvas_data?.objects?.length > 0;
+                const isCurrentAnnotation = currentAnnotationIndex === index;
+                
+                return (
+                  <button
+                    key={annotation.id}
+                    onClick={() => seekToAnnotation(annotation, index)}
+                    className={cn(
+                      "w-full text-left p-3 rounded-lg border transition-all",
+                      "hover:shadow-md hover:scale-[1.02]",
+                      isCurrentAnnotation 
+                        ? "bg-primary/10 border-primary shadow-sm" 
+                        : "bg-background hover:bg-muted/50 border-border"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm flex-shrink-0",
+                        isCurrentAnnotation
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {index + 1}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                          <span className="font-mono font-semibold text-sm">
+                            {formatTimestamp(annotation.timestamp_ms)}
+                          </span>
+                        </div>
+                        
+                        {annotation.comment && (
+                          <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2 mb-2">
+                            {annotation.comment}
+                          </p>
+                        )}
+                        
+                        {hasDrawing && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Pencil className="w-3 h-3 mr-1" />
+                            {annotation.canvas_data.objects.length}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Anotação Atual - Overlay Flutuante */}
+      {currentAnnotation && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-2xl w-full px-4 pointer-events-none lg:hidden animate-fade-in">
+          <div className="bg-background/98 backdrop-blur-md border shadow-2xl rounded-lg p-4 pointer-events-auto">
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold flex-shrink-0">
+                {(currentAnnotationIndex || 0) + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                {currentAnnotation.comment && (
+                  <p className="text-sm leading-relaxed mb-2">{currentAnnotation.comment}</p>
+                )}
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-xs">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formatTimestamp(currentAnnotation.timestamp_ms)}
+                  </Badge>
+                  {currentAnnotation.canvas_data?.objects?.length > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Pencil className="w-3 h-3 mr-1" />
+                      {currentAnnotation.canvas_data.objects.length} desenho(s)
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 };
