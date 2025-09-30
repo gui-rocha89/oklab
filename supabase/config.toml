@@ -13,6 +13,9 @@ verify_jwt = false
 [functions.submit-platform-review]
 verify_jwt = false
 
+[functions.complete-project]
+verify_jwt = false
+
 [db]
 port = 54322
 shadow_port = 54320

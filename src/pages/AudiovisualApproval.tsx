@@ -319,50 +319,44 @@ export default function AudiovisualApproval() {
         console.log('✅ Avaliação salva');
       }
 
-      // Update project status and mark as completed
+      // Update project status and mark as completed using Edge Function
       const newStatus = action === 'approved' ? 'approved' : 'feedback-sent';
-      const completedAt = new Date().toISOString();
       
-      console.log('💾 Atualizando projeto com completed_at:', {
-        projectId: project.id,
+      console.log('📞 Chamando Edge Function complete-project:', {
+        shareId,
         newStatus,
-        completedAt,
-        approvalDate: action === 'approved' ? completedAt : null
+        rating
       });
       
-      const updateData = { 
-        status: newStatus,
-        approval_date: action === 'approved' ? completedAt : null,
-        completed_at: completedAt
-      };
-      
-      console.log('📤 Enviando UPDATE para Supabase:', updateData);
-      
-      const { data: updatedData, error: updateError } = await supabase
-        .from('projects')
-        .update(updateData)
-        .eq('id', project.id)
-        .select();
+      const { data: completeData, error: completeError } = await supabase.functions.invoke('complete-project', {
+        body: {
+          shareId: shareId,
+          status: newStatus,
+          rating: rating || undefined,
+          clientName: project.client,
+          clientEmail: 'client@example.com'
+        }
+      });
 
-      console.log('📥 Resposta do UPDATE:', { updatedData, updateError });
+      console.log('📥 Resposta da Edge Function:', { completeData, completeError });
 
-      if (updateError) {
-        console.error('❌ Erro ao atualizar projeto:', updateError);
-        throw updateError;
+      if (completeError) {
+        console.error('❌ Erro ao chamar Edge Function:', completeError);
+        throw completeError;
       }
-      
-      if (!updatedData || updatedData.length === 0) {
-        console.error('❌ UPDATE não retornou dados!');
-        throw new Error('Falha ao atualizar projeto - nenhum registro afetado');
+
+      if (!completeData?.success) {
+        console.error('❌ Edge Function retornou erro:', completeData?.error);
+        throw new Error(completeData?.error || 'Falha ao completar projeto');
       }
-      
-      console.log('✅ Projeto atualizado com sucesso:', updatedData[0]);
+
+      console.log('✅ Projeto completado com sucesso via Edge Function');
 
       // Atualizar o estado local do projeto
       setProject({
         ...project,
         status: newStatus,
-        completed_at: completedAt
+        completed_at: completeData.completed_at
       });
       
       setShowConfirmation(true);
