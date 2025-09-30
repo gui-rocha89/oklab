@@ -137,35 +137,11 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const addProject = async (projectData: any) => {
     const timestamp = () => `[${new Date().toISOString()}]`;
     
-    // ⚠️ VERSÃO DO CÓDIGO: v2.0 - Sistema de Debug Completo
-    console.log('🚨 [VERSION CHECK]', timestamp(), 'VERSÃO DO ProjectContext: v2.0 - Debug Completo');
-    console.log('🚨 [VERSION CHECK]', timestamp(), 'Se você não vê esta mensagem, o cache do browser não foi limpo!');
-    console.log('🚨 [VERSION CHECK]', timestamp(), 'Pressione Ctrl+Shift+R (ou Cmd+Shift+R no Mac) para forçar reload!');
-    
     try {
-      console.log('🎯 [ProjectContext]', timestamp(), '========================================');
-      console.log('🎯 [ProjectContext]', timestamp(), 'addProject CHAMADO');
-      console.log('🎯 [ProjectContext]', timestamp(), '========================================');
+      console.log('🎯 [ProjectContext]', timestamp(), 'Criando projeto...');
       
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), '==========================================');
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'DADOS RECEBIDOS NO ProjectContext:');
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Tipo do parâmetro:', typeof projectData);
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'É array?', Array.isArray(projectData));
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'É null?', projectData === null);
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'É undefined?', projectData === undefined);
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Constructor:', projectData?.constructor?.name);
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Object.keys():', Object.keys(projectData));
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'JSON.stringify():', JSON.stringify(projectData, null, 2));
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Verificação campo por campo:');
-      for (const [key, value] of Object.entries(projectData)) {
-        console.log('🔍 [DEBUG ENTRADA]', timestamp(), `  - "${key}": ${typeof value} = ${JSON.stringify(value)}`);
-      }
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'TEM clientEmail?', 'clientEmail' in projectData);
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), 'Valor de clientEmail:', projectData.clientEmail);
-      console.log('🔍 [DEBUG ENTRADA]', timestamp(), '==========================================');
       
-      // Validar campos obrigatórios ANTES de processar
-      console.log('🔍 [ProjectContext]', timestamp(), 'Validando campos obrigatórios...');
+      // Validar campos obrigatórios
       
       if (!projectData.title || !projectData.title.trim()) {
         throw new Error('Campo obrigatório ausente: title');
@@ -183,14 +159,12 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Campo obrigatório ausente: share_id');
       }
       
-      console.log('✅ [ProjectContext]', timestamp(), 'Todos os campos obrigatórios presentes');
+      console.log('✅ [ProjectContext]', timestamp(), 'Campos validados');
       
       // Lista EXATA de campos válidos da tabela projects
       const validFields = ['title', 'client', 'description', 'type', 'status', 'priority', 'user_id', 'share_id', 'video_url', 'approval_date'];
       
-      console.log('🧹 [ProjectContext]', timestamp(), 'Limpando dados - removendo campos inválidos...');
-      console.log('🧹 [ProjectContext]', timestamp(), 'Campos VÁLIDOS permitidos:', validFields);
-      console.log('🧹 [ProjectContext]', timestamp(), 'Campos recebidos ANTES da limpeza:', Object.keys(projectData));
+      console.log('🧹 [ProjectContext]', timestamp(), 'Limpando campos inválidos...');
       
       // VALIDAÇÃO EXTRA: Verificar se há campos inválidos
       const receivedFields = Object.keys(projectData);
@@ -215,15 +189,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
-      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), '==========================================');
-      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'DADOS APÓS LIMPEZA:');
-      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'Object.keys():', Object.keys(cleanData));
-      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'JSON.stringify():', JSON.stringify(cleanData, null, 2));
-      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'Total de campos:', Object.keys(cleanData).length);
-      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), 'TEM clientEmail após limpeza?', 'clientEmail' in cleanData);
-      console.log('🔍 [DEBUG LIMPEZA]', timestamp(), '==========================================');
+      console.log('✅ [ProjectContext]', timestamp(), 'Dados limpos:', Object.keys(cleanData).length, 'campos');
       
-      // VALIDAÇÃO FINAL: Garantir que não há campos extras
+      // VALIDAÇÃO FINAL
       const finalFields = Object.keys(cleanData);
       const extraFields = finalFields.filter(f => !validFields.includes(f));
       
@@ -232,12 +200,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(`Campos inválidos detectados após limpeza: ${extraFields.join(', ')}`);
       }
 
-      console.log('💾 [ProjectContext]', timestamp(), '==========================================');
-      console.log('💾 [ProjectContext]', timestamp(), 'EXECUTANDO INSERT NO SUPABASE');
-      console.log('💾 [ProjectContext]', timestamp(), 'Tabela: projects');
-      console.log('💾 [ProjectContext]', timestamp(), 'Operação: INSERT');
-      console.log('💾 [ProjectContext]', timestamp(), 'Dados que SERÃO ENVIADOS:', JSON.stringify(cleanData, null, 2));
-      console.log('💾 [ProjectContext]', timestamp(), '==========================================');
+      console.log('💾 [ProjectContext]', timestamp(), 'Inserindo no Supabase...');
 
       const { data, error } = await supabase
         .from('projects')
@@ -246,14 +209,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ [ProjectContext]', timestamp(), '====================================');
-        console.error('❌ [ProjectContext]', timestamp(), 'ERRO NO SUPABASE');
-        console.error('❌ [ProjectContext]', timestamp(), '====================================');
-        console.error('❌ [ProjectContext]', timestamp(), 'Código:', error.code);
-        console.error('❌ [ProjectContext]', timestamp(), 'Mensagem:', error.message);
-        console.error('❌ [ProjectContext]', timestamp(), 'Detalhes:', error.details);
-        console.error('❌ [ProjectContext]', timestamp(), 'Hint:', error.hint);
-        console.error('❌ [ProjectContext]', timestamp(), 'Erro completo:', JSON.stringify(error, null, 2));
+        console.error('❌ [ProjectContext]', timestamp(), 'Erro ao criar projeto:', error.message);
         throw new Error(`Erro no banco de dados: ${error.message}`);
       }
 
@@ -271,9 +227,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       console.log('✅ [ProjectContext]', timestamp(), 'Share ID:', data.share_id);
       console.log('✅ [ProjectContext]', timestamp(), 'Dados completos:', data);
 
-      console.log('🔄 [ProjectContext]', timestamp(), 'Atualizando lista de projetos...');
       await fetchProjects();
-      console.log('✅ [ProjectContext]', timestamp(), 'Lista de projetos atualizada');
       
       toast({
         title: "✅ Sucesso",
@@ -281,13 +235,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       });
       
     } catch (error: any) {
-      console.error('💥 [ProjectContext]', timestamp(), '====================================');
-      console.error('💥 [ProjectContext]', timestamp(), 'ERRO CAPTURADO NO CATCH');
-      console.error('💥 [ProjectContext]', timestamp(), '====================================');
-      console.error('💥 [ProjectContext]', timestamp(), 'Tipo:', error.constructor.name);
-      console.error('💥 [ProjectContext]', timestamp(), 'Mensagem:', error.message);
-      console.error('💥 [ProjectContext]', timestamp(), 'Stack:', error.stack);
-      console.error('💥 [ProjectContext]', timestamp(), 'Erro completo:', error);
+      console.error('❌ [ProjectContext]', timestamp(), 'Erro:', error.message);
       
       toast({
         title: "❌ Erro",

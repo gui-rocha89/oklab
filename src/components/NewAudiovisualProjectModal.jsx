@@ -208,46 +208,18 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         video_url: publicUrl,
       };
       
-      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), '==========================================');
-      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'DADOS PREPARADOS NO MODAL:');
-      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'Object.keys():', Object.keys(projectData));
-      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'JSON.stringify():', JSON.stringify(projectData, null, 2));
-      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'Verificação campo por campo:');
-      for (const [key, value] of Object.entries(projectData)) {
-        console.log('🔍 [DEBUG CRÍTICO]', timestamp(), `  - ${key}: ${typeof value} = ${value}`);
-      }
-      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), 'TEM clientEmail?', 'clientEmail' in projectData);
-      console.log('🔍 [DEBUG CRÍTICO]', timestamp(), '==========================================');
-      
-      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 6 CONCLUÍDA: Dados validados');
+      console.log('✅ [Audiovisual]', timestamp(), 'Dados preparados');
       
       setUploadProgress(90);
 
       // ========== ETAPA 7: CRIAÇÃO DO PROJETO NO BANCO ==========
-      console.log('💾 [Audiovisual]', timestamp(), 'ETAPA 7: Criando projeto no banco de dados...');
-      console.log('💾 [Audiovisual]', timestamp(), 'Chamando onProjectCreate...');
-      console.log('💾 [ÚLTIMA VERIFICAÇÃO]', timestamp(), 'Objeto final que SERÁ ENVIADO:', projectData);
-      console.log('💾 [ÚLTIMA VERIFICAÇÃO]', timestamp(), 'Stringified:', JSON.stringify(projectData));
-      
-      // ⚠️ BREAKPOINT FORÇADO - Garante que novo código está rodando
-      debugger;
+      console.log('💾 [Audiovisual]', timestamp(), 'Criando projeto no banco...');
       
       await onProjectCreate(projectData);
       
-      console.log('✅ [Audiovisual]', timestamp(), 'ETAPA 7 CONCLUÍDA: Projeto criado no banco');
+      console.log('✅ [Audiovisual]', timestamp(), 'Projeto criado com sucesso');
       
       setUploadProgress(100);
-
-      // ========== SUCESSO TOTAL ==========
-      console.log('🎉 [Audiovisual]', timestamp(), '====================================');
-      console.log('🎉 [Audiovisual]', timestamp(), 'TODAS AS ETAPAS CONCLUÍDAS COM SUCESSO!');
-      console.log('🎉 [Audiovisual]', timestamp(), '====================================');
-      console.log('📊 [Audiovisual]', timestamp(), 'Resumo do projeto criado:', {
-        título: projectData.title,
-        cliente: projectData.client,
-        shareId: projectData.share_id,
-        videoUrl: publicUrl
-      });
 
       toast({
         title: "✅ Projeto Criado com Sucesso!",
@@ -258,13 +230,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       setIsOpen(false);
       
     } catch (error) {
-      console.error('💥 [Audiovisual]', timestamp(), '====================================');
-      console.error('💥 [Audiovisual]', timestamp(), 'ERRO DURANTE A CRIAÇÃO DO PROJETO');
-      console.error('💥 [Audiovisual]', timestamp(), '====================================');
-      console.error('💥 [Audiovisual]', timestamp(), 'Tipo do erro:', error.constructor.name);
-      console.error('💥 [Audiovisual]', timestamp(), 'Mensagem:', error.message);
-      console.error('💥 [Audiovisual]', timestamp(), 'Stack:', error.stack);
-      console.error('💥 [Audiovisual]', timestamp(), 'Erro completo:', error);
+      console.error('❌ [Audiovisual]', timestamp(), 'Erro ao criar projeto:', error.message);
       
       toast({
         title: "❌ Erro ao Criar Projeto",
@@ -275,7 +241,6 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
-      console.log('🏁 [Audiovisual]', timestamp(), 'Processo finalizado');
     }
   };
 
