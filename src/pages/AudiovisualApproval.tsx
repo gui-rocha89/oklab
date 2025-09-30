@@ -336,15 +336,14 @@ export default function AudiovisualApproval() {
   };
 
   const handleSaveAnnotation = () => {
-    if (videoRef.current) {
-      const currentTimeMs = Math.floor(videoRef.current.currentTime * 1000);
-      setPendingAnnotationTime(currentTimeMs);
-      setPendingAnnotationTimestamp(currentTimeMs);
-      
-      console.log('Salvando anotação no tempo:', currentTimeMs, 'ms (', formatTime(currentTimeMs / 1000), ')');
-      
-      setShowCommentModal(true);
-    }
+    // Use currentTime from state (synced with CustomVideoPlayer), not videoRef
+    const currentTimeMs = Math.floor(currentTime * 1000);
+    setPendingAnnotationTime(currentTimeMs);
+    setPendingAnnotationTimestamp(currentTimeMs);
+    
+    console.log('Salvando anotação no tempo:', currentTimeMs, 'ms (', formatTime(currentTime), ')');
+    
+    setShowCommentModal(true);
   };
 
   const handleSaveAnnotationWithComment = async (comment: string) => {
