@@ -5,7 +5,8 @@ import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ interface Project {
   created_at: string;
   completed_at: string | null;
   approval_date: string | null;
+  video_url: string | null;
 }
 
 interface PlatformReview {
@@ -31,12 +33,12 @@ interface PlatformReview {
   created_at: string;
 }
 
-interface Keyframe {
+interface VideoAnnotation {
   id: string;
-  title: string;
-  status: string;
+  timestamp_ms: number;
+  comment: string | null;
+  canvas_data: any;
   created_at: string;
-  attachments: any[];
 }
 
 const ClientReturn = () => {
@@ -45,7 +47,7 @@ const ClientReturn = () => {
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<Project | null>(null);
   const [review, setReview] = useState<PlatformReview | null>(null);
-  const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
+  const [annotations, setAnnotations] = useState<VideoAnnotation[]>([]);
 
   useEffect(() => {
     fetchProjectReturn();
@@ -76,14 +78,14 @@ const ClientReturn = () => {
 
       setReview(reviewData);
 
-      // Buscar keyframes com comentários
-      const { data: keyframesData } = await supabase
-        .from("project_keyframes")
+      // Buscar anotações visuais (feedback detalhado do cliente)
+      const { data: annotationsData } = await supabase
+        .from("video_annotations")
         .select("*")
         .eq("project_id", projectId)
-        .order("created_at", { ascending: true });
+        .order("timestamp_ms", { ascending: true });
 
-      setKeyframes(keyframesData || []);
+      setAnnotations(annotationsData || []);
     } catch (error: any) {
       console.error("Erro ao buscar retorno do cliente:", error);
       toast.error("Erro ao carregar retorno do cliente");
@@ -119,6 +121,13 @@ const ClientReturn = () => {
     );
   };
 
+  const formatTimestamp = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -151,24 +160,24 @@ const ClientReturn = () => {
     );
   }
 
-  const hasClientReturn = project.completed_at || review || keyframes.some(k => k.title);
+  const hasClientReturn = project.completed_at || review || annotations.length > 0;
 
   return (
     <>
       <Header title="Retorno do Cliente" />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 space-y-6">
         <Button
           variant="ghost"
           onClick={() => navigate("/projetos")}
-          className="mb-6"
+          className="mb-2"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar para Projetos
         </Button>
 
         {/* Informações do Projeto */}
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -225,9 +234,70 @@ const ClientReturn = () => {
           </CardContent>
         </Card>
 
-        {/* Status do Retorno */}
+        {/* Estatísticas do Retorno */}
+        {hasClientReturn && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <MessageSquare className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{annotations.length}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Anotações Visuais
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-warning/10 rounded-lg">
+                    <Star className="w-6 h-6 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {review?.rating || "N/A"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Avaliação Geral
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-blue-500/10 rounded-lg">
+                    <Video className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {annotations.length > 0
+                        ? formatTimestamp(
+                            Math.max(...annotations.map((a) => a.timestamp_ms))
+                          )
+                        : "00:00"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Último Comentário
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Status sem Retorno */}
         {!hasClientReturn && (
-          <Card className="mb-6 border-warning/50 bg-warning/5">
+          <Card className="border-warning/50 bg-warning/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-warning" />
@@ -242,93 +312,136 @@ const ClientReturn = () => {
 
         {/* Avaliação do Cliente */}
         {review && (
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Star className="w-5 h-5" />
+                <Star className="w-5 h-5 text-warning" />
                 Avaliação do Cliente
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Classificação</p>
+                {renderStars(review.rating)}
+              </div>
+
+              {review.comment && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Classificação</p>
-                  {renderStars(review.rating)}
-                </div>
-
-                {review.client_name && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Cliente</p>
-                    <p className="font-medium">{review.client_name}</p>
-                    <p className="text-sm text-muted-foreground">{review.client_email}</p>
-                  </div>
-                )}
-
-                {review.comment && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Comentário</p>
-                    <p className="text-sm">{review.comment}</p>
-                  </div>
-                )}
-
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Avaliado em {format(new Date(review.created_at), "dd 'de' MMM, yyyy 'às' HH:mm", { locale: ptBR })}
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Comentário Geral
+                  </p>
+                  <p className="text-sm bg-muted/50 p-4 rounded-lg leading-relaxed">
+                    {review.comment}
                   </p>
                 </div>
+              )}
+
+              <Separator />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {review.client_name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Cliente
+                    </p>
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      {review.client_name}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">E-mail</p>
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    {review.client_email}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <p className="text-xs text-muted-foreground">
+                  Avaliado em {format(new Date(review.created_at), "dd 'de' MMM, yyyy 'às' HH:mm", { locale: ptBR })}
+                </p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Keyframes com Comentários */}
-        {keyframes.length > 0 && (
+        {/* Feedback Visual Detalhado */}
+        {annotations.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Comentários do Cliente ({keyframes.filter(k => k.title).length})
+                <Video className="w-5 h-5" />
+                Feedback Visual Detalhado ({annotations.length})
               </CardTitle>
               <CardDescription>
-                Feedback específico do cliente sobre o conteúdo audiovisual
+                Anotações e comentários visuais feitos pelo cliente no vídeo
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {keyframes.filter(k => k.title).length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Nenhum comentário específico foi enviado pelo cliente.
-                  </p>
-                ) : (
-                  keyframes.filter(k => k.title).map((keyframe, index) => {
-                    // Extract timestamp from attachments if available
-                    const timestamp = keyframe.attachments?.[0];
-                    const timeStr = timestamp?.timeStr || '';
-                    
-                    return (
-                      <div
-                        key={keyframe.id}
-                        className="p-4 border rounded-lg hover:border-primary/50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-sm">
-                              {timeStr ? `${timeStr}` : `Comentário #${index + 1}`}
-                            </span>
-                            <Badge variant="outline" className="text-xs">
-                              {format(new Date(keyframe.created_at), "dd/MM/yyyy HH:mm")}
-                            </Badge>
-                          </div>
-                          {getStatusBadge(keyframe.status)}
+            <CardContent className="space-y-3">
+              {annotations.map((annotation, index) => {
+                const hasDrawing = annotation.canvas_data?.objects?.length > 0;
+                const drawingCount = annotation.canvas_data?.objects?.length || 0;
+                
+                return (
+                  <div
+                    key={annotation.id}
+                    className="p-4 border rounded-lg hover:bg-muted/30 transition-colors space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-bold">
+                          {index + 1}
                         </div>
-                        <p className="text-sm whitespace-pre-wrap bg-muted/30 p-3 rounded">
-                          {keyframe.title}
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-mono font-bold text-base">
+                              {formatTimestamp(annotation.timestamp_ms)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(annotation.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {hasDrawing && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Pencil className="w-3 h-3 mr-1" />
+                            {drawingCount} desenho{drawingCount > 1 ? 's' : ''}
+                          </Badge>
+                        )}
+                        {annotation.comment && (
+                          <Badge variant="outline" className="text-xs">
+                            <MessageSquare className="w-3 h-3 mr-1" />
+                            Comentário
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {annotation.comment && (
+                      <div className="ml-13 pl-4 border-l-2 border-primary/20">
+                        <p className="text-sm leading-relaxed">
+                          {annotation.comment}
                         </p>
                       </div>
-                    );
-                  })
-                )}
-              </div>
+                    )}
+
+                    {hasDrawing && (
+                      <div className="ml-13 pl-4 border-l-2 border-blue-500/20">
+                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                          <Pencil className="w-3 h-3" />
+                          Cliente desenhou {drawingCount} elemento{drawingCount > 1 ? 's' : ''} na tela para indicar o feedback visual
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         )}
