@@ -177,7 +177,7 @@ export default function AudiovisualApproval() {
 
   // Auto-load annotations during playback
   useEffect(() => {
-    if (!isDrawingMode && annotations.length > 0 && duration > 0) {
+    if (!isDrawingMode && annotations.length > 0 && duration > 0 && isPlaying) {
       // Find annotation at current time (within 500ms window)
       const currentAnnotation = annotations.find(ann => {
         const annTime = ann.timestamp_ms / 1000;
@@ -189,13 +189,13 @@ export default function AudiovisualApproval() {
         loadAnnotationToCanvas(currentAnnotation);
         setShowAnnotationOverlay(true);
         
-        // Hide overlay after 3 seconds if video is playing
-        if (isPlaying) {
-          setTimeout(() => {
-            setShowAnnotationOverlay(false);
-          }, 3000);
-        }
-      } else if (!currentAnnotation && showAnnotationOverlay && isPlaying) {
+        // Hide overlay after 3 seconds
+        const timer = setTimeout(() => {
+          setShowAnnotationOverlay(false);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      } else if (!currentAnnotation && showAnnotationOverlay) {
         setShowAnnotationOverlay(false);
       }
     }
@@ -640,12 +640,12 @@ export default function AudiovisualApproval() {
                   {/* Drawing Canvas Overlay - Positioned absolutely over the video */}
                   {(isDrawingMode || showAnnotationOverlay) && (
                     <div 
-                      className="absolute top-0 left-0 w-full h-full" 
-                      style={{ zIndex: 50 }}
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none" 
+                      style={{ zIndex: isDrawingMode ? 50 : 5 }}
                     >
               <VideoAnnotationCanvas
                 videoRef={videoRef}
-                isDrawingMode={isDrawingMode || showAnnotationOverlay}
+                isDrawingMode={isDrawingMode}
                 currentTool={currentTool}
                 brushColor={brushColor}
                 brushWidth={brushWidth}

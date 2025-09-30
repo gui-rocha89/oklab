@@ -152,7 +152,7 @@ export const VideoAnnotationCanvas = ({
         pointerEvents: isDrawingMode ? 'auto' : 'none',
         touchAction: isDrawingMode ? 'none' : 'auto',
         cursor: isDrawingMode ? 'crosshair' : 'default',
-        zIndex: 100
+        zIndex: isDrawingMode ? 100 : 5
       }}
     />
   );
