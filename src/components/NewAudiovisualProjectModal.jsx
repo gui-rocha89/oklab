@@ -226,10 +226,23 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       setUploadProgress(100);
 
       // ========== ETAPA 8: GERAÇÃO DO LINK DE APROVAÇÃO ==========
-      const baseUrl = window.location.origin;
-      const generatedLink = `${baseUrl}/audiovisual-approval/${shareId}`;
-      setApprovalLink(generatedLink);
-      setShowSuccess(true);
+      console.log('🔗 [Audiovisual]', timestamp(), 'Gerando link de aprovação...');
+      
+      try {
+        const baseUrl = window.location.origin;
+        const generatedLink = `${baseUrl}/aprovacao-audiovisual/${shareId}`;
+        console.log('✅ [Audiovisual]', timestamp(), 'Link gerado:', generatedLink);
+        
+        setApprovalLink(generatedLink);
+        setShowSuccess(true);
+      } catch (linkError) {
+        console.error('❌ [Audiovisual]', timestamp(), 'Erro ao gerar link:', linkError);
+        toast({
+          title: "⚠️ Aviso",
+          description: "Projeto criado, mas não foi possível gerar o link de aprovação.",
+          variant: "destructive",
+        });
+      }
 
       toast({
         title: "✅ Projeto Criado com Sucesso!",
