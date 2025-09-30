@@ -29,27 +29,44 @@ export const SimplePlatformRating: React.FC<SimplePlatformRatingProps> = ({
       return;
     }
 
+    // Input validation
+    if (clientName && clientName.length > 100) {
+      toast.error("Nome muito longo. Máximo de 100 caracteres.");
+      return;
+    }
+
+    if (clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
+      toast.error("E-mail inválido.");
+      return;
+    }
+
+    if (comment && comment.length > 1000) {
+      toast.error("Comentário muito longo. Máximo de 1000 caracteres.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('platform_reviews')
-        .insert({
+      const { data, error } = await supabase.functions.invoke('submit-platform-review', {
+        body: {
           project_id: projectId || 'anonymous',
-          client_email: clientEmail || 'anonimo@oklab.com',
-          client_name: clientName || 'Cliente Anônimo',
           rating,
-          comment
-        });
+          client_name: clientName,
+          client_email: clientEmail,
+          comment: comment || undefined,
+        }
+      });
 
       if (error) throw error;
 
       toast.success("⭐ Obrigado pela avaliação! Seu feedback nos ajuda a melhorar.");
       setIsSubmitted(true);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving rating:', error);
-      toast.error("Erro ao salvar avaliação, mas não se preocupe!");
+      const errorMessage = error?.message || "Erro ao salvar avaliação. Tente novamente mais tarde.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

@@ -10,6 +10,9 @@ max_rows = 1000
 [functions.generate-delivery-kit]
 verify_jwt = false
 
+[functions.submit-platform-review]
+verify_jwt = false
+
 [db]
 port = 54322
 shadow_port = 54320
