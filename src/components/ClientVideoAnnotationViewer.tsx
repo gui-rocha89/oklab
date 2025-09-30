@@ -3,6 +3,7 @@ import { Canvas as FabricCanvas } from "fabric";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Play, Pause, SkipBack, SkipForward, Maximize, MessageSquare, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const [duration, setDuration] = useState(0);
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [videoAspectRatio, setVideoAspectRatio] = useState(16 / 9);
 
   // Inicializar canvas
   useEffect(() => {
@@ -47,9 +49,11 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       if (!videoRef.current || !canvas) return;
       
       const video = videoRef.current;
+      const rect = video.getBoundingClientRect();
+      
       canvas.setDimensions({
-        width: video.offsetWidth,
-        height: video.offsetHeight,
+        width: rect.width,
+        height: rect.height,
       });
       canvas.renderAll();
     };
@@ -120,6 +124,12 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration * 1000);
+      
+      // Detectar aspect ratio nativo do vídeo
+      const video = videoRef.current;
+      if (video.videoWidth && video.videoHeight) {
+        setVideoAspectRatio(video.videoWidth / video.videoHeight);
+      }
     }
   };
 
@@ -184,16 +194,17 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       {/* Video Player - Área Principal */}
       <div className="lg:col-span-2 space-y-4">
         <Card className="overflow-hidden border-0 shadow-lg">
-          <div ref={containerRef} className="relative bg-black group">
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              className="w-full h-auto max-h-[70vh] object-contain"
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            />
+          <AspectRatio ratio={videoAspectRatio}>
+            <div ref={containerRef} className="relative w-full h-full group">
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                className="w-full h-full object-cover"
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+              />
             
             {/* Canvas para anotações */}
             <canvas
@@ -301,7 +312,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                 </Button>
               </div>
             </div>
-          </div>
+            </div>
+          </AspectRatio>
         </Card>
       </div>
 
