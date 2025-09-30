@@ -312,20 +312,7 @@ export default function AudiovisualApproval() {
     const isApproved = project.status === 'approved';
 
     return (
-      <div className="min-h-screen bg-white flex flex-col">
-        {/* Header Laranja Fixo - Estilo Frame.io */}
-        <header className="bg-gradient-to-r from-primary to-primary/90 py-4 px-6 shadow-lg">
-          <div className="container mx-auto">
-            <img 
-              src={logoWhite} 
-              alt="OK Lab Logo" 
-              className="h-10 w-auto"
-            />
-          </div>
-        </header>
-
-        {/* Área de Conteúdo Branca */}
-        <div className="flex-1 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-white flex items-center justify-center p-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -386,7 +373,6 @@ export default function AudiovisualApproval() {
               className="mt-12 h-1 w-32 bg-gradient-to-r from-primary to-primary/60 mx-auto rounded-full"
             />
           </motion.div>
-        </div>
       </div>
     );
   }
