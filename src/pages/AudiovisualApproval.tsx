@@ -272,60 +272,17 @@ export default function AudiovisualApproval() {
     setSubmitting(true);
 
     try {
-      // Save all keyframes with comments to the database
-      if (action === 'send_feedback' && keyframes.length > 0) {
-        console.log('💾 Salvando keyframes:', keyframes.length);
-        const keyframesToSave = keyframes.filter(kf => kf.comment.trim() !== '');
-        
-        for (const keyframe of keyframesToSave) {
-          // Check if keyframe already exists (has a UUID format id)
-          const isExistingKeyframe = keyframe.id.length > 20;
-          
-          if (isExistingKeyframe) {
-            // Update existing keyframe
-            await supabase
-              .from('project_keyframes')
-              .update({ title: keyframe.comment })
-              .eq('id', keyframe.id);
-          } else {
-            // Insert new keyframe
-            await supabase
-              .from('project_keyframes')
-              .insert({
-                project_id: project.id,
-                title: `${formatTime(keyframe.time)} - ${keyframe.comment}`,
-                status: 'pending'
-              });
-          }
-        }
-        console.log('✅ Keyframes salvos');
-      }
-
-      // Save rating to platform_reviews
-      console.log('💾 Salvando avaliação:', { projectId: project.id, rating, comment: ratingComment });
-      const { error: ratingError } = await supabase
-        .from('platform_reviews')
-        .insert({
-          project_id: project.id,
-          rating,
-          comment: ratingComment,
-          client_name: project.client,
-          client_email: '',
-        });
-
-      if (ratingError) {
-        console.error('❌ Erro ao salvar avaliação:', ratingError);
-      } else {
-        console.log('✅ Avaliação salva');
-      }
-
       // Update project status and mark as completed using Edge Function
       const newStatus = action === 'approved' ? 'approved' : 'feedback-sent';
+      
+      // Prepare keyframes data to send to Edge Function
+      const keyframesToSave = action === 'send_feedback' ? keyframes.filter(kf => kf.comment.trim() !== '') : [];
       
       console.log('📞 Chamando Edge Function complete-project:', {
         shareId,
         newStatus,
-        rating
+        rating,
+        keyframesCount: keyframesToSave.length
       });
       
       const { data: completeData, error: completeError } = await supabase.functions.invoke('complete-project', {
@@ -334,7 +291,8 @@ export default function AudiovisualApproval() {
           status: newStatus,
           rating: rating || undefined,
           clientName: project.client,
-          clientEmail: 'client@example.com'
+          clientEmail: 'client@example.com',
+          keyframes: keyframesToSave.length > 0 ? keyframesToSave : undefined
         }
       });
 
@@ -350,7 +308,7 @@ export default function AudiovisualApproval() {
         throw new Error(completeData?.error || 'Falha ao completar projeto');
       }
 
-      console.log('✅ Projeto completado com sucesso via Edge Function');
+      console.log('✅ Projeto completado e feedbacks salvos via Edge Function');
 
       // Atualizar o estado local do projeto
       setProject({

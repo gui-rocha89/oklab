@@ -5,12 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface KeyframeComment {
+  id: string
+  time: number
+  comment: string
+}
+
 interface RequestBody {
   shareId: string
   status: string
   rating?: number
   clientName?: string
   clientEmail?: string
+  keyframes?: KeyframeComment[]
 }
 
 Deno.serve(async (req) => {
@@ -20,9 +27,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { shareId, status, rating, clientName, clientEmail }: RequestBody = await req.json()
+    const { shareId, status, rating, clientName, clientEmail, keyframes }: RequestBody = await req.json()
 
-    console.log('[complete-project] Received request:', { shareId, status, rating, clientName, clientEmail })
+    console.log('[complete-project] Received request:', { shareId, status, rating, clientName, clientEmail, keyframesCount: keyframes?.length })
 
     // Validate input
     if (!shareId || !status) {
@@ -49,7 +56,7 @@ Deno.serve(async (req) => {
     // Find project by share_id
     const { data: project, error: fetchError } = await supabase
       .from('projects')
-      .select('id, completed_at, status')
+      .select('id, completed_at, status, user_id')
       .eq('share_id', shareId)
       .single()
 
@@ -70,6 +77,59 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Project already completed', completed_at: project.completed_at }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
+    }
+
+    // Save keyframe feedbacks if provided
+    if (keyframes && keyframes.length > 0) {
+      console.log('[complete-project] Saving', keyframes.length, 'keyframe feedbacks')
+      
+      for (const kf of keyframes.filter(k => k.comment.trim() !== '')) {
+        const isExistingKeyframe = kf.id.length > 20
+        
+        let keyframeId = kf.id
+        
+        if (!isExistingKeyframe) {
+          // Create new keyframe
+          const minutes = Math.floor(kf.time / 60)
+          const seconds = kf.time % 60
+          const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`
+          
+          const { data: newKeyframe, error: kfError } = await supabase
+            .from('project_keyframes')
+            .insert({
+              project_id: project.id,
+              title: `Feedback em ${timeStr}`,
+              status: 'pending'
+            })
+            .select()
+            .single()
+          
+          if (kfError) {
+            console.error('[complete-project] Error creating keyframe:', kfError)
+            continue
+          }
+          
+          keyframeId = newKeyframe.id
+        }
+        
+        // Create feedback for this keyframe
+        const { error: feedbackError } = await supabase
+          .from('project_feedback')
+          .insert({
+            keyframe_id: keyframeId,
+            user_id: project.user_id, // Use project owner as feedback recipient
+            comment: kf.comment,
+            x_position: 50,
+            y_position: 50,
+            status: 'pending'
+          })
+        
+        if (feedbackError) {
+          console.error('[complete-project] Error creating feedback:', feedbackError)
+        }
+      }
+      
+      console.log('[complete-project] Keyframe feedbacks saved')
     }
 
     const now = new Date().toISOString()
