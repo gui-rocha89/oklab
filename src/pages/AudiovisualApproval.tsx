@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Play, Pause, Info, Star } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+import { Logo } from '@/components/ui/logo';
 import { supabase } from '@/integrations/supabase/client';
 
 const formatTime = (seconds: number): string => {
@@ -49,6 +51,9 @@ export default function AudiovisualApproval() {
   const [duration, setDuration] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
 
   // Fetch project data from Supabase
   useEffect(() => {
@@ -102,6 +107,19 @@ export default function AudiovisualApproval() {
         // Check if project has already been actioned
         if (projectData.status === 'approved' || projectData.status === 'feedback-sent') {
           setShowConfirmation(true);
+        }
+
+        // Check if user already submitted a rating
+        const { data: existingRating } = await supabase
+          .from('platform_reviews')
+          .select('*')
+          .eq('project_id', projectData.id)
+          .maybeSingle();
+
+        if (existingRating) {
+          setHasSubmittedRating(true);
+          setRating(existingRating.rating);
+          setRatingComment(existingRating.comment || '');
         }
 
       } catch (error) {
@@ -223,6 +241,38 @@ export default function AudiovisualApproval() {
     }
   };
 
+  const handleRatingSubmit = async () => {
+    if (!project || rating === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('platform_reviews')
+        .insert({
+          project_id: project.id,
+          rating,
+          comment: ratingComment,
+          client_name: project.client,
+          client_email: '',
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Avaliação Enviada!",
+        description: "Obrigado por avaliar sua experiência.",
+      });
+
+      setHasSubmittedRating(true);
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar sua avaliação.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const togglePlayPause = () => {
     if (!videoRef.current) return;
     
@@ -234,22 +284,26 @@ export default function AudiovisualApproval() {
     setIsPlaying(!isPlaying);
   };
 
+  const hasComments = keyframes.some(k => k.comment.trim().length > 0);
+  const canApprove = !hasComments;
+  const canSendFeedback = hasComments;
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center p-4">
-        <Loader2 className="w-16 h-16 text-orange-500 animate-spin mb-4" />
-        <h1 className="text-2xl font-bold text-gray-800">Carregando Projeto...</h1>
-        <p className="text-gray-600">Estamos preparando tudo para você.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-4">
+        <Loader2 className="w-16 h-16 text-[#FF6B2C] animate-spin mb-4" />
+        <h1 className="text-2xl font-bold">Carregando Projeto...</h1>
+        <p className="text-muted-foreground">Estamos preparando tudo para você.</p>
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center p-4">
-        <XCircle className="w-16 h-16 text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-800">Projeto não encontrado</h1>
-        <p className="text-gray-600">O link de aprovação pode estar inválido ou o projeto foi removido.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-4">
+        <XCircle className="w-16 h-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-bold">Projeto não encontrado</h1>
+        <p className="text-muted-foreground">O link de aprovação pode estar inválido ou o projeto foi removido.</p>
       </div>
     );
   }
@@ -275,11 +329,11 @@ export default function AudiovisualApproval() {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full"
+          className="bg-card rounded-2xl shadow-xl p-8 max-w-md w-full"
         >
           {confirmationContent.icon}
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{confirmationContent.title}</h2>
-          <p className="text-gray-600 mb-6">{confirmationContent.message}</p>
+          <h2 className="text-2xl font-bold mb-2">{confirmationContent.title}</h2>
+          <p className="text-muted-foreground mb-6">{confirmationContent.message}</p>
           <Button 
             variant="outline" 
             onClick={() => setShowConfirmation(false)}
@@ -293,143 +347,262 @@ export default function AudiovisualApproval() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Aprovação - {project.title}</title>
+        <title>Aprovação de Vídeo - {project.title}</title>
       </Helmet>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 shadow-lg"
-        >
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{project.title}</h1>
-          <p className="text-gray-600 mb-4">{project.description}</p>
-          <div className="flex items-center space-x-4 text-sm text-gray-500">
-            <span>Cliente: {project.client}</span>
-            <span>{new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{project.type}</span>
+      {/* Header com identidade visual */}
+      <div className="bg-gradient-to-r from-[#FF6B2C] to-[#FF8C5A] py-8 shadow-lg">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <Logo className="h-12 w-auto" />
           </div>
-        </motion.div>
+          <h1 className="text-4xl font-bold text-white text-center">
+            Aprove Seu Vídeo
+          </h1>
+        </div>
+      </div>
 
-        {/* Video Player */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl p-6 shadow-lg"
-        >
-          <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
-            <video
-              ref={videoRef}
-              className="absolute inset-0 w-full h-full object-contain"
-              onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            >
-              <source src={project.video_url} type="video/mp4" />
-            </video>
-          </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Project Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card className="p-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Nome do Projeto</h3>
+            <p className="text-lg font-semibold">{project.title}</p>
+          </Card>
           
-          {/* Video Controls */}
-          <div className="mt-4 flex items-center space-x-4">
-            <Button
-              onClick={togglePlayPause}
-              variant="outline"
-              size="sm"
-            >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </Button>
-            
-            <Button
-              onClick={handleAddKeyframe}
-              className="bg-orange-500 hover:bg-orange-600"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Comentário
-            </Button>
-            
-            <div className="text-sm text-gray-500">
-              {formatTime(currentTime)} / {formatTime(duration)}
+          <Card className="p-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Descrição</h3>
+            <p className="text-sm">{project.description || 'Sem descrição'}</p>
+          </Card>
+          
+          <Card className="p-6 bg-gradient-to-br from-[#FF6B2C]/10 to-[#FF8C5A]/10 border-[#FF6B2C]/20">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Cliente</h3>
+            <p className="text-xl font-bold text-[#FF6B2C]">{project.client}</p>
+          </Card>
+        </div>
+
+        {/* Instructions Card */}
+        <Card className="p-6 mb-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
+          <div className="flex items-start gap-4">
+            <div className="bg-blue-500/20 p-3 rounded-lg">
+              <Info className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Como Usar</h3>
+              <p className="text-muted-foreground">
+                Basta você adicionar um comentário, a plataforma vai fazer automaticamente a marcação no tempo exato que você parar o vídeo.
+              </p>
             </div>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* Keyframes */}
-        {keyframes.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-2xl p-6 shadow-lg"
-          >
-            <h3 className="text-lg font-semibold mb-4">Comentários no Vídeo</h3>
-            <div className="space-y-4">
-              {keyframes.map(keyframe => (
-                <motion.div
-                  key={keyframe.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="border border-gray-200 rounded-lg p-4"
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Video Player Section */}
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="p-6">
+              <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+                <video
+                  ref={videoRef}
+                  className="absolute inset-0 w-full h-full object-contain"
+                  onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+                  onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <button
-                      onClick={() => seekTo(keyframe.time)}
-                      className="text-orange-600 hover:text-orange-700 font-medium"
-                    >
-                      {formatTime(keyframe.time)}
-                    </button>
-                    <Button
-                      onClick={() => handleRemoveKeyframe(keyframe.id)}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Textarea
-                    value={keyframe.comment}
-                    onChange={(e) => handleKeyframeCommentChange(keyframe.id, e.target.value)}
-                    placeholder="Adicione seu comentário aqui..."
-                    className="w-full"
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+                  <source src={project.video_url} type="video/mp4" />
+                </video>
+              </div>
+              
+              {/* Video Controls */}
+              <div className="mt-4 flex items-center space-x-4">
+                <Button
+                  onClick={togglePlayPause}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </Button>
+                
+                <Button
+                  onClick={handleAddKeyframe}
+                  className="bg-[#FF6B2C] hover:bg-[#FF8C5A]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Comentário
+                </Button>
+                
+                <div className="text-sm text-muted-foreground">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </div>
+              </div>
+            </Card>
 
-        {/* Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white rounded-2xl p-6 shadow-lg"
-        >
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button
-              onClick={() => handleAction('approved')}
-              className="flex-1 bg-green-600 hover:bg-green-700"
-              disabled={submitting}
-            >
-              <CheckCircle className="w-5 h-5 mr-2" />
-              {submitting ? 'Processando...' : 'Aprovar Projeto'}
-            </Button>
-            
-            <Button
-              onClick={() => handleAction('send_feedback')}
-              variant="outline"
-              className="flex-1"
-              disabled={keyframes.filter(k => k.comment.trim() !== '').length === 0 || submitting}
-            >
-              <Send className="w-5 h-5 mr-2" />
-              {submitting ? 'Enviando...' : `Enviar Feedback (${keyframes.filter(k => k.comment.trim() !== '').length})`}
-            </Button>
+            {/* Keyframes */}
+            {keyframes.length > 0 && (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Comentários no Vídeo</h3>
+                <div className="space-y-4">
+                  {keyframes.map(keyframe => (
+                    <motion.div
+                      key={keyframe.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          onClick={() => seekTo(keyframe.time)}
+                          className="text-[#FF6B2C] hover:text-[#FF8C5A] font-medium"
+                        >
+                          {formatTime(keyframe.time)}
+                        </button>
+                        <Button
+                          onClick={() => handleRemoveKeyframe(keyframe.id)}
+                          variant="ghost"
+                          size="sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={keyframe.comment}
+                        onChange={(e) => handleKeyframeCommentChange(keyframe.id, e.target.value)}
+                        placeholder="Adicione seu comentário aqui..."
+                        className="w-full"
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </div>
-        </motion.div>
+
+          {/* Actions Sidebar */}
+          <div className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Ações
+              </h3>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleAction('approved')}
+                  disabled={submitting || !canApprove || project.status === 'approved'}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  title={hasComments ? "Não é possível aprovar com comentários pendentes" : "Aprovar projeto na íntegra"}
+                >
+                  {submitting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                  )}
+                  Aprovar Projeto
+                </Button>
+
+                <Button
+                  onClick={() => handleAction('send_feedback')}
+                  disabled={submitting || !canSendFeedback || project.status === 'feedback-sent'}
+                  className="w-full"
+                  variant="outline"
+                  title={!hasComments ? "Adicione comentários antes de enviar feedback" : "Enviar feedback para a equipe"}
+                >
+                  {submitting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                  )}
+                  Enviar Feedback
+                </Button>
+
+                {!canApprove && hasComments && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Para aprovar, não deve haver comentários no vídeo
+                  </p>
+                )}
+                {!canSendFeedback && !hasComments && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Adicione comentários para enviar feedback
+                  </p>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Rating Section */}
+        <Card className="p-8 mt-8">
+          <h3 className="text-2xl font-bold mb-4 text-center">Avalie sua Experiência</h3>
+          <p className="text-muted-foreground text-center mb-6">
+            Sua opinião é muito importante para melhorarmos nossa plataforma inovadora
+          </p>
+
+          {hasSubmittedRating ? (
+            <div className="text-center">
+              <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              <p className="text-lg font-semibold text-green-600">Obrigado por sua avaliação!</p>
+              <div className="flex justify-center gap-1 mt-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-6 h-6 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                  />
+                ))}
+              </div>
+              {ratingComment && (
+                <p className="text-sm text-muted-foreground mt-4 max-w-md mx-auto">
+                  "{ratingComment}"
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="max-w-md mx-auto space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-3 text-center">
+                  Como você avalia sua experiência?
+                </label>
+                <div className="flex justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`w-10 h-10 cursor-pointer transition-colors ${
+                          star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Comentários (opcional)
+                </label>
+                <Textarea
+                  value={ratingComment}
+                  onChange={(e) => setRatingComment(e.target.value)}
+                  placeholder="Conte-nos mais sobre sua experiência..."
+                  className="min-h-[100px]"
+                />
+              </div>
+
+              <Button
+                onClick={handleRatingSubmit}
+                disabled={rating === 0}
+                className="w-full"
+              >
+                Enviar Avaliação
+              </Button>
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );
