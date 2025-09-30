@@ -118,6 +118,14 @@ export default function AudiovisualApproval() {
           return;
         }
 
+        // Check if project has already been completed
+        if (projectData.completed_at) {
+          setProject(projectData);
+          setShowConfirmation(true);
+          setLoading(false);
+          return;
+        }
+
         setProject(projectData);
 
         // Fetch existing keyframes for this project
@@ -138,11 +146,6 @@ export default function AudiovisualApproval() {
             created_at: kf.created_at
           }));
           setKeyframes(formattedKeyframes);
-        }
-
-        // Check if project has already been actioned
-        if (projectData.status === 'approved' || projectData.status === 'feedback-sent') {
-          setShowConfirmation(true);
         }
 
         // Check if user already submitted a rating
@@ -239,6 +242,16 @@ export default function AudiovisualApproval() {
   const handleAction = async (action: string) => {
     if (!project || submitting) return;
 
+    // Validar que avaliação foi preenchida
+    if (rating === 0) {
+      toast({
+        title: "Avaliação obrigatória",
+        description: "Por favor, avalie sua experiência antes de continuar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -269,13 +282,30 @@ export default function AudiovisualApproval() {
         }
       }
 
-      // Update project status
+      // Save rating to platform_reviews
+      const { error: ratingError } = await supabase
+        .from('platform_reviews')
+        .insert({
+          project_id: project.id,
+          rating,
+          comment: ratingComment,
+          client_name: project.client,
+          client_email: '',
+        });
+
+      if (ratingError) {
+        console.error('Error saving rating:', ratingError);
+        // Continue even if rating fails
+      }
+
+      // Update project status and mark as completed
       const newStatus = action === 'approved' ? 'approved' : 'feedback-sent';
       const { error: updateError } = await supabase
         .from('projects')
         .update({ 
           status: newStatus,
-          approval_date: action === 'approved' ? new Date().toISOString() : null
+          approval_date: action === 'approved' ? new Date().toISOString() : null,
+          completed_at: new Date().toISOString()
         })
         .eq('id', project.id);
 
@@ -284,17 +314,18 @@ export default function AudiovisualApproval() {
       }
 
       setShowConfirmation(true);
+      setHasSubmittedRating(true);
       
       if (action === 'approved') {
         toast({
             title: "✅ Aprovação Enviada!",
-            description: "Obrigado! Sua aprovação foi registrada com sucesso.",
+            description: `Obrigado pela avaliação ${rating}⭐ e aprovação!`,
             duration: 6000,
         });
       } else {
         toast({
             title: "👍 Feedback Enviado!",
-            description: "A equipe foi notificada sobre seus apontamentos.",
+            description: `Obrigado pela avaliação ${rating}⭐ e pelo feedback detalhado!`,
             duration: 6000,
         });
       }
@@ -310,37 +341,6 @@ export default function AudiovisualApproval() {
     }
   };
 
-  const handleRatingSubmit = async () => {
-    if (!project || rating === 0) return;
-
-    try {
-      const { error } = await supabase
-        .from('platform_reviews')
-        .insert({
-          project_id: project.id,
-          rating,
-          comment: ratingComment,
-          client_name: project.client,
-          client_email: '',
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Avaliação Enviada!",
-        description: "Obrigado por avaliar sua experiência.",
-      });
-
-      setHasSubmittedRating(true);
-    } catch (error) {
-      console.error('Error submitting rating:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar sua avaliação.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const captureVideoScreenshot = async (): Promise<string | null> => {
     if (!videoRef.current) return null;
@@ -924,13 +924,13 @@ export default function AudiovisualApproval() {
                       />
                     </div>
 
-                    <Button
-                      onClick={handleRatingSubmit}
-                      disabled={rating === 0}
-                      className={`w-full bg-primary hover:bg-primary/90 touch-manipulation ${isMobile ? 'min-h-[44px]' : ''}`}
-                    >
-                      Enviar Avaliação
-                    </Button>
+                    {rating === 0 && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p className="text-sm text-yellow-800 text-center">
+                          ⚠️ Avaliação obrigatória antes de aprovar ou enviar feedback
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -939,12 +939,14 @@ export default function AudiovisualApproval() {
               <div className="space-y-3">
                 <Button
                   onClick={() => handleAction('approved')}
-                  disabled={submitting || !canApprove || project.status === 'approved'}
+                  disabled={submitting || !canApprove || rating === 0 || project.status === 'approved'}
                   className={`w-full bg-green-600 hover:bg-green-700 touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
                   title={
-                    hasFeedback 
-                      ? "Não é possível aprovar com comentários ou anotações visuais pendentes" 
-                      : "Aprovar projeto na íntegra"
+                    rating === 0
+                      ? "Avalie sua experiência antes de aprovar"
+                      : hasFeedback 
+                        ? "Não é possível aprovar com comentários ou anotações visuais pendentes" 
+                        : "Aprovar projeto na íntegra"
                   }
                 >
                   {submitting ? (
@@ -957,13 +959,15 @@ export default function AudiovisualApproval() {
 
                 <Button
                   onClick={() => handleAction('send_feedback')}
-                  disabled={submitting || !canSendFeedback || project.status === 'feedback-sent'}
+                  disabled={submitting || !canSendFeedback || rating === 0 || project.status === 'feedback-sent'}
                   className={`w-full touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
                   variant="outline"
                   title={
-                    !hasFeedback 
-                      ? "Adicione comentários ou anotações visuais antes de enviar feedback" 
-                      : "Enviar feedback para a equipe"
+                    rating === 0
+                      ? "Avalie sua experiência antes de enviar feedback"
+                      : !hasFeedback 
+                        ? "Adicione comentários ou anotações visuais antes de enviar feedback" 
+                        : "Enviar feedback para a equipe"
                   }
                 >
                   {submitting ? (

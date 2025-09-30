@@ -83,6 +83,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
   const { toast } = useToast();
 
   const fetchProjects = async () => {
@@ -118,6 +119,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       }));
 
       setProjects(transformedProjects);
+      
+      // Fetch review statistics
+      await fetchReviewStats();
     } catch (error) {
       console.error('Error fetching projects:', error);
       toast({
@@ -127,6 +131,27 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviewStats = async () => {
+    try {
+      const { data: reviews, error } = await supabase
+        .from('platform_reviews')
+        .select('rating');
+
+      if (error) throw error;
+
+      if (reviews && reviews.length > 0) {
+        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+        const averageRating = totalRating / reviews.length;
+        setReviewStats({
+          averageRating,
+          totalReviews: reviews.length
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching review stats:', error);
     }
   };
 
@@ -353,13 +378,11 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     const archived = projects.filter(p => p.status === "archived").length;
     const feedbacks = projects.reduce((acc, p) => acc + p.keyframes.reduce((kfAcc, kf) => kfAcc + kf.feedbacks.length, 0), 0);
     
-    // Calculate client satisfaction based on resolved feedbacks
-    const totalFeedbacks = feedbacks;
-    const resolvedFeedbacks = projects.reduce((acc, p) => 
-      acc + p.keyframes.reduce((kfAcc, kf) => 
-        kfAcc + kf.feedbacks.filter(f => f.status === 'resolved').length, 0), 0);
-    
-    const clientSatisfaction = totalFeedbacks > 0 ? Math.round((resolvedFeedbacks / totalFeedbacks) * 100) : 100;
+    // Calculate client satisfaction based on platform reviews (ratings)
+    // Convert average rating (1-5) to percentage (0-100)
+    const clientSatisfaction = reviewStats.totalReviews > 0 
+      ? Math.round((reviewStats.averageRating / 5) * 100)
+      : 85; // Default value when no reviews exist
 
     return {
       total,

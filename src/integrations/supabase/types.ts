@@ -266,6 +266,7 @@ export type Database = {
         Row: {
           approval_date: string | null
           client: string
+          completed_at: string | null
           created_at: string
           description: string | null
           id: string
@@ -281,6 +282,7 @@ export type Database = {
         Insert: {
           approval_date?: string | null
           client: string
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -296,6 +298,7 @@ export type Database = {
         Update: {
           approval_date?: string | null
           client?: string
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           id?: string
