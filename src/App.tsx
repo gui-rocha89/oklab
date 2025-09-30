@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { UserProvider } from "@/contexts/UserContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Feedbacks from "./pages/Feedbacks";
@@ -15,7 +14,6 @@ import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import AudiovisualApproval from "./pages/AudiovisualApproval";
 import ClientApproval from "./pages/ClientApproval";
-import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,49 +33,36 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
         <Routes>
-          <Route path="/auth" element={<Auth />} />
           <Route path="/" element={
-            <ProtectedRoute>
-              <Layout>
-                <Dashboard />
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <Dashboard />
+            </Layout>
           } />
           <Route path="/aprovacao-audiovisual/:shareId" element={
-            <ProtectedRoute>
-              <Layout>
-                <AudiovisualApproval />
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <AudiovisualApproval />
+            </Layout>
           } />
           <Route path="/projeto/:shareId" element={<ClientApproval />} />
           <Route path="/projetos" element={
-            <ProtectedRoute>
-              <Layout>
-                <Projects />
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <Projects />
+            </Layout>
           } />
           <Route path="/feedbacks" element={
-            <ProtectedRoute>
-              <Layout>
-                <Feedbacks />
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <Feedbacks />
+            </Layout>
           } />
           <Route path="/equipe" element={
-            <ProtectedRoute>
-              <Layout>
-                <Team />
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <Team />
+            </Layout>
           } />
           <Route path="/configuracoes" element={
-            <ProtectedRoute>
-              <Layout>
-                <Settings />
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <Settings />
+            </Layout>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
