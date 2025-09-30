@@ -615,13 +615,20 @@ export default function AudiovisualApproval() {
                 <Button
                   onClick={() => {
                     const newMode = !isDrawingMode;
-                    setIsDrawingMode(newMode);
-                    // Force pause when entering drawing mode
+                    
                     if (newMode) {
+                      // FIRST: Force pause the video BEFORE activating drawing mode
                       setIsPlaying(false);
                       if (videoRef.current) {
                         videoRef.current.pause();
                       }
+                      // THEN: Activate drawing mode
+                      setTimeout(() => {
+                        setIsDrawingMode(true);
+                      }, 50);
+                    } else {
+                      // Simply deactivate drawing mode
+                      setIsDrawingMode(false);
                     }
                   }}
                   variant={isDrawingMode ? "default" : "outline"}

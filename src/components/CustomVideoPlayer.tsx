@@ -221,18 +221,6 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     };
   }, [onTimeUpdate, onDurationChange, onPlayPauseChange]);
 
-  // Force pause when drawing mode is active
-  useEffect(() => {
-    if (isDrawingMode && videoRef.current && isPlaying) {
-      videoRef.current.pause();
-      if (onPlayPauseChange) {
-        onPlayPauseChange(false);
-      } else {
-        setInternalIsPlaying(false);
-      }
-    }
-  }, [isDrawingMode, isPlaying, onPlayPauseChange]);
-
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
@@ -243,16 +231,6 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
-      {/* Drawing Mode Indicator */}
-      {isDrawingMode && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
-            <span className="text-sm font-medium">Modo Desenho Ativo - Vídeo Pausado</span>
-          </div>
-        </div>
-      )}
-
       <video
         ref={videoRef}
         src={src}
