@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare } from "lucide-react";
+import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
@@ -348,7 +348,23 @@ export default function Projects() {
         {/* Lista/Grid de Projetos */}
         {viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 items-stretch">
-            {filteredProjects.map((project) => (
+            {filteredProjects.map((project) => {
+              const isAudiovisual = project.type === 'Audiovisual';
+              
+              const handleCardClick = (e: React.MouseEvent) => {
+                // Não abrir link se clicar em botões
+                if ((e.target as HTMLElement).closest('button')) {
+                  return;
+                }
+                
+                // Abrir link do projeto para o cliente
+                if (project.share_id) {
+                  const clientLink = `${window.location.origin}/audiovisual-approval/${project.share_id}`;
+                  window.open(clientLink, '_blank');
+                }
+              };
+              
+              return (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -356,7 +372,10 @@ export default function Projects() {
                 transition={{ duration: 0.3 }}
                 className="flex"
               >
-                <Card className="min-h-[220px] p-5 rounded-2xl shadow-lg border-0 bg-card hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group overflow-hidden flex-1 flex flex-col">
+                <Card 
+                  onClick={handleCardClick}
+                  className="min-h-[220px] p-5 rounded-2xl shadow-lg border-0 bg-card hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group overflow-hidden flex-1 flex flex-col cursor-pointer"
+                >
                   <CardHeader className="pb-3 relative flex-shrink-0">
                     {/* Background Pattern */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
@@ -375,6 +394,14 @@ export default function Projects() {
                         <CardTitle className="text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                           {project.title}
                         </CardTitle>
+                        
+                        {/* Audiovisual Tag */}
+                        {isAudiovisual && (
+                          <Badge className="mt-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs font-bold">
+                            <Video className="w-3 h-3 mr-1" />
+                            AUDIOVISUAL
+                          </Badge>
+                        )}
                       </div>
                       
                       {/* Status & Priority Badges */}
@@ -432,7 +459,10 @@ export default function Projects() {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
-                          onClick={() => handleEditProject(project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProject(project.id);
+                          }}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -440,37 +470,74 @@ export default function Projects() {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          onClick={() => handleDeleteProject(project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProject(project.id);
+                          }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                         <Button 
                           size="sm" 
-                          onClick={() => handleViewProject(project.share_id)}
-                          className="ml-2 bg-primary hover:bg-primary/90 text-white shadow-md hover:shadow-lg transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isAudiovisual) {
+                              navigate('/feedbacks');
+                            } else {
+                              handleViewProject(project.share_id);
+                            }
+                          }}
+                          className={`ml-2 ${isAudiovisual ? 'bg-purple-600 hover:bg-purple-700' : 'bg-primary hover:bg-primary/90'} text-white shadow-md hover:shadow-lg transition-all`}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Ver Projeto
+                          {isAudiovisual ? <MessageSquare className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+                          {isAudiovisual ? 'Ver Feedback' : 'Ver Projeto'}
                         </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            );
+            })}
           </div>
         ) : (
           <Card>
             <CardContent className="p-0">
               <div className="divide-y">
-                {filteredProjects.map((project) => (
-                  <div key={project.id} className="p-6 hover:bg-muted/50 transition-colors">
+                {filteredProjects.map((project) => {
+                  const isAudiovisual = project.type === 'Audiovisual';
+                  
+                  const handleCardClick = (e: React.MouseEvent) => {
+                    // Não abrir link se clicar em botões
+                    if ((e.target as HTMLElement).closest('button')) {
+                      return;
+                    }
+                    
+                    // Abrir link do projeto para o cliente
+                    if (project.share_id) {
+                      const clientLink = `${window.location.origin}/audiovisual-approval/${project.share_id}`;
+                      window.open(clientLink, '_blank');
+                    }
+                  };
+                  
+                  return (
+                  <div 
+                    key={project.id} 
+                    onClick={handleCardClick}
+                    className="p-6 hover:bg-muted/50 transition-colors cursor-pointer"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="font-semibold text-foreground truncate">
                             {project.title}
                           </h3>
+                          {isAudiovisual && (
+                            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs font-bold">
+                              <Video className="w-3 h-3 mr-1" />
+                              AUDIOVISUAL
+                            </Badge>
+                          )}
                           <Badge className={getStatusColor(project.status)}>
                             {getStatusText(project.status)}
                           </Badge>
@@ -503,29 +570,44 @@ export default function Projects() {
                       <div className="flex gap-2 ml-4">
                         <Button 
                           size="sm" 
-                          onClick={() => handleViewProject(project.share_id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isAudiovisual) {
+                              navigate('/feedbacks');
+                            } else {
+                              handleViewProject(project.share_id);
+                            }
+                          }}
+                          className={isAudiovisual ? 'bg-purple-600 hover:bg-purple-700' : ''}
                         >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ver Projeto
+                          {isAudiovisual ? <MessageSquare className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                          {isAudiovisual ? 'Ver Feedback' : 'Ver Projeto'}
                         </Button>
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => handleEditProject(project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProject(project.id);
+                          }}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => handleDeleteProject(project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProject(project.id);
+                          }}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             </CardContent>
           </Card>
