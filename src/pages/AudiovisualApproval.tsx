@@ -43,6 +43,7 @@ interface Project {
   share_id: string;
   type: string;
   created_at: string;
+  completed_at?: string | null;
 }
 
 export default function AudiovisualApproval() {
@@ -300,6 +301,12 @@ export default function AudiovisualApproval() {
 
       // Update project status and mark as completed
       const newStatus = action === 'approved' ? 'approved' : 'feedback-sent';
+      console.log('🔄 Atualizando projeto:', {
+        projectId: project.id,
+        newStatus,
+        completed_at: new Date().toISOString()
+      });
+      
       const { error: updateError } = await supabase
         .from('projects')
         .update({ 
@@ -310,9 +317,19 @@ export default function AudiovisualApproval() {
         .eq('id', project.id);
 
       if (updateError) {
+        console.error('❌ Erro ao atualizar projeto:', updateError);
         throw updateError;
       }
+      
+      console.log('✅ Projeto atualizado com sucesso, completed_at salvo');
 
+      // Atualizar o estado local do projeto
+      setProject({
+        ...project,
+        status: newStatus,
+        completed_at: new Date().toISOString()
+      });
+      
       setShowConfirmation(true);
       setHasSubmittedRating(true);
       
@@ -529,7 +546,9 @@ export default function AudiovisualApproval() {
               transition={{ delay: 0.5, duration: 0.5 }}
               className="text-lg text-gray-500 font-['Inter']"
             >
-              Você receberá atualizações por e-mail.
+              {project.completed_at && new Date(project.completed_at).toLocaleDateString('pt-BR') !== new Date().toLocaleDateString('pt-BR')
+                ? `Este link já foi utilizado em ${new Date(project.completed_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} e não está mais disponível para novas ações.`
+                : 'Você receberá atualizações por e-mail.'}
             </motion.p>
 
             {/* Detalhe Laranja Decorativo */}

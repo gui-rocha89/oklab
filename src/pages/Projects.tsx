@@ -359,7 +359,7 @@ export default function Projects() {
                 
                 // Abrir link do projeto para o cliente
                 if (project.share_id) {
-                  const clientLink = `${window.location.origin}/audiovisual-approval/${project.share_id}`;
+                  const clientLink = `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`;
                   window.open(clientLink, '_blank');
                 }
               };
@@ -515,7 +515,7 @@ export default function Projects() {
                     
                     // Abrir link do projeto para o cliente
                     if (project.share_id) {
-                      const clientLink = `${window.location.origin}/audiovisual-approval/${project.share_id}`;
+                      const clientLink = `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`;
                       window.open(clientLink, '_blank');
                     }
                   };
