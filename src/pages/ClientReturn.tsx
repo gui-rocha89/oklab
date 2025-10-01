@@ -369,18 +369,59 @@ const ClientReturn = () => {
           </Card>
         )}
 
-        {/* Preview Visual com Anotações */}
-        {annotations.length > 0 && project.video_url && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Video className="w-5 h-5" />
-              Preview Visual com Feedback do Cliente
-            </h2>
-            <ClientVideoAnnotationViewer 
-              videoUrl={project.video_url}
-              annotations={annotations}
-            />
-          </div>
+        {/* Vídeo Aprovado pelo Cliente */}
+        {project.video_url && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="w-5 h-5 text-primary" />
+                  Vídeo Aprovado pelo Cliente
+                </CardTitle>
+                {annotations.length === 0 && (
+                  <Badge variant="success" className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Aprovado na íntegra
+                  </Badge>
+                )}
+              </div>
+              {annotations.length === 0 && (
+                <CardDescription>
+                  Este vídeo foi aprovado sem comentários ou modificações sugeridas
+                </CardDescription>
+              )}
+              {annotations.length > 0 && (
+                <CardDescription>
+                  Visualize o vídeo com as anotações e comentários do cliente
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
+              {annotations.length > 0 ? (
+                <ClientVideoAnnotationViewer 
+                  videoUrl={project.video_url}
+                  annotations={annotations}
+                />
+              ) : (
+                <div className="space-y-4">
+                  <video 
+                    controls 
+                    className="w-full rounded-lg"
+                    src={project.video_url}
+                  >
+                    Seu navegador não suporta a reprodução de vídeos.
+                  </video>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                    <p>
+                      O cliente aprovou este vídeo sem solicitar alterações. 
+                      Não há anotações visuais ou comentários adicionais.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Feedback Visual Detalhado (Lista) */}
@@ -388,11 +429,11 @@ const ClientReturn = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Detalhamento das Anotações ({annotations.length})
+                <Pencil className="w-5 h-5" />
+                Feedback Visual Detalhado
               </CardTitle>
               <CardDescription>
-                Lista completa de comentários e anotações visuais do cliente
+                Lista completa de todas as {annotations.length} anotações visuais e comentários do cliente
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
