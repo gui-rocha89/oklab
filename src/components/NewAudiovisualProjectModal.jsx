@@ -40,18 +40,35 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith('video/')) {
+    if (file) {
+      // Validate file type
+      const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
+      const validExtensions = ['.mp4', '.mov'];
+      const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+      
+      if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+        toast({
+          title: "Formato não suportado",
+          description: "Por favor, selecione um arquivo MP4 ou MOV",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (file.size > 500 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O vídeo deve ter no máximo 500MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setVideoFile(file);
       toast({
         title: "🎥 Vídeo Anexado!",
         description: `${file.name} foi selecionado com sucesso.`,
         duration: 3000,
-      });
-    } else {
-      toast({
-        title: "Formato Inválido",
-        description: "Por favor, selecione um arquivo de vídeo.",
-        variant: "destructive",
       });
     }
   };
@@ -382,7 +399,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
-                    accept="video/*"
+                    accept=".mp4,.mov,video/mp4,video/quicktime"
                     onChange={handleFileChange}
                   />
                   {videoFile ? (
@@ -396,7 +413,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <Upload className="h-12 w-12 mb-3 text-muted-foreground" />
                       <p className="font-semibold text-lg">Arraste ou clique para enviar</p>
-                      <p className="text-sm">Formatos de vídeo suportados (MP4, MOV, etc.)</p>
+                      <p className="text-sm">Formatos: MP4 ou MOV (máximo 500MB)</p>
                     </div>
                   )}
                 </div>
