@@ -32,10 +32,6 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [videoAspectRatio, setVideoAspectRatio] = useState(16 / 9);
-  const [originalCanvasDimensions, setOriginalCanvasDimensions] = useState<{ width: number; height: number } | null>(null);
-  const [loadedObjectsCount, setLoadedObjectsCount] = useState(0);
-  const [showAnnotations, setShowAnnotations] = useState(true);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
   // Inicializar canvas
   useEffect(() => {
@@ -95,16 +91,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     }
   }, [currentTime, annotations]);
 
-  const addDebugLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setDebugLogs(prev => [...prev.slice(-4), `[${timestamp}] ${message}`]);
-  };
-
   const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
-    if (!fabricCanvasRef.current || !videoRef.current) {
-      addDebugLog('❌ Canvas ou video não disponível');
-      return;
-    }
+    if (!fabricCanvasRef.current || !videoRef.current) return;
 
     const canvas = fabricCanvasRef.current;
     const video = videoRef.current;
@@ -113,136 +101,71 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       clearCanvas();
       
       if (!annotation.canvas_data?.objects || annotation.canvas_data.objects.length === 0) {
-        addDebugLog('⚠️ Nenhum objeto para carregar');
-        setLoadedObjectsCount(0);
         return;
       }
 
-      // Get exact video element dimensions
       const videoRect = video.getBoundingClientRect();
       const currentWidth = Math.floor(videoRect.width);
       const currentHeight = Math.floor(videoRect.height);
 
-      addDebugLog(`📐 Canvas: ${currentWidth}x${currentHeight} | Video: ${video.videoWidth}x${video.videoHeight}`);
-
-      // Resize canvas to EXACTLY match video element
       canvas.setDimensions({
         width: currentWidth,
         height: currentHeight
       });
 
-      // PERMANENT DEBUG BACKGROUND - Super visible
-      canvas.backgroundColor = 'rgba(0, 255, 0, 0.1)';
-
-      addDebugLog(`📦 ${annotation.canvas_data.objects.length} objetos para carregar`);
-
-      // Load objects from JSON - Fabric.js v6
       const objects = await util.enlivenObjects(annotation.canvas_data.objects);
       
-      // CRITICAL: Check if canvas_data has original dimensions
       const hasOriginalDimensions = annotation.canvas_data.width && annotation.canvas_data.height;
-      
-      let visibleCount = 0;
-      let offscreenCount = 0;
       
       if (hasOriginalDimensions) {
         const originalWidth = annotation.canvas_data.width;
         const originalHeight = annotation.canvas_data.height;
         const scaleX = currentWidth / originalWidth;
         const scaleY = currentHeight / originalHeight;
-        
-        addDebugLog(`🔢 Escala: ${scaleX.toFixed(2)}x, ${scaleY.toFixed(2)}y`);
 
-        objects.forEach((obj: any, index) => {
+        objects.forEach((obj: any) => {
           if (obj) {
-            const newLeft = (obj.left || 0) * scaleX;
-            const newTop = (obj.top || 0) * scaleY;
-            
             obj.set({
-              left: newLeft,
-              top: newTop,
+              left: (obj.left || 0) * scaleX,
+              top: (obj.top || 0) * scaleY,
               scaleX: (obj.scaleX || 1) * scaleX,
               scaleY: (obj.scaleY || 1) * scaleY,
               selectable: false,
               evented: false,
-              stroke: obj.stroke || '#FF0000',
-              strokeWidth: Math.max((obj.strokeWidth || 3), 3),
-              opacity: showAnnotations ? 1 : 0
+              stroke: '#FF0000',
+              strokeWidth: 5,
+              fill: obj.type === 'path' ? undefined : (obj.fill || 'transparent')
             });
             obj.setCoords();
             canvas.add(obj);
-            
-            // Check if visible
-            if (newLeft >= 0 && newLeft <= currentWidth && newTop >= 0 && newTop <= currentHeight) {
-              visibleCount++;
-            } else {
-              offscreenCount++;
-            }
           }
         });
       } else {
-        // NO ORIGINAL DIMENSIONS: Intelligent fallback
-        addDebugLog('⚠️ SEM dimensões - Ajustando automaticamente');
+        // Scale down from native video resolution to displayed size
+        const scale = currentWidth / video.videoWidth;
         
-        objects.forEach((obj: any, index) => {
+        objects.forEach((obj: any) => {
           if (obj) {
-            let adjustedLeft = obj.left || 0;
-            let adjustedTop = obj.top || 0;
-            
-            // SMART FALLBACK: If object is way off screen, try to scale it down
-            if (adjustedLeft > currentWidth * 2 || adjustedTop > currentHeight * 2) {
-              // Probably saved at native video resolution, scale down
-              const estimatedScale = currentWidth / (video.videoWidth || 1920);
-              adjustedLeft *= estimatedScale;
-              adjustedTop *= estimatedScale;
-              addDebugLog(`🔧 Auto-corrigido obj ${index}: escala ${estimatedScale.toFixed(2)}`);
-            }
-            
-            // Clamp to canvas if still off-screen
-            adjustedLeft = Math.max(0, Math.min(adjustedLeft, currentWidth - 50));
-            adjustedTop = Math.max(0, Math.min(adjustedTop, currentHeight - 50));
-            
             obj.set({
-              left: adjustedLeft,
-              top: adjustedTop,
+              left: (obj.left || 0) * scale,
+              top: (obj.top || 0) * scale,
+              scaleX: (obj.scaleX || 1) * scale,
+              scaleY: (obj.scaleY || 1) * scale,
               selectable: false,
               evented: false,
-              stroke: obj.stroke || '#FF0000',
-              strokeWidth: Math.max((obj.strokeWidth || 3), 4),
-              fill: obj.fill === null ? 'transparent' : obj.fill,
-              opacity: showAnnotations ? 1 : 0
+              stroke: '#FF0000',
+              strokeWidth: 5,
+              fill: obj.type === 'path' ? undefined : (obj.fill || 'transparent')
             });
             obj.setCoords();
             canvas.add(obj);
-            
-            if (adjustedLeft >= 0 && adjustedLeft <= currentWidth && adjustedTop >= 0 && adjustedTop <= currentHeight) {
-              visibleCount++;
-            } else {
-              offscreenCount++;
-            }
           }
         });
       }
 
-      const totalLoaded = canvas.getObjects().length;
-      setLoadedObjectsCount(totalLoaded);
-      
-      if (offscreenCount > 0) {
-        addDebugLog(`⚠️ ${offscreenCount} objetos fora da tela`);
-      }
-      addDebugLog(`✅ ${visibleCount} objetos visíveis carregados`);
-
-      // Force multiple renders
       canvas.renderAll();
-      requestAnimationFrame(() => {
-        canvas.renderAll();
-        requestAnimationFrame(() => canvas.renderAll());
-      });
-
     } catch (error) {
-      console.error('❌ Erro ao carregar anotação:', error);
-      addDebugLog(`❌ Erro: ${error}`);
-      setLoadedObjectsCount(0);
+      console.error('Erro ao carregar anotação:', error);
     }
   };
 
@@ -250,25 +173,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     if (fabricCanvasRef.current) {
       const canvas = fabricCanvasRef.current;
       canvas.clear();
-      canvas.backgroundColor = 'transparent';
       canvas.renderAll();
-      setLoadedObjectsCount(0);
-      addDebugLog('🧹 Canvas limpo');
     }
-  };
-
-  const toggleAnnotationsVisibility = () => {
-    if (!fabricCanvasRef.current) return;
-    
-    const newState = !showAnnotations;
-    setShowAnnotations(newState);
-    
-    const canvas = fabricCanvasRef.current;
-    canvas.getObjects().forEach((obj: any) => {
-      obj.set({ opacity: newState ? 1 : 0 });
-    });
-    canvas.renderAll();
-    addDebugLog(newState ? '👁️ Anotações mostradas' : '🙈 Anotações ocultadas');
   };
 
   const handleTimeUpdate = () => {
@@ -281,13 +187,10 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     if (videoRef.current) {
       setDuration(videoRef.current.duration * 1000);
       
-      // Detectar aspect ratio nativo do vídeo
       const video = videoRef.current;
       if (video.videoWidth && video.videoHeight) {
         const aspectRatio = video.videoWidth / video.videoHeight;
-        console.log(`📹 Vídeo carregado: ${video.videoWidth}x${video.videoHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
         setVideoAspectRatio(aspectRatio);
-        setOriginalCanvasDimensions({ width: video.videoWidth, height: video.videoHeight });
       }
     }
   };
@@ -369,38 +272,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
             <canvas
               ref={canvasRef}
               className="absolute top-0 left-0 w-full h-full pointer-events-none"
-              style={{ 
-                zIndex: 30,
-                border: '2px solid rgba(0, 255, 0, 0.3)',
-                boxShadow: 'inset 0 0 0 2px rgba(0, 255, 0, 0.2)'
-              }}
+              style={{ zIndex: 30 }}
             />
-
-            {/* Debug Overlay - Top Left */}
-            <div className="absolute top-2 left-2 z-40 bg-black/80 text-white p-2 rounded text-xs font-mono space-y-1 backdrop-blur-sm max-w-xs">
-              <div className="flex items-center gap-2">
-                <div className={cn(
-                  "w-2 h-2 rounded-full",
-                  loadedObjectsCount > 0 ? "bg-green-500 animate-pulse" : "bg-red-500"
-                )} />
-                <span className="font-bold">{loadedObjectsCount} objetos carregados</span>
-              </div>
-              {debugLogs.map((log, i) => (
-                <div key={i} className="text-[10px] opacity-80 truncate">{log}</div>
-              ))}
-            </div>
-
-            {/* Debug Controls - Top Right */}
-            <div className="absolute top-2 right-2 z-40 flex gap-2">
-              <Button
-                size="sm"
-                variant={showAnnotations ? "default" : "outline"}
-                onClick={toggleAnnotationsVisibility}
-                className="h-8 text-xs backdrop-blur-sm"
-              >
-                {showAnnotations ? "👁️ Visível" : "🙈 Oculto"}
-              </Button>
-            </div>
 
             {/* Overlay para controles - aparece no hover */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20" />
