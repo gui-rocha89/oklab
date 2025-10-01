@@ -93,107 +93,113 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   }, [currentTime, annotations]);
 
   const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
-    if (!fabricCanvasRef.current || !annotation.canvas_data || !videoRef.current) {
-      console.log("❌ Canvas, canvas_data ou vídeo não disponível");
+    if (!fabricCanvasRef.current || !videoRef.current) {
+      console.log('❌ Canvas ou video não disponível');
       return;
     }
 
     const canvas = fabricCanvasRef.current;
+    const video = videoRef.current;
     
-    // PASSO 1: Garantir que o canvas tenha as dimensões corretas ANTES de carregar objetos
-    const videoRect = videoRef.current.getBoundingClientRect();
-    canvas.setDimensions({
-      width: videoRect.width,
-      height: videoRect.height,
-    });
-    
-    console.log(`📐 Canvas redimensionado para: ${videoRect.width}x${videoRect.height}`);
-    
-    // PASSO 2: Limpar canvas
-    canvas.clear();
-    
-    // Debug: adicionar background temporário para verificar posicionamento
-    canvas.backgroundColor = 'rgba(255, 0, 0, 0.05)';
+    try {
+      clearCanvas();
+      
+      if (!annotation.canvas_data?.objects || annotation.canvas_data.objects.length === 0) {
+        console.log('⚠️ Nenhum objeto para carregar');
+        return;
+      }
 
-    // PASSO 3: Carregar os objetos do canvas_data
-    if (annotation.canvas_data.objects && annotation.canvas_data.objects.length > 0) {
-      console.log(`📝 Carregando ${annotation.canvas_data.objects.length} objeto(s) no canvas`);
+      // Get exact video element dimensions
+      const videoRect = video.getBoundingClientRect();
+      const currentWidth = Math.floor(videoRect.width);
+      const currentHeight = Math.floor(videoRect.height);
+
+      console.log('🎯 DIMENSÕES:');
+      console.log('Video nativo:', video.videoWidth, 'x', video.videoHeight);
+      console.log('Video renderizado:', currentWidth, 'x', currentHeight);
+      console.log('Canvas atual:', canvas.width, canvas.height);
+
+      // Resize canvas to EXACTLY match video element
+      canvas.setDimensions({
+        width: currentWidth,
+        height: currentHeight
+      });
+
+      console.log('Canvas redimensionado para:', canvas.width, 'x', canvas.height);
+
+      // Calculate scale based on original canvas dimensions in the annotation data
+      const originalWidth = annotation.canvas_data.width || video.videoWidth;
+      const originalHeight = annotation.canvas_data.height || video.videoHeight;
       
-      // Obter dimensões originais do canvas_data
-      const originalWidth = annotation.canvas_data.width || videoRect.width;
-      const originalHeight = annotation.canvas_data.height || videoRect.height;
+      const scaleX = currentWidth / originalWidth;
+      const scaleY = currentHeight / originalHeight;
       
-      // Calcular escala proporcional
-      const scaleX = videoRect.width / originalWidth;
-      const scaleY = videoRect.height / originalHeight;
-      
-      console.log(`📏 Escala aplicada: ${scaleX.toFixed(2)}x (largura), ${scaleY.toFixed(2)}x (altura)`);
-      console.log(`📏 Original: ${originalWidth}x${originalHeight} → Atual: ${videoRect.width}x${videoRect.height}`);
-      
-      try {
-        // Fabric.js v6: usar enlivenObjects para converter JSON em objetos Fabric
-        const objects = await util.enlivenObjects(annotation.canvas_data.objects);
-        
-        console.log(`🎨 Objetos carregados:`, objects.map((obj: any) => ({
-          type: obj.type,
-          left: obj.left,
-          top: obj.top,
-          width: obj.width,
-          height: obj.height,
-        })));
-        
-        // PASSO 4: Adicionar cada objeto ao canvas com escalonamento
-        objects.forEach((obj: any, index: number) => {
-          // Aplicar escala proporcional
-          if (scaleX !== 1 || scaleY !== 1) {
-            obj.set({
-              left: (obj.left || 0) * scaleX,
-              top: (obj.top || 0) * scaleY,
-              scaleX: (obj.scaleX || 1) * scaleX,
-              scaleY: (obj.scaleY || 1) * scaleY,
-            });
-          }
+      console.log('🔢 ESCALA:', { scaleX, scaleY, originalWidth, originalHeight });
+      console.log('📦 Objetos a carregar:', annotation.canvas_data.objects.length);
+
+      // DEBUG: Super visible background
+      canvas.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+      canvas.renderAll();
+
+      // Load objects from JSON - Fabric.js v6
+      const objects = await util.enlivenObjects(annotation.canvas_data.objects);
+
+      console.log('✅ Objetos criados:', objects.length);
+
+      // Add each object with proper scaling
+      objects.forEach((obj: any, index) => {
+        if (obj) {
+          const originalLeft = obj.left || 0;
+          const originalTop = obj.top || 0;
           
-          // Desabilitar interação
-          obj.selectable = false;
-          obj.evented = false;
+          // Apply scaling to position and size
+          obj.set({
+            left: originalLeft * scaleX,
+            top: originalTop * scaleY,
+            scaleX: (obj.scaleX || 1) * scaleX,
+            scaleY: (obj.scaleY || 1) * scaleY,
+            selectable: false,
+            evented: false,
+            stroke: obj.stroke || '#ff0000',
+            strokeWidth: (obj.strokeWidth || 2) * Math.max(scaleX, scaleY),
+            fill: obj.fill || 'transparent'
+          });
           
-          // Adicionar ao canvas
+          obj.setCoords();
           canvas.add(obj);
           
-          // CRÍTICO para Fabric.js v6: atualizar coordenadas do objeto
-          obj.setCoords();
-          
-          console.log(`✏️ Objeto ${index + 1} adicionado:`, {
-            type: obj.type,
-            left: obj.left,
-            top: obj.top,
-            visible: obj.visible,
-            opacity: obj.opacity,
+          console.log(`✏️ Objeto ${index + 1}:`, {
+            tipo: obj.type,
+            original: `${originalLeft}, ${originalTop}`,
+            escalado: `${obj.left}, ${obj.top}`,
+            visivel: obj.left >= 0 && obj.left <= currentWidth && obj.top >= 0 && obj.top <= currentHeight
           });
-        });
-        
-        // PASSO 5: Forçar múltiplas renderizações para garantir visibilidade
+        }
+      });
+
+      // Force multiple renders with RAF
+      canvas.renderAll();
+      requestAnimationFrame(() => {
         canvas.renderAll();
         requestAnimationFrame(() => {
           canvas.renderAll();
-          console.log(`✅ ${objects.length} objeto(s) renderizado(s) com sucesso`);
+          console.log('🎨 Renderização completa! Total de objetos:', canvas.getObjects().length);
         });
-        
-      } catch (error) {
-        console.error("❌ Erro ao carregar objetos no canvas:", error);
-      }
-    } else {
-      console.log("ℹ️ Nenhum objeto para carregar");
-      canvas.renderAll();
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao carregar anotação:', error);
     }
   };
 
   const clearCanvas = () => {
-    if (!fabricCanvasRef.current) return;
-    fabricCanvasRef.current.clear();
-    fabricCanvasRef.current.backgroundColor = 'transparent';
-    fabricCanvasRef.current.renderAll();
+    if (fabricCanvasRef.current) {
+      const canvas = fabricCanvasRef.current;
+      canvas.clear();
+      canvas.backgroundColor = 'transparent';
+      canvas.renderAll();
+      console.log('🧹 Canvas limpo');
+    }
   };
 
   const handleTimeUpdate = () => {
@@ -293,8 +299,12 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
             {/* Canvas para anotações */}
             <canvas
               ref={canvasRef}
-              className="absolute top-0 left-0 pointer-events-none"
-              style={{ zIndex: 10 }}
+              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+              style={{ 
+                zIndex: 30,
+                border: '3px solid lime',
+                boxSizing: 'border-box'
+              }}
             />
 
             {/* Overlay para controles - aparece no hover */}
