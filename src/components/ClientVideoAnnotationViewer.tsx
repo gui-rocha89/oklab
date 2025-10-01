@@ -127,55 +127,68 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
       console.log('Canvas redimensionado para:', canvas.width, 'x', canvas.height);
 
-      // Calculate scale based on original canvas dimensions in the annotation data
-      const originalWidth = annotation.canvas_data.width || video.videoWidth;
-      const originalHeight = annotation.canvas_data.height || video.videoHeight;
-      
-      const scaleX = currentWidth / originalWidth;
-      const scaleY = currentHeight / originalHeight;
-      
-      console.log('🔢 ESCALA:', { scaleX, scaleY, originalWidth, originalHeight });
-      console.log('📦 Objetos a carregar:', annotation.canvas_data.objects.length);
-
-      // DEBUG: Super visible background
-      canvas.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+      // DEBUG: Super visible background to verify canvas position
+      canvas.backgroundColor = 'rgba(0, 255, 0, 0.15)';
       canvas.renderAll();
+
+      console.log('📦 Objetos a carregar:', annotation.canvas_data.objects.length);
 
       // Load objects from JSON - Fabric.js v6
       const objects = await util.enlivenObjects(annotation.canvas_data.objects);
-
       console.log('✅ Objetos criados:', objects.length);
 
-      // Add each object with proper scaling
-      objects.forEach((obj: any, index) => {
-        if (obj) {
-          const originalLeft = obj.left || 0;
-          const originalTop = obj.top || 0;
-          
-          // Apply scaling to position and size
-          obj.set({
-            left: originalLeft * scaleX,
-            top: originalTop * scaleY,
-            scaleX: (obj.scaleX || 1) * scaleX,
-            scaleY: (obj.scaleY || 1) * scaleY,
-            selectable: false,
-            evented: false,
-            stroke: obj.stroke || '#ff0000',
-            strokeWidth: (obj.strokeWidth || 2) * Math.max(scaleX, scaleY),
-            fill: obj.fill || 'transparent'
-          });
-          
-          obj.setCoords();
-          canvas.add(obj);
-          
-          console.log(`✏️ Objeto ${index + 1}:`, {
-            tipo: obj.type,
-            original: `${originalLeft}, ${originalTop}`,
-            escalado: `${obj.left}, ${obj.top}`,
-            visivel: obj.left >= 0 && obj.left <= currentWidth && obj.top >= 0 && obj.top <= currentHeight
-          });
-        }
-      });
+      // CRITICAL: Check if canvas_data has original dimensions
+      const hasOriginalDimensions = annotation.canvas_data.width && annotation.canvas_data.height;
+      
+      if (hasOriginalDimensions) {
+        // If we have original dimensions, scale properly
+        const originalWidth = annotation.canvas_data.width;
+        const originalHeight = annotation.canvas_data.height;
+        const scaleX = currentWidth / originalWidth;
+        const scaleY = currentHeight / originalHeight;
+        
+        console.log('🔢 ESCALA COM DIMENSÕES:', { scaleX, scaleY, originalWidth, originalHeight });
+
+        objects.forEach((obj: any, index) => {
+          if (obj) {
+            obj.set({
+              left: (obj.left || 0) * scaleX,
+              top: (obj.top || 0) * scaleY,
+              scaleX: (obj.scaleX || 1) * scaleX,
+              scaleY: (obj.scaleY || 1) * scaleY,
+              selectable: false,
+              evented: false
+            });
+            obj.setCoords();
+            canvas.add(obj);
+            console.log(`✏️ Objeto ${index + 1} escalado:`, obj.type, obj.left, obj.top);
+          }
+        });
+      } else {
+        // NO ORIGINAL DIMENSIONS: Render 1:1 without scaling
+        console.log('⚠️ SEM DIMENSÕES ORIGINAIS - Renderizando 1:1');
+        
+        objects.forEach((obj: any, index) => {
+          if (obj) {
+            obj.set({
+              selectable: false,
+              evented: false,
+              stroke: obj.stroke || '#ff0000',
+              strokeWidth: obj.strokeWidth || 3,
+              fill: obj.fill === null ? 'transparent' : obj.fill
+            });
+            obj.setCoords();
+            canvas.add(obj);
+            console.log(`✏️ Objeto ${index + 1} 1:1:`, {
+              tipo: obj.type,
+              posição: `${obj.left}, ${obj.top}`,
+              tamanho: `${obj.width || 'N/A'}x${obj.height || 'N/A'}`,
+              stroke: obj.stroke,
+              strokeWidth: obj.strokeWidth
+            });
+          }
+        });
+      }
 
       // Force multiple renders with RAF
       canvas.renderAll();
