@@ -647,43 +647,64 @@ export default function AudiovisualApproval() {
         <title>Aprovação de Vídeo - {project.title}</title>
       </Helmet>
 
-      {/* Header Laranja com Logo Centralizada */}
-      <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-lg ${isMobile ? 'py-4' : 'py-6'}`}>
-        <div className="container mx-auto flex items-center justify-center px-4">
-          <img 
-            src={logoOrange} 
-            alt="OK Lab Logo" 
-            className={`w-auto ${isMobile ? 'h-12' : 'h-16'}`}
-          />
+      {/* Header Premium Clean com Logo, Título e Badge */}
+      <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-lg ${isMobile ? 'py-3' : 'py-4'}`}>
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Logo */}
+            <img 
+              src={logoOrange} 
+              alt="OK Lab Logo" 
+              className={`w-auto ${isMobile ? 'h-10' : 'h-14'}`}
+            />
+            
+            {/* Título Centralizado */}
+            <div className="flex-1 text-center">
+              <h1 className={`font-bold text-white tracking-tight ${isMobile ? 'text-lg' : 'text-2xl'}`}>
+                APROVE SEU CONTEÚDO
+              </h1>
+            </div>
+            
+            {/* Badge Cliente */}
+            <div className={`bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 ${isMobile ? 'px-2 py-0.5' : ''}`}>
+              <span className={`text-white font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                Cliente
+              </span>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <div className={`flex-1 container mx-auto max-w-7xl ${isMobile ? 'px-3 py-4' : 'px-6 py-6'}`}>
-        {/* Cards de Informação - Layout Horizontal Profissional */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-3 mb-4' : 'gap-4 mb-6'}`}>
-          <Card className={`bg-gradient-to-br from-card to-card/80 border-primary/20 shadow-lg hover:shadow-xl transition-all ${isMobile ? 'p-3' : 'p-4'}`}>
-            <div className="flex items-start gap-3">
-              <div className={`rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
-                <FileText className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
+        {/* Cards de Informação - Layout Horizontal com Tipografia Hierárquica */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-3 mb-4' : 'gap-5 mb-6'}`}>
+          <Card className={`bg-card border-border/50 hover:border-primary/30 transition-all ${isMobile ? 'p-4' : 'p-5'} h-[110px]`}>
+            <div className="flex items-start gap-3 h-full">
+              <div className={`rounded-lg bg-primary/10 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-11 w-11'}`}>
+                <FileText className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium text-muted-foreground mb-1 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Projeto</p>
-                <h2 className={`font-bold text-foreground leading-tight truncate ${isMobile ? 'text-base' : 'text-2xl'}`}>
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-medium`}>
+                  Projeto
+                </p>
+                <h2 className={`font-bold text-foreground leading-snug ${isMobile ? 'text-base' : 'text-2xl'}`}>
                   {project.title}
                 </h2>
               </div>
             </div>
           </Card>
           
-          <Card className={`bg-gradient-to-br from-primary/5 to-primary/10 border-primary/30 shadow-lg hover:shadow-xl transition-all ${isMobile ? 'p-3' : 'p-4'}`}>
-            <div className="flex items-start gap-3">
-              <div className={`rounded-xl bg-primary/20 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
-                <User className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
+          <Card className={`bg-primary/5 border-primary/20 hover:border-primary/40 transition-all ${isMobile ? 'p-4' : 'p-5'} h-[110px]`}>
+            <div className="flex items-start gap-3 h-full">
+              <div className={`rounded-lg bg-primary/20 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-11 w-11'}`}>
+                <User className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium text-primary/70 mb-1 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Cliente</p>
-                <h3 className={`font-bold text-primary truncate ${isMobile ? 'text-sm' : 'text-xl'}`}>
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <p className={`text-primary/70 mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-medium`}>
+                  Cliente
+                </p>
+                <h3 className={`font-semibold text-primary ${isMobile ? 'text-sm' : 'text-lg'}`}>
                   {project.client}
                 </h3>
               </div>
@@ -691,14 +712,16 @@ export default function AudiovisualApproval() {
           </Card>
 
           {project.description && (
-            <Card className={`bg-gradient-to-br from-card to-card/80 border-primary/20 shadow-lg hover:shadow-xl transition-all ${isMobile ? 'p-3' : 'p-4'}`}>
-              <div className="flex items-start gap-3">
-                <div className={`rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
-                  <Info className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
+            <Card className={`bg-card border-border/50 hover:border-primary/30 transition-all ${isMobile ? 'p-4' : 'p-5'} h-[110px]`}>
+              <div className="flex items-start gap-3 h-full">
+                <div className={`rounded-lg bg-primary/10 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-11 w-11'}`}>
+                  <Info className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium text-muted-foreground mb-1 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Descrição</p>
-                  <p className={`text-foreground leading-tight line-clamp-2 ${isMobile ? 'text-xs' : 'text-lg'}`}>
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-medium`}>
+                    Descrição
+                  </p>
+                  <p className={`text-foreground leading-snug line-clamp-2 ${isMobile ? 'text-xs' : 'text-base'}`}>
                     {project.description}
                   </p>
                 </div>
@@ -707,13 +730,17 @@ export default function AudiovisualApproval() {
           )}
         </div>
 
-        {/* Card de Instruções */}
-        <Card className={`bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 ${isMobile ? 'mb-4' : 'mb-6'}`}>
-          <div className={`flex items-center gap-3 ${isMobile ? 'p-3' : 'p-4'}`}>
-            <Info className={isMobile ? 'h-4 w-4 text-primary shrink-0' : 'h-5 w-5 text-primary shrink-0'} />
-            <p className={`text-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
-              <strong>Como revisar:</strong> Assista ao vídeo, adicione comentários nos momentos específicos ou desenhe diretamente no vídeo para marcar correções. Depois, aprove ou envie feedback.
-            </p>
+        {/* Card de Instruções Estilo Premium */}
+        <Card className={`bg-primary/5 border-primary/20 ${isMobile ? 'mb-4' : 'mb-6'}`}>
+          <div className={`flex items-start gap-3 ${isMobile ? 'p-3' : 'p-4'}`}>
+            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+              <Info className={isMobile ? 'h-4 w-4 text-primary' : 'h-4 w-4 text-primary'} />
+            </div>
+            <div className="flex-1">
+              <p className={`text-foreground/90 leading-relaxed ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                <span className="font-semibold text-primary">Como revisar:</span> Assista ao vídeo, adicione comentários nos momentos específicos ou desenhe diretamente no vídeo para marcar correções. Depois, aprove ou envie feedback.
+              </p>
+            </div>
           </div>
         </Card>
 
@@ -887,12 +914,14 @@ export default function AudiovisualApproval() {
           {/* Coluna Direita: Sidebar Unificado (40% - 5/12 columns) */}
           <div className={`${isMobile ? '' : 'lg:col-span-5'}`}>
             <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : '550px' }}>
-              {/* Seção de Ações no Topo */}
-              <div className={`border-b border-border bg-muted/30 ${isMobile ? 'pb-4 mb-4 px-4 pt-4' : 'p-4 pb-4'}`}>
-                <h3 className={`font-semibold mb-3 flex items-center gap-2 text-foreground ${isMobile ? 'text-base' : 'text-lg'}`}>
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                  Avaliação e Ações
-                </h3>
+              {/* Seção de Ações - Estilo Frame.io Premium */}
+              <div className={`border-b border-border/50 bg-primary/5 ${isMobile ? 'pb-4 mb-4 px-4 pt-4' : 'p-5 pb-5'}`}>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-8 w-1 bg-primary rounded-full" />
+                  <h3 className={`font-bold text-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
+                    Avaliação e Ações
+                  </h3>
+                </div>
 
                 {/* Compact Rating */}
                 {hasSubmittedRating ? (
