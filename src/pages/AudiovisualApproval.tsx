@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Info, Star, Pencil } from 'lucide-react';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Info, Star, Pencil, FileText, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -666,20 +666,41 @@ export default function AudiovisualApproval() {
       {/* Main Content */}
       <div className={`flex-1 container mx-auto max-w-6xl ${isMobile ? 'px-3 py-4' : 'px-4 py-6'}`}>
         {/* Project Info Cards - 3 columns on top */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 mb-6 ${isMobile ? 'gap-3' : 'gap-4'}`}>
-          <Card className={`bg-white border-gray-200 shadow-sm h-full ${isMobile ? 'p-4' : 'p-6'}`}>
-            <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Nome do Projeto</h3>
-            <p className="text-base font-['Inter'] text-gray-900">{project.title}</p>
+        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-3 mb-4' : 'gap-6 mb-6'}`}>
+          <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-5'}`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <FileText className="w-5 h-5 text-gray-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs font-semibold font-['Inter'] mb-1.5 text-gray-500 uppercase tracking-wide">Nome do Projeto</h3>
+                <p className="text-base font-semibold font-['Inter'] text-gray-900 break-words">{project.title}</p>
+              </div>
+            </div>
           </Card>
           
-          <Card className={`bg-white border-gray-200 shadow-sm h-full ${isMobile ? 'p-4' : 'p-6'}`}>
-            <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Descrição</h3>
-            <p className="text-sm font-['Inter'] text-gray-900">{project.description || 'Sem descrição'}</p>
+          <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-5'}`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <Info className="w-5 h-5 text-gray-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs font-semibold font-['Inter'] mb-1.5 text-gray-500 uppercase tracking-wide">Descrição</h3>
+                <p className="text-sm font-['Inter'] text-gray-700 break-words line-clamp-2">{project.description || 'Sem descrição'}</p>
+              </div>
+            </div>
           </Card>
           
-          <Card className={`bg-primary/5 border-primary/20 shadow-sm h-full ${isMobile ? 'p-4' : 'p-6'}`}>
-            <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Cliente</h3>
-            <p className="text-xl font-bold text-primary font-['Inter']">{project.client}</p>
+          <Card className={`bg-primary/10 border-primary/30 shadow-sm ${isMobile ? 'p-4' : 'p-5'}`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs font-semibold font-['Inter'] mb-1.5 text-primary/70 uppercase tracking-wide">Cliente</h3>
+                <p className="text-lg font-bold text-primary font-['Inter'] break-words">{project.client}</p>
+              </div>
+            </div>
           </Card>
         </div>
 
@@ -700,12 +721,12 @@ export default function AudiovisualApproval() {
           </div>
         </Card>
 
-        {/* Side-by-Side Layout: Video (left) + Actions (right) */}
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-5 gap-6'}`}>
-          {/* Video Player Section - 60% width on desktop */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-3 space-y-4'}`}>
-            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative bg-black">
+        {/* Side-by-Side Layout: Video (left) + Actions (right) - Using 12-column grid for precise control */}
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-6'}`}>
+          {/* Video Player Section - ~58% width on desktop (7/12 columns) */}
+          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-7 space-y-4'}`}>
+            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'} min-h-[400px] lg:min-h-[500px]`}>
+              <div className="relative bg-black rounded-lg overflow-hidden">
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -944,9 +965,9 @@ export default function AudiovisualApproval() {
             )}
           </div>
 
-          {/* Actions Sidebar - 40% width on desktop */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-2'}`}>
-            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4 h-auto' : 'p-6 h-fit sticky top-6'}`}>
+          {/* Actions Sidebar - ~42% width on desktop (5/12 columns) */}
+          <div className={`${isMobile ? 'space-y-4' : 'lg:col-span-5'}`}>
+            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6 sticky top-6'}`}>
               <h3 className={`font-semibold mb-4 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
                 <MessageSquare className="w-5 h-5 text-gray-700" />
                 Ações
