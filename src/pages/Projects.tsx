@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare, Video, CheckCircle2 } from "lucide-react";
+import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare, Video, CheckCircle2, Link } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
@@ -128,6 +129,32 @@ export default function Projects() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleCopyClientLink = (project: any) => {
+    if (!project.share_id) {
+      toast({
+        title: "Erro",
+        description: "Este projeto não possui um link de cliente gerado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const clientLink = `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`;
+    
+    navigator.clipboard.writeText(clientLink).then(() => {
+      toast({
+        title: "Link copiado!",
+        description: "Você pode enviar este link para o cliente.",
+      });
+    }).catch(() => {
+      toast({
+        title: "Erro ao copiar",
+        description: "Tente copiar o link manualmente.",
+        variant: "destructive",
+      });
+    });
   };
 
   return (
@@ -479,6 +506,28 @@ export default function Projects() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        {isAudiovisual && project.share_id && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopyClientLink(project);
+                                  }}
+                                >
+                                  <Link className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Copiar link para o cliente</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -598,6 +647,28 @@ export default function Projects() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        {isAudiovisual && project.share_id && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopyClientLink(project);
+                                  }}
+                                >
+                                  <Link className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Copiar link do cliente</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                         <Button 
                           size="sm" 
                           variant="outline"
