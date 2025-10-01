@@ -666,89 +666,86 @@ export default function AudiovisualApproval() {
 
       {/* Main Content */}
       <div className={`flex-1 container mx-auto max-w-6xl ${isMobile ? 'px-3 py-4' : 'px-4 py-6'}`}>
-        {/* Project Info Cards - Vertical Stack */}
-        <div className={`space-y-4 ${isMobile ? 'mb-4' : 'mb-6'}`}>
-          <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
-            <div className="flex items-start gap-4">
+        {/* Project Info Cards - Horizontal Layout (3 cards side by side) */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-3 mb-4' : 'gap-4 mb-6'}`}>
+          <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-3' : 'p-4'}`}>
+            <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
-                <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <FileText className="w-7 h-7 text-primary" />
+                <div className={`rounded-xl bg-primary/10 flex items-center justify-center ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
+                  <FileText className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className={`font-medium text-muted-foreground mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                  Nome do Projeto
+                <h3 className={`font-medium text-muted-foreground ${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-1.5'}`}>
+                  Projeto
                 </h3>
-                <h2 className={`font-bold text-foreground leading-tight ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+                <h2 className={`font-bold text-foreground leading-tight truncate ${isMobile ? 'text-base' : 'text-3xl'}`}>
                   {project.title}
                 </h2>
               </div>
             </div>
           </Card>
           
+          <Card className={`bg-primary/5 border-primary/30 shadow-md ${isMobile ? 'p-3' : 'p-4'}`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <div className={`rounded-xl bg-primary/20 flex items-center justify-center ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
+                  <User className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className={`font-medium text-primary/70 ${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-1.5'}`}>
+                  Cliente
+                </h3>
+                <h2 className={`font-bold text-primary truncate ${isMobile ? 'text-sm' : 'text-2xl'}`}>
+                  {project.client}
+                </h2>
+              </div>
+            </div>
+          </Card>
+
           {project.description && (
-            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
-              <div className="flex items-start gap-4">
+            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-3' : 'p-4'}`}>
+              <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Info className="w-7 h-7 text-primary" />
+                  <div className={`rounded-xl bg-primary/10 flex items-center justify-center ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
+                    <Info className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-medium text-muted-foreground mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                  <h3 className={`font-medium text-muted-foreground ${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-1.5'}`}>
                     Descrição
                   </h3>
-                  <p className={`text-foreground leading-relaxed ${isMobile ? 'text-base' : 'text-lg'}`}>
+                  <p className={`text-foreground leading-tight line-clamp-2 ${isMobile ? 'text-xs' : 'text-xl'}`}>
                     {project.description}
                   </p>
                 </div>
               </div>
             </Card>
           )}
-          
-          <Card className={`bg-primary/5 border-primary/30 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="h-14 w-14 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <User className="w-7 h-7 text-primary" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className={`font-medium text-primary/70 mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                  Cliente
-                </h3>
-                <h2 className={`font-bold text-primary ${isMobile ? 'text-lg' : 'text-xl'}`}>
-                  {project.client}
-                </h2>
-              </div>
-            </div>
-          </Card>
         </div>
 
-        {/* Instructions Card - Frame.io style */}
-        <Card className={`border-gray-200 shadow-sm bg-white ${isMobile ? 'mb-4' : 'mb-6'}`}>
-          <div className={`flex items-start ${isMobile ? 'p-4 gap-3' : 'p-6 gap-4'}`}>
-            <div className="flex-shrink-0 mt-1">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Info className="h-5 w-5 text-primary" />
-              </div>
+        {/* Instructions Card - Compact */}
+        <Card className={`border-gray-200 shadow-sm bg-white ${isMobile ? 'mb-3' : 'mb-4'}`}>
+          <div className={`flex items-start ${isMobile ? 'p-3 gap-2' : 'p-4 gap-3'}`}>
+            <div className="flex-shrink-0">
+              <Info className={isMobile ? 'h-4 w-4 text-primary mt-0.5' : 'h-4 w-4 text-primary mt-0.5'} />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold font-['Inter'] text-base mb-2 text-gray-900">Como Usar</h3>
-              <p className="text-gray-600 font-['Inter'] text-sm leading-relaxed">
-                Basta você adicionar um comentário. A plataforma fará automaticamente a marcação no tempo exato que você parar o vídeo.
+              <p className={`text-muted-foreground leading-snug ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                Assista ao vídeo, use as ferramentas de desenho para marcar ajustes, adicione comentários e avalie o projeto.
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Side-by-Side Layout: Video + Actions (left) + Comments Sidebar (right) - Using 12-column grid for precise control */}
+        {/* Side-by-Side Layout: Video (left) + Unified Sidebar (right) - 70/30 proportion */}
         <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-6'}`}>
-          {/* Left Column: Video + Actions - 75% width on desktop (9/12 columns) */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-9 space-y-4'}`}>
+          {/* Left Column: Video Only - 70% width on desktop (8/12 columns) */}
+          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-8 space-y-0'}`}>
             {/* Video Player Card */}
             <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: isMobile ? '250px' : '450px' }}>
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: isMobile ? '300px' : '600px' }}>
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -868,151 +865,9 @@ export default function AudiovisualApproval() {
               </div>
             </Card>
 
-            {/* Actions Card - Below Video */}
-            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
-              <h3 className={`font-semibold mb-4 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
-                <MessageSquare className="w-5 h-5 text-gray-700" />
-                Ações
-              </h3>
-
-              {/* Rating Section - Inside Actions Card */}
-              <div className={`mb-6 pb-6 border-b border-gray-200`}>
-                <h4 className={`font-semibold mb-2 text-center text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
-                  Avalie sua Experiência
-                </h4>
-                <p className={`text-gray-600 text-center ${isMobile ? 'text-xs mb-3' : 'text-sm mb-4'}`}>
-                  Sua opinião é muito importante para melhorarmos nossa plataforma inovadora
-                </p>
-
-                {hasSubmittedRating ? (
-                  <div className="text-center">
-                    <CheckCircle className={`text-green-600 mx-auto mb-2 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`} />
-                    <p className={`font-semibold text-green-600 ${isMobile ? 'text-sm' : 'text-base'}`}>
-                      Obrigado por sua avaliação!
-                    </p>
-                    <div className="flex justify-center gap-1 mt-3">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${
-                            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    {ratingComment && (
-                      <p className="text-xs text-gray-600 mt-3">
-                        "{ratingComment}"
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <label className={`block font-medium mb-2 text-center ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                        Como você avalia sua experiência?
-                      </label>
-                      <div className="flex justify-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() => setRating(star)}
-                            className="transition-transform hover:scale-110 touch-manipulation p-1"
-                          >
-                            <Star
-                              className={`cursor-pointer transition-colors ${
-                                isMobile ? 'w-6 h-6' : 'w-7 h-7'
-                              } ${
-                                star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className={`block font-medium mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                        Comentários (opcional)
-                      </label>
-                      <Textarea
-                        value={ratingComment}
-                        onChange={(e) => setRatingComment(e.target.value)}
-                        placeholder="Conte-nos mais sobre sua experiência..."
-                        className={isMobile ? 'min-h-[80px] text-sm' : 'min-h-[100px]'}
-                      />
-                    </div>
-
-                    {rating === 0 && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <p className="text-sm text-yellow-800 text-center">
-                          ⚠️ Avaliação obrigatória antes de aprovar ou enviar feedback
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <Button
-                  onClick={() => handleAction('approved')}
-                  disabled={submitting || !canApprove || rating === 0 || project.status === 'approved'}
-                  className={`w-full bg-green-600 hover:bg-green-700 touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
-                  title={
-                    rating === 0
-                      ? "Avalie sua experiência antes de aprovar"
-                      : hasFeedback 
-                        ? "Não é possível aprovar com comentários ou anotações visuais pendentes" 
-                        : "Aprovar projeto na íntegra"
-                  }
-                >
-                  {submitting ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                  )}
-                  Aprovar Projeto
-                </Button>
-
-                <Button
-                  onClick={() => handleAction('send_feedback')}
-                  disabled={submitting || !canSendFeedback || rating === 0 || project.status === 'feedback-sent'}
-                  className={`w-full touch-manipulation ${isMobile ? 'min-h-[48px]' : ''}`}
-                  variant="outline"
-                  title={
-                    rating === 0
-                      ? "Avalie sua experiência antes de enviar feedback"
-                      : !hasFeedback 
-                        ? "Adicione comentários ou anotações visuais antes de enviar feedback" 
-                        : "Enviar feedback para a equipe"
-                  }
-                >
-                  {submitting ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                  )}
-                  Enviar Feedback
-                </Button>
-
-                {!canApprove && hasFeedback && (
-                  <p className="text-sm text-gray-600 text-center">
-                    Para aprovar, não deve haver comentários ou anotações visuais
-                  </p>
-                )}
-                {!canSendFeedback && !hasFeedback && (
-                  <p className="text-sm text-gray-600 text-center">
-                    Adicione comentários ou anotações visuais para enviar feedback
-                  </p>
-                )}
-              </div>
-            </Card>
-
-            {/* Keyframes Editing Section (mobile/desktop) - Keep for editing */}
+            {/* Keyframes Editing Section - Below Video */}
             {keyframes.length > 0 && (
-              <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
+              <Card className={`bg-white border-gray-200 shadow-sm mt-4 ${isMobile ? 'p-4' : 'p-6'}`}>
                 <h3 className={`font-semibold mb-4 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>Editar Comentários</h3>
                 <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                   {keyframes.map(keyframe => (
@@ -1051,16 +906,134 @@ export default function AudiovisualApproval() {
             )}
           </div>
 
-          {/* Right Column: Comments Sidebar - 25% width on desktop (3/12 columns) */}
-          <div className={`${isMobile ? '' : 'lg:col-span-3'}`} style={{ height: isMobile ? 'auto' : '700px' }}>
-            <CommentsSidebar
-              keyframes={keyframes}
-              annotations={annotations}
-              currentTime={currentTime}
-              onSeekToTime={seekTo}
-              onLoadAnnotation={handleAnnotationClick}
-              formatTime={formatTime}
-            />
+          {/* Right Column: Unified Sidebar (Actions + Comments) - 30% width on desktop (4/12 columns) */}
+          <div className={`${isMobile ? '' : 'lg:col-span-4'}`}>
+            <Card className={`bg-white border-gray-200 shadow-md flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : '600px' }}>
+              {/* Actions Section at Top */}
+              <div className={`border-b border-gray-200 ${isMobile ? 'pb-4 mb-4' : 'p-4 pb-4'}`}>
+                <h3 className={`font-semibold mb-3 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-base'}`}>
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  Avaliação e Ações
+                </h3>
+
+                {/* Rating Section */}
+                {hasSubmittedRating ? (
+                  <div className="text-center mb-4">
+                    <CheckCircle className={`text-green-600 mx-auto mb-2 ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`} />
+                    <p className={`font-semibold text-green-600 ${isMobile ? 'text-sm' : 'text-sm'}`}>
+                      Obrigado por sua avaliação!
+                    </p>
+                    <div className="flex justify-center gap-1 mt-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${
+                            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 mb-4">
+                    <div>
+                      <label className={`block font-medium mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        Como você avalia sua experiência?
+                      </label>
+                      <div className="flex justify-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setRating(star)}
+                            className="transition-transform hover:scale-110 touch-manipulation p-1"
+                            disabled={hasSubmittedRating}
+                          >
+                            <Star
+                              className={`cursor-pointer transition-colors ${
+                                isMobile ? 'w-6 h-6' : 'w-7 h-7'
+                              } ${
+                                star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {rating === 0 && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                        <p className="text-xs text-yellow-800 text-center">
+                          ⚠️ Avaliação obrigatória
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={() => handleAction('approved')}
+                    disabled={submitting || !canApprove || rating === 0 || project.status === 'approved'}
+                    className={`w-full bg-green-600 hover:bg-green-700 touch-manipulation ${isMobile ? 'min-h-[44px] text-sm' : 'h-10 text-sm'}`}
+                    title={
+                      rating === 0
+                        ? "Avalie sua experiência antes de aprovar"
+                        : hasFeedback 
+                          ? "Não é possível aprovar com comentários ou anotações visuais pendentes" 
+                          : "Aprovar projeto na íntegra"
+                    }
+                  >
+                    {submitting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Aprovar Projeto
+                  </Button>
+
+                  <Button
+                    onClick={() => handleAction('send_feedback')}
+                    disabled={submitting || !canSendFeedback || rating === 0 || project.status === 'feedback-sent'}
+                    className={`w-full touch-manipulation ${isMobile ? 'min-h-[44px] text-sm' : 'h-10 text-sm'}`}
+                    variant="outline"
+                    title={
+                      rating === 0
+                        ? "Avalie sua experiência antes de enviar feedback"
+                        : !hasFeedback 
+                          ? "Adicione comentários ou anotações visuais antes de enviar feedback" 
+                          : "Enviar todos os comentários e anotações"
+                    }
+                  >
+                    {submitting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                    )}
+                    Enviar Feedback
+                  </Button>
+                </div>
+              </div>
+
+              {/* Comments Section Below - Scrollable */}
+              <div className="flex-1 overflow-hidden">
+                <CommentsSidebar
+                  keyframes={keyframes}
+                  annotations={annotations}
+                  currentTime={currentTime}
+                  onSeekToTime={seekTo}
+                  onLoadAnnotation={(annotationId) => {
+                    const annotation = annotations.find(a => a.id === annotationId);
+                    if (annotation) {
+                      loadAnnotationToCanvas(annotation);
+                      setCurrentAnnotationId(annotationId);
+                      setShowAnnotationOverlay(true);
+                    }
+                  }}
+                  formatTime={formatTime}
+                />
+              </div>
+            </Card>
           </div>
         </div>
 
