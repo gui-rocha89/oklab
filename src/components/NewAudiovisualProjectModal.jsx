@@ -84,7 +84,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
     }
 
     setIsUploading(true);
-    setUploadProgress(30);
+    setUploadProgress(10);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -93,30 +93,65 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         throw new Error('Usuário não autenticado');
       }
 
-      setUploadProgress(50);
-
-      const shareId = `av-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const projectId = crypto.randomUUID();
+      const fileName = `${projectId}/${Date.now()}.${videoFile.name.split('.').pop()}`;
       
-      setUploadProgress(70);
+      setUploadProgress(20);
 
+      // STEP 1: Upload do vídeo PRIMEIRO
+      console.log('🚀 Iniciando upload do vídeo...');
+      
+      const uploadTimeout = 3 * 60 * 1000; // 3 minutos
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timeout - tente novamente')), uploadTimeout)
+      );
+      
+      const uploadPromise = supabase.storage
+        .from('audiovisual-projects')
+        .upload(fileName, videoFile, {
+          contentType: videoFile.type,
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      const { error: uploadError } = await Promise.race([uploadPromise, timeoutPromise]);
+
+      if (uploadError) {
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
+
+      setUploadProgress(70);
+      console.log('✅ Upload do vídeo concluído');
+
+      // STEP 2: Obter URL pública do vídeo
+      const { data: { publicUrl } } = supabase.storage
+        .from('audiovisual-projects')
+        .getPublicUrl(fileName);
+
+      setUploadProgress(80);
+
+      // STEP 3: Criar projeto com video_url JÁ DEFINIDO
+      const shareId = `av-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
       const projectData = {
         id: projectId,
         title: title.trim(),
         client: clientName.trim(),
         description: comment.trim() || null,
         type: 'Audiovisual',
-        status: 'uploading',
+        status: 'pending', // Já em pending porque o vídeo foi enviado!
         priority: 'medium',
-        video_url: null,
+        video_url: publicUrl, // Video URL já disponível
         share_id: shareId,
         user_id: user.id
       };
 
       await onProjectCreate(projectData);
       
-      setUploadProgress(90);
+      setUploadProgress(95);
+      console.log('✅ Projeto criado com sucesso');
 
+      // STEP 4: Mostrar sucesso
       const approvalLink = `${window.location.origin}/aprovacao-audiovisual/${shareId}`;
       setApprovalLink(approvalLink);
       setShowSuccess(true);
@@ -124,101 +159,15 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
       toast({
         title: "✅ Projeto Criado!",
-        description: "O vídeo será processado em segundo plano.",
+        description: "O vídeo está pronto para aprovação do cliente.",
         duration: 3000,
       });
 
-      // Upload em background com retry logic e timeout
-      setTimeout(async () => {
-        const maxRetries = 3;
-        const uploadTimeout = 10 * 60 * 1000; // 10 minutos
-        let retryCount = 0;
-        
-        const uploadWithRetry = async () => {
-          try {
-            console.log(`🚀 Iniciando upload (tentativa ${retryCount + 1}/${maxRetries})`);
-            
-            const fileName = `${projectId}/${Date.now()}.${videoFile.name.split('.').pop()}`;
-            
-            // Create a timeout promise
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Upload timeout')), uploadTimeout)
-            );
-            
-            // Upload with timeout
-            const uploadPromise = supabase.storage
-              .from('audiovisual-projects')
-              .upload(fileName, videoFile, {
-                contentType: videoFile.type,
-                cacheControl: '3600',
-                upsert: false
-              });
-            
-            const { error: uploadError } = await Promise.race([uploadPromise, timeoutPromise]);
-
-            if (uploadError) {
-              // Check if error is 413 (file too large) - don't retry
-              if (uploadError.statusCode === '413' || uploadError.status === 413) {
-                console.error("❌ Arquivo muito grande, não será feito retry");
-                throw new Error('FILE_TOO_LARGE');
-              }
-              throw uploadError;
-            }
-
-            console.log("✅ Upload concluído com sucesso");
-
-            const { data: { publicUrl } } = supabase.storage
-              .from('audiovisual-projects')
-              .getPublicUrl(fileName);
-
-            await supabase
-              .from('projects')
-              .update({ 
-                video_url: publicUrl,
-                status: 'pending'
-              })
-              .eq('id', projectId);
-            
-            console.log("✅ Projeto atualizado com video_url");
-
-          } catch (error) {
-            console.error(`❌ Erro no upload (tentativa ${retryCount + 1}):`, error);
-            
-            // Don't retry if file is too large
-            if (error.message === 'FILE_TOO_LARGE') {
-              await supabase
-                .from('projects')
-                .update({ status: 'error' })
-                .eq('id', projectId);
-              return;
-            }
-            
-            // Retry if we haven't exceeded max retries
-            if (retryCount < maxRetries - 1) {
-              retryCount++;
-              const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
-              console.log(`⏳ Aguardando ${delay}ms antes de tentar novamente...`);
-              await new Promise(resolve => setTimeout(resolve, delay));
-              return uploadWithRetry();
-            } else {
-              // Final failure after all retries
-              console.error("❌ Todas as tentativas de upload falharam");
-              await supabase
-                .from('projects')
-                .update({ status: 'error' })
-                .eq('id', projectId);
-            }
-          }
-        };
-        
-        await uploadWithRetry();
-      }, 100);
-
     } catch (error) {
-      console.error('Erro ao criar projeto:', error);
+      console.error('❌ Erro ao criar projeto:', error);
       toast({
-        title: "❌ Erro",
-        description: error.message || "Erro ao criar projeto. Tente novamente.",
+        title: "❌ Erro no Upload",
+        description: error.message || "Erro ao enviar vídeo. Verifique sua conexão e tente novamente.",
         variant: "destructive",
         duration: 5000,
       });
