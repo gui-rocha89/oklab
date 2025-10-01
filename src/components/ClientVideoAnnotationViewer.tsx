@@ -32,6 +32,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [videoAspectRatio, setVideoAspectRatio] = useState(16 / 9);
+  const [originalCanvasDimensions, setOriginalCanvasDimensions] = useState<{ width: number; height: number } | null>(null);
 
   // Inicializar canvas
   useEffect(() => {
@@ -92,42 +93,107 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   }, [currentTime, annotations]);
 
   const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
-    if (!fabricCanvasRef.current || !annotation.canvas_data) {
-      console.log("❌ Canvas ou canvas_data não disponível");
+    if (!fabricCanvasRef.current || !annotation.canvas_data || !videoRef.current) {
+      console.log("❌ Canvas, canvas_data ou vídeo não disponível");
       return;
     }
 
     const canvas = fabricCanvasRef.current;
+    
+    // PASSO 1: Garantir que o canvas tenha as dimensões corretas ANTES de carregar objetos
+    const videoRect = videoRef.current.getBoundingClientRect();
+    canvas.setDimensions({
+      width: videoRect.width,
+      height: videoRect.height,
+    });
+    
+    console.log(`📐 Canvas redimensionado para: ${videoRect.width}x${videoRect.height}`);
+    
+    // PASSO 2: Limpar canvas
     canvas.clear();
+    
+    // Debug: adicionar background temporário para verificar posicionamento
+    canvas.backgroundColor = 'rgba(255, 0, 0, 0.05)';
 
-    // Carregar os objetos do canvas_data usando API do Fabric.js v6
+    // PASSO 3: Carregar os objetos do canvas_data
     if (annotation.canvas_data.objects && annotation.canvas_data.objects.length > 0) {
       console.log(`📝 Carregando ${annotation.canvas_data.objects.length} objeto(s) no canvas`);
+      
+      // Obter dimensões originais do canvas_data
+      const originalWidth = annotation.canvas_data.width || videoRect.width;
+      const originalHeight = annotation.canvas_data.height || videoRect.height;
+      
+      // Calcular escala proporcional
+      const scaleX = videoRect.width / originalWidth;
+      const scaleY = videoRect.height / originalHeight;
+      
+      console.log(`📏 Escala aplicada: ${scaleX.toFixed(2)}x (largura), ${scaleY.toFixed(2)}x (altura)`);
+      console.log(`📏 Original: ${originalWidth}x${originalHeight} → Atual: ${videoRect.width}x${videoRect.height}`);
       
       try {
         // Fabric.js v6: usar enlivenObjects para converter JSON em objetos Fabric
         const objects = await util.enlivenObjects(annotation.canvas_data.objects);
         
-        // Adicionar cada objeto ao canvas
-        objects.forEach((obj: any) => {
+        console.log(`🎨 Objetos carregados:`, objects.map((obj: any) => ({
+          type: obj.type,
+          left: obj.left,
+          top: obj.top,
+          width: obj.width,
+          height: obj.height,
+        })));
+        
+        // PASSO 4: Adicionar cada objeto ao canvas com escalonamento
+        objects.forEach((obj: any, index: number) => {
+          // Aplicar escala proporcional
+          if (scaleX !== 1 || scaleY !== 1) {
+            obj.set({
+              left: (obj.left || 0) * scaleX,
+              top: (obj.top || 0) * scaleY,
+              scaleX: (obj.scaleX || 1) * scaleX,
+              scaleY: (obj.scaleY || 1) * scaleY,
+            });
+          }
+          
+          // Desabilitar interação
           obj.selectable = false;
           obj.evented = false;
+          
+          // Adicionar ao canvas
           canvas.add(obj);
+          
+          // CRÍTICO para Fabric.js v6: atualizar coordenadas do objeto
+          obj.setCoords();
+          
+          console.log(`✏️ Objeto ${index + 1} adicionado:`, {
+            type: obj.type,
+            left: obj.left,
+            top: obj.top,
+            visible: obj.visible,
+            opacity: obj.opacity,
+          });
         });
         
+        // PASSO 5: Forçar múltiplas renderizações para garantir visibilidade
         canvas.renderAll();
-        console.log(`✅ ${objects.length} objeto(s) renderizado(s) com sucesso`);
+        requestAnimationFrame(() => {
+          canvas.renderAll();
+          console.log(`✅ ${objects.length} objeto(s) renderizado(s) com sucesso`);
+        });
+        
       } catch (error) {
         console.error("❌ Erro ao carregar objetos no canvas:", error);
       }
     } else {
       console.log("ℹ️ Nenhum objeto para carregar");
+      canvas.renderAll();
     }
   };
 
   const clearCanvas = () => {
     if (!fabricCanvasRef.current) return;
     fabricCanvasRef.current.clear();
+    fabricCanvasRef.current.backgroundColor = 'transparent';
+    fabricCanvasRef.current.renderAll();
   };
 
   const handleTimeUpdate = () => {
@@ -146,19 +212,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         const aspectRatio = video.videoWidth / video.videoHeight;
         console.log(`📹 Vídeo carregado: ${video.videoWidth}x${video.videoHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
         setVideoAspectRatio(aspectRatio);
-        
-        // Atualizar canvas após o aspect ratio ser definido
-        setTimeout(() => {
-          if (fabricCanvasRef.current && videoRef.current) {
-            const rect = videoRef.current.getBoundingClientRect();
-            fabricCanvasRef.current.setDimensions({
-              width: rect.width,
-              height: rect.height,
-            });
-            fabricCanvasRef.current.renderAll();
-            console.log(`📐 Canvas redimensionado: ${rect.width}x${rect.height}`);
-          }
-        }, 100);
+        setOriginalCanvasDimensions({ width: video.videoWidth, height: video.videoHeight });
       }
     }
   };
