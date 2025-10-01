@@ -19,7 +19,10 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [approvalLink, setApprovalLink] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [estimatedTime, setEstimatedTime] = useState('');
   const fileInputRef = useRef(null);
+  const uploadAbortRef = useRef(null);
   const { toast } = useToast();
 
   // Use the layered blur system
@@ -38,15 +41,35 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
     }
   }, [isOpen]);
 
+  const getEstimatedTime = (fileSize) => {
+    const sizeMB = fileSize / (1024 * 1024);
+    if (sizeMB < 50) return '10-30 segundos';
+    if (sizeMB < 150) return '30-60 segundos';
+    if (sizeMB < 300) return '1-2 minutos';
+    return '2-3 minutos';
+  };
+
+  const getDynamicTimeout = (fileSize) => {
+    const sizeMB = fileSize / (1024 * 1024);
+    if (sizeMB < 50) return 30 * 1000; // 30 segundos
+    if (sizeMB < 150) return 60 * 1000; // 1 minuto
+    if (sizeMB < 300) return 120 * 1000; // 2 minutos
+    return 180 * 1000; // 3 minutos
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setUploadError('');
+      
       // Validate file type
       const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
       const validExtensions = ['.mp4', '.mov'];
       const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
       
       if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+        const errorMsg = "❌ Formato não suportado. Use MP4 ou MOV.";
+        setUploadError(errorMsg);
         toast({
           title: "Formato não suportado",
           description: "Por favor, selecione um arquivo MP4 ou MOV",
@@ -55,25 +78,33 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         return;
       }
       
-      if (file.size > 500 * 1024 * 1024) {
+      const maxSize = 500 * 1024 * 1024; // 500MB
+      if (file.size > maxSize) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const errorMsg = `❌ Arquivo muito grande (${fileSizeMB}MB). Máximo: 500MB`;
+        setUploadError(errorMsg);
         toast({
           title: "Arquivo muito grande",
-          description: "O vídeo deve ter no máximo 500MB",
+          description: `O arquivo tem ${fileSizeMB}MB. O limite é 500MB. Tente comprimir o vídeo.`,
           variant: "destructive",
         });
         return;
       }
       
+      const estimated = getEstimatedTime(file.size);
+      setEstimatedTime(estimated);
       setVideoFile(file);
+      
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
       toast({
         title: "🎥 Vídeo Anexado!",
-        description: `${file.name} foi selecionado com sucesso.`,
-        duration: 3000,
+        description: `${file.name} (${fileSizeMB}MB) - Tempo estimado: ${estimated}`,
+        duration: 4000,
       });
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (retryCount = 0) => {
     if (!title || !clientName || !videoFile) {
       toast({
         title: "Campos Obrigatórios",
@@ -85,6 +116,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
     setIsUploading(true);
     setUploadProgress(10);
+    setUploadError('');
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -98,12 +130,11 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       
       setUploadProgress(20);
 
-      // STEP 1: Upload do vídeo PRIMEIRO
       console.log('🚀 Iniciando upload do vídeo...');
       
-      const uploadTimeout = 3 * 60 * 1000; // 3 minutos
+      const dynamicTimeout = getDynamicTimeout(videoFile.size);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Upload timeout - tente novamente')), uploadTimeout)
+        setTimeout(() => reject(new Error('TIMEOUT')), dynamicTimeout)
       );
       
       const uploadPromise = supabase.storage
@@ -117,20 +148,18 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       const { error: uploadError } = await Promise.race([uploadPromise, timeoutPromise]);
 
       if (uploadError) {
-        throw new Error(`Erro no upload: ${uploadError.message}`);
+        throw uploadError;
       }
 
       setUploadProgress(70);
       console.log('✅ Upload do vídeo concluído');
 
-      // STEP 2: Obter URL pública do vídeo
       const { data: { publicUrl } } = supabase.storage
         .from('audiovisual-projects')
         .getPublicUrl(fileName);
 
       setUploadProgress(80);
 
-      // STEP 3: Criar projeto com video_url JÁ DEFINIDO
       const shareId = `av-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       const projectData = {
@@ -139,9 +168,9 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         client: clientName.trim(),
         description: comment.trim() || null,
         type: 'Audiovisual',
-        status: 'pending', // Já em pending porque o vídeo foi enviado!
+        status: 'pending',
         priority: 'medium',
-        video_url: publicUrl, // Video URL já disponível
+        video_url: publicUrl,
         share_id: shareId,
         user_id: user.id
       };
@@ -151,7 +180,6 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
       setUploadProgress(95);
       console.log('✅ Projeto criado com sucesso');
 
-      // STEP 4: Mostrar sucesso
       const approvalLink = `${window.location.origin}/aprovacao-audiovisual/${shareId}`;
       setApprovalLink(approvalLink);
       setShowSuccess(true);
@@ -165,11 +193,43 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
     } catch (error) {
       console.error('❌ Erro ao criar projeto:', error);
+      
+      let errorTitle = "❌ Erro no Upload";
+      let errorDescription = "";
+      
+      if (error.message === 'TIMEOUT') {
+        errorTitle = "⏱️ Tempo Esgotado";
+        errorDescription = `Upload demorou muito (${estimatedTime}). Tente com um arquivo menor ou verifique sua conexão.`;
+        setUploadError(errorDescription);
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorTitle = "🌐 Problema de Conexão";
+        errorDescription = "Verifique sua internet e tente novamente.";
+        setUploadError(errorDescription);
+        
+        // Auto-retry uma vez para erros de conexão
+        if (retryCount === 0) {
+          toast({
+            title: "🔄 Tentando novamente...",
+            description: "Reconectando...",
+            duration: 2000,
+          });
+          setTimeout(() => handleSubmit(1), 2000);
+          return;
+        }
+      } else if (error.message?.includes('size') || error.message?.includes('large')) {
+        errorTitle = "📦 Arquivo Muito Grande";
+        errorDescription = "Tente comprimir o vídeo ou usar um arquivo menor que 500MB.";
+        setUploadError(errorDescription);
+      } else {
+        errorDescription = error.message || "Erro ao enviar vídeo. Tente novamente.";
+        setUploadError(errorDescription);
+      }
+      
       toast({
-        title: "❌ Erro no Upload",
-        description: error.message || "Erro ao enviar vídeo. Verifique sua conexão e tente novamente.",
+        title: errorTitle,
+        description: errorDescription,
         variant: "destructive",
-        duration: 5000,
+        duration: 6000,
       });
     } finally {
       setIsUploading(false);
@@ -285,8 +345,17 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
 
               <div className="space-y-4">
                 <h3 className="text-xl font-bold text-foreground">Arquivo de Vídeo</h3>
+                {uploadError && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                    {uploadError}
+                  </div>
+                )}
                 <div
-                  className="relative border-2 border-dashed border-muted-foreground/30 rounded-xl p-8 text-center cursor-pointer hover:border-orange-500 hover:bg-muted/50 transition-all"
+                  className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                    uploadError 
+                      ? 'border-destructive/50 bg-destructive/5' 
+                      : 'border-muted-foreground/30 hover:border-orange-500 hover:bg-muted/50'
+                  }`}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input
