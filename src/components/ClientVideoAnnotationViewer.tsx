@@ -238,11 +238,11 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const currentAnnotation = currentAnnotationIndex !== null ? annotations[currentAnnotationIndex] : null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Video Player - Área Principal */}
-      <div className="lg:col-span-2 space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* Video Player - Área Principal (60% - 3/5 columns) */}
+      <div className="lg:col-span-3 space-y-4">
         <Card className="overflow-hidden border-0 shadow-lg">
-          <AspectRatio ratio={videoAspectRatio}>
+          <AspectRatio ratio={16 / 9}>
             <div ref={containerRef} className="relative w-full h-full group">
               <video
                 ref={videoRef}
@@ -365,8 +365,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         </Card>
       </div>
 
-      {/* Painel Lateral - Lista de Anotações */}
-      <div className="lg:col-span-1">
+      {/* Painel Lateral - Lista de Anotações (40% - 2/5 columns) */}
+      <div className="lg:col-span-2">
         <Card className="sticky top-4 max-h-[70vh] flex flex-col">
           <CardContent className="p-4 flex flex-col h-full">
             <div className="flex items-center justify-between mb-4 pb-3 border-b">
