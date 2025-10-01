@@ -22,6 +22,9 @@ verify_jwt = true
 [functions.cleanup-orphaned-files]
 verify_jwt = false
 
+[functions.upload-audiovisual-video]
+verify_jwt = false
+
 [db]
 port = 54322
 shadow_port = 54320

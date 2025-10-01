@@ -161,51 +161,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const addProject = async (projectData: any) => {
-    const timestamp = () => `[${new Date().toISOString()}]`;
-    
     try {
-      console.log('🎯 [ProjectContext]', timestamp(), 'Criando projeto...');
-      
-      
-      // Validar campos obrigatórios
-      
-      if (!projectData.title || !projectData.title.trim()) {
-        throw new Error('Campo obrigatório ausente: title');
-      }
-      if (!projectData.client || !projectData.client.trim()) {
-        throw new Error('Campo obrigatório ausente: client');
-      }
-      if (!projectData.type) {
-        throw new Error('Campo obrigatório ausente: type');
-      }
-      if (!projectData.user_id) {
-        throw new Error('Campo obrigatório ausente: user_id');
-      }
-      if (!projectData.share_id) {
-        throw new Error('Campo obrigatório ausente: share_id');
-      }
-      
-      console.log('✅ [ProjectContext]', timestamp(), 'Campos validados');
-      
-      // Lista EXATA de campos válidos da tabela projects
+      // Lista de campos válidos da tabela projects
       const validFields = ['title', 'client', 'description', 'type', 'status', 'priority', 'user_id', 'share_id', 'video_url', 'approval_date'];
-      
-      console.log('🧹 [ProjectContext]', timestamp(), 'Limpando campos inválidos...');
-      
-      // VALIDAÇÃO EXTRA: Verificar se há campos inválidos
-      const receivedFields = Object.keys(projectData);
-      const invalidFields = receivedFields.filter(f => !validFields.includes(f));
-      
-      if (invalidFields.length > 0) {
-        console.warn('⚠️ [ProjectContext]', timestamp(), '==========================================');
-        console.warn('⚠️ [ProjectContext]', timestamp(), 'CAMPOS INVÁLIDOS DETECTADOS!');
-        console.warn('⚠️ [ProjectContext]', timestamp(), 'Campos inválidos:', invalidFields);
-        invalidFields.forEach(field => {
-          console.warn('⚠️ [ProjectContext]', timestamp(), `  - Campo "${field}" = ${JSON.stringify(projectData[field])}`);
-        });
-        console.warn('⚠️ [ProjectContext]', timestamp(), 'Estes campos serão REMOVIDOS antes do INSERT!');
-        console.warn('⚠️ [ProjectContext]', timestamp(), '==========================================');
-      }
       
       // Criar objeto limpo com APENAS campos válidos
       const cleanData: any = {};
@@ -214,58 +172,36 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
           cleanData[field] = projectData[field];
         }
       });
-      
-      console.log('✅ [ProjectContext]', timestamp(), 'Dados limpos:', Object.keys(cleanData).length, 'campos');
-      
-      // VALIDAÇÃO FINAL
-      const finalFields = Object.keys(cleanData);
-      const extraFields = finalFields.filter(f => !validFields.includes(f));
-      
-      if (extraFields.length > 0) {
-        console.error('🚨 [ProjectContext]', timestamp(), 'ERRO CRÍTICO: Campos inválidos após limpeza:', extraFields);
-        throw new Error(`Campos inválidos detectados após limpeza: ${extraFields.join(', ')}`);
-      }
-
-      console.log('💾 [ProjectContext]', timestamp(), 'Inserindo no Supabase...');
 
       const { data, error } = await supabase
         .from('projects')
         .insert(cleanData)
         .select()
-        .maybeSingle();
+        .single();
 
-      if (error) {
-        console.error('❌ [ProjectContext]', timestamp(), 'Erro ao criar projeto:', error.message);
-        throw new Error(`Erro no banco de dados: ${error.message}`);
-      }
+      if (error) throw error;
 
-      if (!data) {
-        console.error('❌ [ProjectContext]', timestamp(), 'INSERT não retornou dados');
-        throw new Error('Projeto não foi criado - resposta vazia do banco');
-      }
-
-      console.log('✅ [ProjectContext]', timestamp(), '====================================');
-      console.log('✅ [ProjectContext]', timestamp(), 'PROJETO INSERIDO COM SUCESSO!');
-      console.log('✅ [ProjectContext]', timestamp(), '====================================');
-      console.log('✅ [ProjectContext]', timestamp(), 'ID do projeto:', data.id);
-      console.log('✅ [ProjectContext]', timestamp(), 'Título:', data.title);
-      console.log('✅ [ProjectContext]', timestamp(), 'Cliente:', data.client);
-      console.log('✅ [ProjectContext]', timestamp(), 'Share ID:', data.share_id);
-      console.log('✅ [ProjectContext]', timestamp(), 'Dados completos:', data);
-
-      await fetchProjects();
+      // Adicionar o novo projeto ao estado local imediatamente
+      const newProject = {
+        ...data,
+        keyframes: [],
+        feedbacks: []
+      };
+      
+      setProjects(prev => [newProject, ...prev]);
       
       toast({
-        title: "✅ Sucesso",
-        description: "Projeto criado com sucesso no banco de dados",
+        title: "Sucesso",
+        description: "Projeto criado com sucesso",
       });
       
+      return newProject;
     } catch (error: any) {
-      console.error('❌ [ProjectContext]', timestamp(), 'Erro:', error.message);
+      console.error('Erro ao criar projeto:', error);
       
       toast({
-        title: "❌ Erro",
-        description: error.message || "Falha ao criar projeto no banco de dados",
+        title: "Erro",
+        description: error.message || "Falha ao criar projeto",
         variant: "destructive",
       });
       throw error;
