@@ -15,6 +15,7 @@ import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
 import { AnnotationCommentModal } from '@/components/AnnotationCommentModal';
 import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
 import { CommentsSidebar } from '@/components/CommentsSidebar';
+import { useVideoAspectRatio } from '@/hooks/useVideoAspectRatio';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 import logoOrange from '@/assets/logo-orange-bg.png';
@@ -93,6 +94,9 @@ export default function AudiovisualApproval() {
     canUndo,
     canRedo,
   } = useVideoAnnotations(project?.id);
+
+  // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
+  const { aspectRatio, isReady: videoReady } = useVideoAspectRatio(videoRef);
 
   // Fetch project data from Supabase
   useEffect(() => {
@@ -750,7 +754,14 @@ export default function AudiovisualApproval() {
           <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-3 space-y-0'}`}>
             {/* Card do Player de Vídeo */}
             <Card className={`bg-card border-primary/20 shadow-xl ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              {/* Container adaptativo que respeita a proporção do vídeo */}
+              <div 
+                className="relative bg-black rounded-lg overflow-hidden flex items-center justify-center"
+                style={{ 
+                  aspectRatio: aspectRatio.toString(),
+                  maxHeight: isMobile ? '60vh' : '70vh'
+                }}
+              >
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -762,7 +773,7 @@ export default function AudiovisualApproval() {
                   onPause={() => setIsPlaying(false)}
                 />
                 
-                <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+                <div className="relative w-full h-full">
                   <CustomVideoPlayer
                     src={project.video_url}
                     currentTime={currentTime}

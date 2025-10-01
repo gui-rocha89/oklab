@@ -3,10 +3,10 @@ import { Canvas as FabricCanvas, util } from "fabric";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Play, Pause, SkipBack, SkipForward, Maximize, MessageSquare, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { convertFromReferenceResolution, REFERENCE_WIDTH, REFERENCE_HEIGHT } from "@/lib/annotationUtils";
+import { useVideoAspectRatio } from "@/hooks/useVideoAspectRatio";
 
 interface VideoAnnotation {
   id: string;
@@ -33,7 +33,10 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Inicializar canvas
+  // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
+  const { aspectRatio, isReady: videoReady } = useVideoAspectRatio(videoRef);
+
+  // Inicializar canvas e configurar dimensões baseadas no player renderizado
   useEffect(() => {
     if (!canvasRef.current || !videoRef.current) return;
 
@@ -49,21 +52,31 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       if (!videoRef.current || !canvas) return;
       
       const video = videoRef.current;
-      // Usar dimensões nativas do vídeo, não do elemento HTML renderizado
-      const videoNativeWidth = video.videoWidth || REFERENCE_WIDTH;
-      const videoNativeHeight = video.videoHeight || REFERENCE_HEIGHT;
+      // Usar dimensões RENDERIZADAS do elemento de vídeo (não nativas)
+      const rect = video.getBoundingClientRect();
       
       canvas.setDimensions({
-        width: videoNativeWidth,
-        height: videoNativeHeight,
+        width: rect.width,
+        height: rect.height,
       });
       canvas.renderAll();
+      
+      console.log('📐 Canvas redimensionado:', {
+        width: rect.width,
+        height: rect.height,
+        aspectRatio: (rect.width / rect.height).toFixed(3)
+      });
     };
 
+    // Aguardar carregamento do vídeo antes de dimensionar
+    const video = videoRef.current;
+    video.addEventListener('loadedmetadata', updateCanvasSize);
+    
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
     return () => {
+      video.removeEventListener('loadedmetadata', updateCanvasSize);
       window.removeEventListener('resize', updateCanvasSize);
       canvas.dispose();
     };
@@ -106,27 +119,28 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         return;
       }
 
-      // Usar dimensões NATIVAS do vídeo, não do elemento HTML
-      const videoNativeWidth = video.videoWidth || REFERENCE_WIDTH;
-      const videoNativeHeight = video.videoHeight || REFERENCE_HEIGHT;
+      // Usar dimensões RENDERIZADAS do vídeo (player atual)
+      const rect = video.getBoundingClientRect();
+      const currentWidth = Math.floor(rect.width);
+      const currentHeight = Math.floor(rect.height);
 
       canvas.setDimensions({
-        width: videoNativeWidth,
-        height: videoNativeHeight
+        width: currentWidth,
+        height: currentHeight
       });
 
-      // Converter objetos da resolução de referência para as dimensões nativas do vídeo
+      // Converter objetos da resolução de referência para o tamanho ATUAL do player
       const convertedObjects = convertFromReferenceResolution(
         annotation.canvas_data.objects || [],
-        videoNativeWidth,
-        videoNativeHeight
+        currentWidth,
+        currentHeight
       );
 
       console.log('🎯 Carregando anotação:', {
         reference: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
-        videoNative: `${videoNativeWidth}x${videoNativeHeight}`,
-        scaleX: (videoNativeWidth / REFERENCE_WIDTH).toFixed(3),
-        scaleY: (videoNativeHeight / REFERENCE_HEIGHT).toFixed(3),
+        currentPlayer: `${currentWidth}x${currentHeight}`,
+        scaleX: (currentWidth / REFERENCE_WIDTH).toFixed(3),
+        scaleY: (currentHeight / REFERENCE_HEIGHT).toFixed(3),
         objectCount: convertedObjects.length
       });
 
@@ -234,29 +248,33 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-      {/* Video Player (60%) */}
+      {/* Video Player (60%) - Adaptativo */}
       <div className="lg:col-span-3">
         <Card className="overflow-hidden border-0 shadow-lg">
-          <AspectRatio ratio={16 / 9}>
-            <div ref={containerRef} className="relative w-full h-full group">
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                className="w-full h-full object-cover"
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              />
+          {/* Container adaptativo que respeita a proporção do vídeo */}
+          <div 
+            ref={containerRef} 
+            className="relative w-full bg-black group flex items-center justify-center"
+            style={{ 
+              aspectRatio: aspectRatio.toString(),
+              maxHeight: '70vh'
+            }}
+          >
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              className="w-full h-full object-contain"
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            />
             
-            {/* Canvas para anotações - escala proporcionalmente com o vídeo */}
+            {/* Canvas para anotações - sobreposição 1:1 com vídeo */}
             <canvas
               ref={canvasRef}
               className="absolute top-0 left-0 w-full h-full pointer-events-none"
-              style={{ 
-                zIndex: 30,
-                objectFit: 'cover'
-              }}
+              style={{ zIndex: 30 }}
             />
 
             {/* Overlay para controles - aparece no hover */}
@@ -358,8 +376,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                 </Button>
               </div>
             </div>
-            </div>
-          </AspectRatio>
+          </div>
         </Card>
       </div>
 
