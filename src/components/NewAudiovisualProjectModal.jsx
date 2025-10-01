@@ -84,7 +84,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
     }
 
     setIsUploading(true);
-    setUploadProgress(20);
+    setUploadProgress(30);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -93,15 +93,15 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         throw new Error('Usuário não autenticado');
       }
 
-      setUploadProgress(40);
+      setUploadProgress(50);
 
-      // Criar share_id único
       const shareId = `av-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const projectId = crypto.randomUUID();
       
-      setUploadProgress(60);
+      setUploadProgress(70);
 
-      // Criar projeto primeiro (sem video_url, será atualizado depois)
       const projectData = {
+        id: projectId,
         title: title.trim(),
         client: clientName.trim(),
         description: comment.trim() || null,
@@ -113,36 +113,56 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         user_id: user.id
       };
 
-      const newProject = await onProjectCreate(projectData);
+      await onProjectCreate(projectData);
       
-      setUploadProgress(80);
+      setUploadProgress(90);
 
-      // Enviar vídeo para processamento em background
-      const formData = new FormData();
-      formData.append('projectId', newProject.id);
-      formData.append('video', videoFile);
-
-      const { error: uploadError } = await supabase.functions.invoke('upload-audiovisual-video', {
-        body: formData
-      });
-
-      if (uploadError) {
-        console.error('Erro ao iniciar upload:', uploadError);
-        throw new Error('Falha ao iniciar upload do vídeo');
-      }
-
-      setUploadProgress(100);
-
-      // Gerar link de aprovação
       const approvalLink = `${window.location.origin}/aprovacao-audiovisual/${shareId}`;
       setApprovalLink(approvalLink);
-      
       setShowSuccess(true);
+      setUploadProgress(100);
+
       toast({
         title: "✅ Projeto Criado!",
-        description: "O vídeo está sendo processado em segundo plano.",
-        duration: 4000,
+        description: "O vídeo será processado em segundo plano.",
+        duration: 3000,
       });
+
+      // Upload em background sem bloquear UI
+      setTimeout(async () => {
+        try {
+          const fileName = `${projectId}/${Date.now()}.${videoFile.name.split('.').pop()}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('audiovisual-projects')
+            .upload(fileName, videoFile, {
+              contentType: videoFile.type,
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('audiovisual-projects')
+            .getPublicUrl(fileName);
+
+          await supabase
+            .from('projects')
+            .update({ 
+              video_url: publicUrl,
+              status: 'pending'
+            })
+            .eq('id', projectId);
+
+        } catch (error) {
+          console.error("Erro no upload:", error);
+          await supabase
+            .from('projects')
+            .update({ status: 'error' })
+            .eq('id', projectId);
+        }
+      }, 100);
 
     } catch (error) {
       console.error('Erro ao criar projeto:', error);
