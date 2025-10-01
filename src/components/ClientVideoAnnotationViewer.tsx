@@ -127,10 +127,6 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
       console.log('Canvas redimensionado para:', canvas.width, 'x', canvas.height);
 
-      // DEBUG: Super visible background to verify canvas position
-      canvas.backgroundColor = 'rgba(0, 255, 0, 0.15)';
-      canvas.renderAll();
-
       console.log('📦 Objetos a carregar:', annotation.canvas_data.objects.length);
 
       // Load objects from JSON - Fabric.js v6
@@ -165,8 +161,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
           }
         });
       } else {
-        // NO ORIGINAL DIMENSIONS: Render 1:1 without scaling
-        console.log('⚠️ SEM DIMENSÕES ORIGINAIS - Renderizando 1:1');
+        // NO ORIGINAL DIMENSIONS: Render 1:1 without scaling (for old annotations)
+        console.log('⚠️ SEM DIMENSÕES ORIGINAIS - Renderizando 1:1 (anotação antiga)');
         
         objects.forEach((obj: any, index) => {
           if (obj) {
@@ -313,11 +309,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
             <canvas
               ref={canvasRef}
               className="absolute top-0 left-0 w-full h-full pointer-events-none"
-              style={{ 
-                zIndex: 30,
-                border: '3px solid lime',
-                boxSizing: 'border-box'
-              }}
+              style={{ zIndex: 30 }}
             />
 
             {/* Overlay para controles - aparece no hover */}

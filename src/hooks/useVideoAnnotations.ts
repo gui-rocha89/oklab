@@ -44,7 +44,18 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
     if (!projectId || !fabricCanvasRef.current) return;
 
     try {
-      const canvasData = fabricCanvasRef.current.toJSON();
+      const canvas = fabricCanvasRef.current;
+      const canvasData = canvas.toJSON();
+      
+      // CRITICAL: Include canvas dimensions in the saved data
+      canvasData.width = canvas.width;
+      canvasData.height = canvas.height;
+      
+      console.log('💾 Salvando anotação com dimensões:', {
+        width: canvasData.width,
+        height: canvasData.height,
+        objects: canvasData.objects?.length || 0
+      });
       
       const { data, error } = await supabase
         .from('video_annotations')
