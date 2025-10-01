@@ -115,58 +115,62 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
       const objects = await util.enlivenObjects(annotation.canvas_data.objects);
       
-      const hasOriginalDimensions = annotation.canvas_data.width && annotation.canvas_data.height;
-      
-      if (hasOriginalDimensions) {
-        const originalWidth = annotation.canvas_data.width;
-        const originalHeight = annotation.canvas_data.height;
-        const scaleX = currentWidth / originalWidth;
-        const scaleY = currentHeight / originalHeight;
+      // Determinar dimensões originais do canvas
+      let originalWidth = annotation.canvas_data.width;
+      let originalHeight = annotation.canvas_data.height;
 
-        objects.forEach((obj: any) => {
-          if (obj) {
-            obj.set({
-              left: (obj.left || 0) * scaleX,
-              top: (obj.top || 0) * scaleY,
-              scaleX: (obj.scaleX || 1) * scaleX,
-              scaleY: (obj.scaleY || 1) * scaleY,
-              selectable: false,
-              evented: false,
-              stroke: '#FF0000',
-              strokeWidth: 5,
-              fill: obj.type === 'path' ? undefined : (obj.fill || 'transparent')
-            });
-            obj.setCoords();
-            canvas.add(obj);
-          }
+      // Se não temos dimensões salvas, calcular baseado nos objetos
+      if (!originalWidth || !originalHeight) {
+        let maxRight = 0;
+        let maxBottom = 0;
+
+        annotation.canvas_data.objects.forEach((obj: any) => {
+          const objWidth = (obj.width || 0) * (obj.scaleX || 1);
+          const objHeight = (obj.height || 0) * (obj.scaleY || 1);
+          const right = (obj.left || 0) + objWidth;
+          const bottom = (obj.top || 0) + objHeight;
+          
+          if (right > maxRight) maxRight = right;
+          if (bottom > maxBottom) maxBottom = bottom;
         });
-      } else {
-        // Para anotações sem dimensões originais, assumir canvas padrão
-        // que é proporcional ao vídeo em tamanho médio de tela
-        const assumedCanvasWidth = 800;
-        const assumedCanvasHeight = 450;
+
+        // Adicionar padding e garantir dimensões mínimas
+        originalWidth = Math.max(maxRight + 50, 600);
+        originalHeight = Math.max(maxBottom + 50, 350);
         
-        const scaleX = currentWidth / assumedCanvasWidth;
-        const scaleY = currentHeight / assumedCanvasHeight;
-        
-        objects.forEach((obj: any) => {
-          if (obj) {
-            obj.set({
-              left: (obj.left || 0) * scaleX,
-              top: (obj.top || 0) * scaleY,
-              scaleX: (obj.scaleX || 1) * scaleX,
-              scaleY: (obj.scaleY || 1) * scaleY,
-              selectable: false,
-              evented: false,
-              stroke: '#FF0000',
-              strokeWidth: 5,
-              fill: obj.type === 'path' ? undefined : (obj.fill || 'rgba(255, 0, 0, 0.3)')
-            });
-            obj.setCoords();
-            canvas.add(obj);
-          }
-        });
+        console.log(`📐 Dimensões calculadas: ${originalWidth}x${originalHeight}`);
+        console.log(`📏 Limites dos objetos: direita=${maxRight}, baixo=${maxBottom}`);
       }
+
+      const scaleX = currentWidth / originalWidth;
+      const scaleY = currentHeight / originalHeight;
+
+      console.log(`🎯 Canvas atual: ${currentWidth}x${currentHeight}`);
+      console.log(`📦 Canvas original: ${originalWidth}x${originalHeight}`);
+      console.log(`📊 Fatores de escala: X=${scaleX.toFixed(3)}, Y=${scaleY.toFixed(3)}`);
+
+      objects.forEach((obj: any, index: number) => {
+        if (obj) {
+          const scaledLeft = (obj.left || 0) * scaleX;
+          const scaledTop = (obj.top || 0) * scaleY;
+          
+          console.log(`🎨 Objeto ${index}: ${obj.type} em (${obj.left}, ${obj.top}) → (${scaledLeft.toFixed(1)}, ${scaledTop.toFixed(1)})`);
+          
+          obj.set({
+            left: scaledLeft,
+            top: scaledTop,
+            scaleX: (obj.scaleX || 1) * scaleX,
+            scaleY: (obj.scaleY || 1) * scaleY,
+            selectable: false,
+            evented: false,
+            stroke: '#FF0000',
+            strokeWidth: 5,
+            fill: obj.type === 'path' ? undefined : (obj.fill || 'rgba(255, 0, 0, 0.3)')
+          });
+          obj.setCoords();
+          canvas.add(obj);
+        }
+      });
 
       canvas.renderAll();
     } catch (error) {
