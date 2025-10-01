@@ -158,6 +158,9 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               scaleY: (obj.scaleY || 1) * scaleY,
               selectable: false,
               evented: false,
+              stroke: '#FF0000',
+              strokeWidth: 5,
+              fill: obj.type === 'path' ? undefined : (obj.fill || 'rgba(255, 0, 0, 0.3)')
             });
             obj.setCoords();
             canvas.add(obj);
