@@ -40,15 +40,15 @@ export function CommentsSidebar({
   const totalComments = keyframes.filter(k => k.comment.trim()).length + annotations.length;
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col shadow-md">
       {/* Header fixo */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b bg-card/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold">Comentários</h3>
+            <h3 className="font-semibold text-lg">Comentários</h3>
           </div>
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
             {totalComments}
           </Badge>
         </div>
@@ -60,9 +60,9 @@ export function CommentsSidebar({
           {/* Comentários de Texto (Keyframes) */}
           {keyframes.filter(k => k.comment.trim()).length > 0 && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <MessageSquare className="w-4 h-4" />
-                <span>Comentários de Texto</span>
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <MessageSquare className="w-4 h-4 text-primary" />
+                <span>Comentários de Texto ({keyframes.filter(k => k.comment.trim()).length})</span>
               </div>
               
               {keyframes
@@ -107,9 +107,9 @@ export function CommentsSidebar({
           {/* Anotações Visuais */}
           {annotations.length > 0 && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Pencil className="w-4 h-4" />
-                <span>Anotações Visuais</span>
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Pencil className="w-4 h-4 text-primary" />
+                <span>Anotações Visuais ({annotations.length})</span>
               </div>
               
               {annotations

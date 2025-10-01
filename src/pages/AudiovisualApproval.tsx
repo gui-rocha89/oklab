@@ -666,40 +666,60 @@ export default function AudiovisualApproval() {
 
       {/* Main Content */}
       <div className={`flex-1 container mx-auto max-w-6xl ${isMobile ? 'px-3 py-4' : 'px-4 py-6'}`}>
-        {/* Project Info Cards - 3 columns on top */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-3 mb-4' : 'gap-6 mb-6'}`}>
-          <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-5'}`}>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <FileText className="w-5 h-5 text-gray-500" />
+        {/* Project Info Cards - Vertical Stack */}
+        <div className={`space-y-4 ${isMobile ? 'mb-4' : 'mb-6'}`}>
+          <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileText className="w-7 h-7 text-primary" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-xs font-semibold font-['Inter'] mb-1.5 text-gray-500 uppercase tracking-wide">Nome do Projeto</h3>
-                <p className="text-base font-semibold font-['Inter'] text-gray-900 break-words">{project.title}</p>
+                <h3 className={`font-medium text-muted-foreground mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                  Nome do Projeto
+                </h3>
+                <h2 className={`font-bold text-foreground leading-tight ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+                  {project.title}
+                </h2>
               </div>
             </div>
           </Card>
           
-          <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-5'}`}>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <Info className="w-5 h-5 text-gray-500" />
+          {project.description && (
+            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Info className="w-7 h-7 text-primary" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className={`font-medium text-muted-foreground mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                    Descrição
+                  </h3>
+                  <p className={`text-foreground leading-relaxed ${isMobile ? 'text-base' : 'text-lg'}`}>
+                    {project.description}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-xs font-semibold font-['Inter'] mb-1.5 text-gray-500 uppercase tracking-wide">Descrição</h3>
-                <p className="text-sm font-['Inter'] text-gray-700 break-words line-clamp-2">{project.description || 'Sem descrição'}</p>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          )}
           
-          <Card className={`bg-primary/10 border-primary/30 shadow-sm ${isMobile ? 'p-4' : 'p-5'}`}>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <User className="w-5 h-5 text-primary" />
+          <Card className={`bg-primary/5 border-primary/30 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="h-14 w-14 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <User className="w-7 h-7 text-primary" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-xs font-semibold font-['Inter'] mb-1.5 text-primary/70 uppercase tracking-wide">Cliente</h3>
-                <p className="text-lg font-bold text-primary font-['Inter'] break-words">{project.client}</p>
+                <h3 className={`font-medium text-primary/70 mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                  Cliente
+                </h3>
+                <h2 className={`font-bold text-primary ${isMobile ? 'text-lg' : 'text-xl'}`}>
+                  {project.client}
+                </h2>
               </div>
             </div>
           </Card>
@@ -724,11 +744,11 @@ export default function AudiovisualApproval() {
 
         {/* Side-by-Side Layout: Video + Actions (left) + Comments Sidebar (right) - Using 12-column grid for precise control */}
         <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-6'}`}>
-          {/* Left Column: Video + Actions - ~66% width on desktop (8/12 columns) */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-8 space-y-4'}`}>
+          {/* Left Column: Video + Actions - 75% width on desktop (9/12 columns) */}
+          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-9 space-y-4'}`}>
             {/* Video Player Card */}
-            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: isMobile ? '250px' : '400px' }}>
+            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-3' : 'p-6'}`}>
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: isMobile ? '250px' : '450px' }}>
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -849,7 +869,7 @@ export default function AudiovisualApproval() {
             </Card>
 
             {/* Actions Card - Below Video */}
-            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
+            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
               <h3 className={`font-semibold mb-4 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
                 <MessageSquare className="w-5 h-5 text-gray-700" />
                 Ações
@@ -1031,8 +1051,8 @@ export default function AudiovisualApproval() {
             )}
           </div>
 
-          {/* Right Column: Comments Sidebar - ~33% width on desktop (4/12 columns) */}
-          <div className={`${isMobile ? '' : 'lg:col-span-4'}`} style={{ height: isMobile ? 'auto' : '800px' }}>
+          {/* Right Column: Comments Sidebar - 25% width on desktop (3/12 columns) */}
+          <div className={`${isMobile ? '' : 'lg:col-span-3'}`} style={{ height: isMobile ? 'auto' : '700px' }}>
             <CommentsSidebar
               keyframes={keyframes}
               annotations={annotations}
