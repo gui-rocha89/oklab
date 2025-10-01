@@ -58,35 +58,28 @@ export function Sidebar() {
       isCollapsed ? "w-20" : "w-64"
     }`}>
       {/* Header */}
-      <div className="relative p-6 border-b border-sidebar-border">
-        <div className="flex items-center justify-center w-full mb-2">
+      <div className="p-6 border-b border-sidebar-border">
+        <div 
+          className="flex items-center justify-center w-full mb-2 cursor-pointer group"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          role="button"
+          aria-label={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
+        >
           {!isCollapsed ? (
             <Logo 
-              className="h-20 w-auto transition-all duration-300 hover:scale-105" 
+              className="h-20 w-auto transition-all duration-300 group-hover:scale-105 group-hover:opacity-80" 
               alt="MANUS I.A"
             />
           ) : (
             <div className="flex flex-col items-center space-y-2">
               <Logo 
-                className="h-8 w-auto transition-all duration-300 hover:scale-105" 
+                className="h-8 w-auto transition-all duration-300 group-hover:scale-105 group-hover:opacity-80" 
                 alt="MANUS I.A"
               />
-              <div className="w-8 h-0.5 bg-primary rounded-full opacity-60"></div>
+              <div className="w-8 h-0.5 bg-primary rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
             </div>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-sidebar-accent transition-colors"
-        >
-          {isCollapsed ? (
-            <Menu className="h-4 w-4" />
-          ) : (
-            <X className="h-4 w-4" />
-          )}
-        </Button>
       </div>
 
       {/* Navigation */}

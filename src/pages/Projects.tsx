@@ -484,71 +484,74 @@ export default function Projects() {
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
-                      <div className="text-sm text-muted-foreground flex items-center space-x-1">
-                        <MessageSquare className="w-4 h-4" />
-                        <span>
+                    <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto gap-3">
+                      <div className="text-sm text-muted-foreground flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                        <span className="whitespace-nowrap">
                           {project.keyframes?.reduce((total, keyframe) => 
                             total + (keyframe.feedbacks?.filter(feedback => feedback.status === 'pending').length || 0), 0
-                          ) || 0} comentário(s) pendente(s)
+                          ) || 0} comentário(s)
                         </span>
                       </div>
                       
-                      <div className="flex items-center space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditProject(project.id);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {isAudiovisual && project.share_id && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCopyClientLink(project);
-                                  }}
-                                >
-                                  <Link className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Copiar link para o cliente</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteProject(project.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditProject(project.id);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {isAudiovisual && project.share_id && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-9 w-9 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopyClientLink(project);
+                                    }}
+                                  >
+                                    <Link className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Copiar link para o cliente</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteProject(project.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
                         <Button 
                           size="sm" 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleViewProject(project);
                           }}
-                          className={`ml-2 ${isAudiovisual ? 'bg-purple-600 hover:bg-purple-700' : 'bg-primary hover:bg-primary/90'} text-white shadow-md hover:shadow-lg transition-all`}
+                          className={`h-9 ${isAudiovisual ? 'bg-purple-600 hover:bg-purple-700' : 'bg-primary hover:bg-primary/90'} text-white shadow-md hover:shadow-lg transition-all`}
                         >
-                          {isAudiovisual ? <MessageSquare className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-                          {isAudiovisual ? 'Ver Retorno do Cliente' : 'Ver Projeto'}
+                          {isAudiovisual ? <MessageSquare className="h-4 w-4 mr-1.5" /> : <Eye className="h-4 w-4 mr-1.5" />}
+                          <span className="whitespace-nowrap">{isAudiovisual ? 'Ver Retorno' : 'Ver Projeto'}</span>
                         </Button>
                       </div>
                     </div>
