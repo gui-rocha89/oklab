@@ -145,6 +145,18 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Ignore keyboard events when user is typing in input fields
+      const activeElement = document.activeElement;
+      const isTyping = activeElement instanceof HTMLElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.isContentEditable
+      );
+      
+      if (isTyping) {
+        return; // Let the input handle the event normally
+      }
+
       switch (e.code) {
         case 'Space':
           e.preventDefault();
