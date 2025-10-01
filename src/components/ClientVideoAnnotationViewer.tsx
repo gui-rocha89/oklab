@@ -32,7 +32,6 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const [duration, setDuration] = useState(0);
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [videoAspectRatio, setVideoAspectRatio] = useState(16 / 9);
 
   // Inicializar canvas
   useEffect(() => {
@@ -172,12 +171,6 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration * 1000);
-      
-      const video = videoRef.current;
-      if (video.videoWidth && video.videoHeight) {
-        const aspectRatio = video.videoWidth / video.videoHeight;
-        setVideoAspectRatio(aspectRatio);
-      }
     }
   };
 
@@ -239,8 +232,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-      {/* Video Player - Área Principal (60% - 3/5 columns) */}
-      <div className="lg:col-span-3 space-y-4">
+      {/* Video Player (60%) */}
+      <div className="lg:col-span-3">
         <Card className="overflow-hidden border-0 shadow-lg">
           <AspectRatio ratio={16 / 9}>
             <div ref={containerRef} className="relative w-full h-full group">
@@ -365,7 +358,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         </Card>
       </div>
 
-      {/* Painel Lateral - Lista de Anotações (40% - 2/5 columns) */}
+      {/* Painel Lateral - Lista de Anotações (40%) */}
       <div className="lg:col-span-2">
         <Card className="sticky top-4 max-h-[70vh] flex flex-col">
           <CardContent className="p-4 flex flex-col h-full">
