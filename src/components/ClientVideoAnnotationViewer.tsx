@@ -141,21 +141,23 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
           }
         });
       } else {
-        // Scale down from native video resolution to displayed size
-        const scale = currentWidth / video.videoWidth;
+        // Para anotações sem dimensões originais, assumir canvas padrão
+        // que é proporcional ao vídeo em tamanho médio de tela
+        const assumedCanvasWidth = 800;
+        const assumedCanvasHeight = 450;
+        
+        const scaleX = currentWidth / assumedCanvasWidth;
+        const scaleY = currentHeight / assumedCanvasHeight;
         
         objects.forEach((obj: any) => {
           if (obj) {
             obj.set({
-              left: (obj.left || 0) * scale,
-              top: (obj.top || 0) * scale,
-              scaleX: (obj.scaleX || 1) * scale,
-              scaleY: (obj.scaleY || 1) * scale,
+              left: (obj.left || 0) * scaleX,
+              top: (obj.top || 0) * scaleY,
+              scaleX: (obj.scaleX || 1) * scaleX,
+              scaleY: (obj.scaleY || 1) * scaleY,
               selectable: false,
               evented: false,
-              stroke: '#FF0000',
-              strokeWidth: 5,
-              fill: obj.type === 'path' ? undefined : (obj.fill || 'transparent')
             });
             obj.setCoords();
             canvas.add(obj);
