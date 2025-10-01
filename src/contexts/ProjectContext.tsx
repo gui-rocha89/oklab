@@ -298,23 +298,43 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteProject = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', id);
+      console.log('🗑️ Iniciando exclusão completa do projeto:', id);
+
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Call edge function for complete deletion
+      const { data, error } = await supabase.functions.invoke('delete-project', {
+        body: { projectId: id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
 
+      if (!data.success) {
+        throw new Error(data.error || 'Falha ao excluir projeto');
+      }
+
+      console.log('✅ Projeto excluído com sucesso!');
+      console.log('📊 Itens removidos:', data.deletedItems);
+
       await fetchProjects();
+      
       toast({
         title: "Sucesso",
-        description: "Projeto excluído com sucesso",
+        description: `Projeto excluído completamente. ${data.deletedItems.keyframes} keyframes, ${data.deletedItems.feedbacks} feedbacks, ${data.deletedItems.storageFiles} arquivos removidos.`,
       });
-    } catch (error) {
-      console.error('Error deleting project:', error);
+    } catch (error: any) {
+      console.error('❌ Erro ao excluir projeto:', error);
       toast({
         title: "Erro",
-        description: "Falha ao excluir projeto",
+        description: error.message || "Falha ao excluir projeto",
         variant: "destructive",
       });
     }
