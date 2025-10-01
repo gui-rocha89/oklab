@@ -38,7 +38,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
   // Inicializar canvas e configurar dimensões baseadas no player renderizado
   useEffect(() => {
-    if (!canvasRef.current || !videoRef.current) return;
+    if (!canvasRef.current || !videoRef.current || !containerRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
       selection: false,
@@ -49,34 +49,49 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     fabricCanvasRef.current = canvas;
 
     const updateCanvasSize = () => {
-      if (!videoRef.current || !canvas) return;
+      if (!videoRef.current || !canvas || !containerRef.current || !canvasRef.current) return;
       
       const video = videoRef.current;
-      // Usar dimensões RENDERIZADAS do elemento de vídeo (não nativas)
-      const rect = video.getBoundingClientRect();
+      const container = containerRef.current;
+      const canvasElement = canvasRef.current;
+      
+      // Obter dimensões RENDERIZADAS e calcular offset exato
+      const videoRect = video.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      const offsetLeft = videoRect.left - containerRect.left;
+      const offsetTop = videoRect.top - containerRect.top;
+      
+      // Posicionar canvas EXATAMENTE sobre o vídeo
+      canvasElement.style.left = `${offsetLeft}px`;
+      canvasElement.style.top = `${offsetTop}px`;
+      canvasElement.style.width = `${videoRect.width}px`;
+      canvasElement.style.height = `${videoRect.height}px`;
       
       canvas.setDimensions({
-        width: rect.width,
-        height: rect.height,
+        width: videoRect.width,
+        height: videoRect.height,
       });
       canvas.renderAll();
       
-      console.log('📐 Canvas redimensionado:', {
-        width: rect.width,
-        height: rect.height,
-        aspectRatio: (rect.width / rect.height).toFixed(3)
+      console.log('📐 Canvas posicionado:', {
+        videoSize: `${videoRect.width}x${videoRect.height}`,
+        offset: `left=${offsetLeft}px, top=${offsetTop}px`,
+        aspectRatio: (videoRect.width / videoRect.height).toFixed(3)
       });
     };
 
     // Aguardar carregamento do vídeo antes de dimensionar
     const video = videoRef.current;
     video.addEventListener('loadedmetadata', updateCanvasSize);
+    video.addEventListener('canplay', updateCanvasSize);
     
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
     return () => {
       video.removeEventListener('loadedmetadata', updateCanvasSize);
+      video.removeEventListener('canplay', updateCanvasSize);
       window.removeEventListener('resize', updateCanvasSize);
       canvas.dispose();
     };
@@ -270,10 +285,10 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               onPause={() => setIsPlaying(false)}
             />
             
-            {/* Canvas para anotações - sobreposição 1:1 com vídeo */}
+            {/* Canvas para anotações - posicionado exatamente sobre o vídeo */}
             <canvas
               ref={canvasRef}
-              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+              className="absolute pointer-events-none"
               style={{ zIndex: 30 }}
             />
 
