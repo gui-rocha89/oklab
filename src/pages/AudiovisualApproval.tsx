@@ -646,77 +646,58 @@ export default function AudiovisualApproval() {
         <title>Aprovação de Vídeo - {project.title}</title>
       </Helmet>
 
-      {/* Header Laranja Fixo - Estilo Frame.io */}
-      <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-lg ${isMobile ? 'py-3 px-4' : 'py-6 px-6'}`}>
-        <div className="container mx-auto flex items-center justify-center">
-          <h1 className={`font-bold text-white font-['Inter'] ${isMobile ? 'text-lg' : 'text-2xl'}`}>
-            Aprove Seu Vídeo
-          </h1>
+      {/* Clean Header */}
+      <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-md ${isMobile ? 'py-2.5' : 'py-3'}`}>
+        <div className="container mx-auto flex items-center justify-center px-4">
+          <img 
+            src={logoDark} 
+            alt="OK Lab Logo" 
+            className={`w-auto ${isMobile ? 'h-8' : 'h-10'}`}
+          />
         </div>
       </header>
 
-      {/* Logo Grande Centralizada */}
-      <div className={`bg-white ${isMobile ? 'py-4' : 'py-8'}`}>
-        <img 
-          src={logoDark} 
-          alt="OK Lab Logo" 
-          className={`w-auto mx-auto ${isMobile ? 'h-16' : 'h-24'}`}
-        />
-      </div>
-
       {/* Main Content */}
-      <div className={`flex-1 container mx-auto max-w-6xl ${isMobile ? 'px-3 py-4' : 'px-4 py-6'}`}>
-        {/* Project Info Cards - Horizontal Layout (3 cards side by side) */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-3 mb-4' : 'gap-4 mb-6'}`}>
-          <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-3' : 'p-4'}`}>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <div className={`rounded-xl bg-primary/10 flex items-center justify-center ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
-                  <FileText className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
-                </div>
+      <div className={`flex-1 container mx-auto max-w-7xl ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
+        {/* Clean Info Cards - Horizontal Layout */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-2 mb-3' : 'gap-3 mb-4'}`}>
+          <Card className={`bg-card border-border shadow-sm hover:shadow-md transition-shadow ${isMobile ? 'p-2.5' : 'p-3'}`}>
+            <div className="flex items-center gap-2.5">
+              <div className={`p-1.5 rounded-md bg-primary/10 shrink-0 ${isMobile ? '' : ''}`}>
+                <FileText className={isMobile ? 'w-4 h-4 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className={`font-medium text-muted-foreground ${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-1.5'}`}>
-                  Projeto
-                </h3>
-                <h2 className={`font-bold text-foreground leading-tight truncate ${isMobile ? 'text-base' : 'text-3xl'}`}>
+                <p className={`text-muted-foreground mb-0.5 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Projeto</p>
+                <h2 className={`font-bold text-foreground truncate ${isMobile ? 'text-sm' : 'text-2xl'}`}>
                   {project.title}
                 </h2>
               </div>
             </div>
           </Card>
           
-          <Card className={`bg-primary/5 border-primary/30 shadow-md ${isMobile ? 'p-3' : 'p-4'}`}>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <div className={`rounded-xl bg-primary/20 flex items-center justify-center ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
-                  <User className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
-                </div>
+          <Card className={`bg-card border-border shadow-sm hover:shadow-md transition-shadow ${isMobile ? 'p-2.5' : 'p-3'}`}>
+            <div className="flex items-center gap-2.5">
+              <div className={`p-1.5 rounded-md bg-primary/10 shrink-0 ${isMobile ? '' : ''}`}>
+                <User className={isMobile ? 'w-4 h-4 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className={`font-medium text-primary/70 ${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-1.5'}`}>
-                  Cliente
-                </h3>
-                <h2 className={`font-bold text-primary truncate ${isMobile ? 'text-sm' : 'text-2xl'}`}>
+                <p className={`text-muted-foreground mb-0.5 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Cliente</p>
+                <h3 className={`font-semibold text-primary truncate ${isMobile ? 'text-sm' : 'text-lg'}`}>
                   {project.client}
-                </h2>
+                </h3>
               </div>
             </div>
           </Card>
 
           {project.description && (
-            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-3' : 'p-4'}`}>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <div className={`rounded-xl bg-primary/10 flex items-center justify-center ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
-                    <Info className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
-                  </div>
+            <Card className={`bg-card border-border shadow-sm hover:shadow-md transition-shadow ${isMobile ? 'p-2.5' : 'p-3'}`}>
+              <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-md bg-primary/10 shrink-0 ${isMobile ? '' : ''}`}>
+                  <Info className={isMobile ? 'w-4 h-4 text-primary' : 'w-5 h-5 text-primary'} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-medium text-muted-foreground ${isMobile ? 'text-[10px] mb-1' : 'text-xs mb-1.5'}`}>
-                    Descrição
-                  </h3>
-                  <p className={`text-foreground leading-tight line-clamp-2 ${isMobile ? 'text-xs' : 'text-xl'}`}>
+                  <p className={`text-muted-foreground mb-0.5 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Descrição</p>
+                  <p className={`text-foreground line-clamp-2 ${isMobile ? 'text-xs' : 'text-base'}`}>
                     {project.description}
                   </p>
                 </div>
@@ -725,27 +706,23 @@ export default function AudiovisualApproval() {
           )}
         </div>
 
-        {/* Instructions Card - Compact */}
-        <Card className={`border-gray-200 shadow-sm bg-white ${isMobile ? 'mb-3' : 'mb-4'}`}>
-          <div className={`flex items-start ${isMobile ? 'p-3 gap-2' : 'p-4 gap-3'}`}>
-            <div className="flex-shrink-0">
-              <Info className={isMobile ? 'h-4 w-4 text-primary mt-0.5' : 'h-4 w-4 text-primary mt-0.5'} />
-            </div>
-            <div className="flex-1">
-              <p className={`text-muted-foreground leading-snug ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                Assista ao vídeo, use as ferramentas de desenho para marcar ajustes, adicione comentários e avalie o projeto.
-              </p>
-            </div>
+        {/* Compact Instructions */}
+        <Card className={`bg-primary/5 border-primary/20 ${isMobile ? 'mb-3' : 'mb-4'}`}>
+          <div className={`flex items-center gap-2 ${isMobile ? 'p-2.5' : 'p-3'}`}>
+            <Info className={isMobile ? 'h-3.5 w-3.5 text-primary shrink-0' : 'h-4 w-4 text-primary shrink-0'} />
+            <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
+              Assista, adicione comentários ou desenhe no vídeo, depois aprove ou envie feedback.
+            </p>
           </div>
         </Card>
 
-        {/* Side-by-Side Layout: Video (left) + Unified Sidebar (right) - 70/30 proportion */}
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-6'}`}>
-          {/* Left Column: Video Only - 70% width on desktop (8/12 columns) */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-8 space-y-0'}`}>
+        {/* Optimized Grid - 60/40 Proportion */}
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-4'}`}>
+          {/* Left Column: Video (60% - 7/12 columns) */}
+          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-7 space-y-0'}`}>
             {/* Video Player Card */}
-            <Card className={`bg-white border-gray-200 shadow-md ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: isMobile ? '300px' : '600px' }}>
+            <Card className={`bg-card border-border shadow-md ${isMobile ? 'p-3' : 'p-3'}`}>
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: isMobile ? '300px' : '500px' }}>
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -906,28 +883,28 @@ export default function AudiovisualApproval() {
             )}
           </div>
 
-          {/* Right Column: Unified Sidebar (Actions + Comments) - 30% width on desktop (4/12 columns) */}
-          <div className={`${isMobile ? '' : 'lg:col-span-4'}`}>
-            <Card className={`bg-white border-gray-200 shadow-md flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : '600px' }}>
-              {/* Actions Section at Top */}
-              <div className={`border-b border-gray-200 ${isMobile ? 'pb-4 mb-4' : 'p-4 pb-4'}`}>
-                <h3 className={`font-semibold mb-3 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-base'}`}>
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                  Avaliação e Ações
+          {/* Right Column: Frame.io Style Sidebar (40% - 5/12 columns) */}
+          <div className={`${isMobile ? '' : 'lg:col-span-5'}`}>
+            <Card className={`bg-card border-border shadow-md flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : '500px' }}>
+              {/* Actions Section - Compact Top */}
+              <div className={`border-b border-border bg-muted/10 ${isMobile ? 'pb-3 mb-3 px-3 pt-3' : 'p-3 pb-3'}`}>
+                <h3 className={`font-semibold mb-2.5 flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                  Ações
                 </h3>
 
-                {/* Rating Section */}
+                {/* Compact Rating */}
                 {hasSubmittedRating ? (
-                  <div className="text-center mb-4">
-                    <CheckCircle className={`text-green-600 mx-auto mb-2 ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`} />
-                    <p className={`font-semibold text-green-600 ${isMobile ? 'text-sm' : 'text-sm'}`}>
-                      Obrigado por sua avaliação!
+                  <div className="text-center mb-3">
+                    <CheckCircle className={`text-green-600 mx-auto mb-1.5 ${isMobile ? 'w-8 h-8' : 'w-9 h-9'}`} />
+                    <p className={`font-semibold text-green-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                      Obrigado pela avaliação!
                     </p>
-                    <div className="flex justify-center gap-1 mt-2">
+                    <div className="flex justify-center gap-0.5 mt-1.5">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
-                          className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${
+                          className={`${isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${
                             star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
                           }`}
                         />
@@ -935,22 +912,22 @@ export default function AudiovisualApproval() {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-2 mb-3">
                     <div>
-                      <label className={`block font-medium mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                        Como você avalia sua experiência?
+                      <label className={`block font-medium mb-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        Avalie sua experiência
                       </label>
-                      <div className="flex justify-center gap-1">
+                      <div className="flex justify-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
                             onClick={() => setRating(star)}
-                            className="transition-transform hover:scale-110 touch-manipulation p-1"
+                            className="transition-transform hover:scale-110 touch-manipulation p-0.5"
                             disabled={hasSubmittedRating}
                           >
                             <Star
                               className={`cursor-pointer transition-colors ${
-                                isMobile ? 'w-6 h-6' : 'w-7 h-7'
+                                isMobile ? 'w-5 h-5' : 'w-6 h-6'
                               } ${
                                 star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
                               }`}
@@ -961,8 +938,8 @@ export default function AudiovisualApproval() {
                     </div>
 
                     {rating === 0 && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-                        <p className="text-xs text-yellow-800 text-center">
+                      <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md p-1.5">
+                        <p className="text-xs text-yellow-800 dark:text-yellow-200 text-center">
                           ⚠️ Avaliação obrigatória
                         </p>
                       </div>
@@ -970,7 +947,7 @@ export default function AudiovisualApproval() {
                   </div>
                 )}
 
-                {/* Action Buttons */}
+                {/* Compact Action Buttons */}
                 <div className="flex flex-col gap-2">
                   <Button
                     onClick={() => handleAction('approved')}
