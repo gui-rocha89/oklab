@@ -128,40 +128,90 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         duration: 3000,
       });
 
-      // Upload em background sem bloquear UI
+      // Upload em background com retry logic e timeout
       setTimeout(async () => {
-        try {
-          const fileName = `${projectId}/${Date.now()}.${videoFile.name.split('.').pop()}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('audiovisual-projects')
-            .upload(fileName, videoFile, {
-              contentType: videoFile.type,
-              cacheControl: '3600',
-              upsert: false
-            });
+        const maxRetries = 3;
+        const uploadTimeout = 10 * 60 * 1000; // 10 minutos
+        let retryCount = 0;
+        
+        const uploadWithRetry = async () => {
+          try {
+            console.log(`🚀 Iniciando upload (tentativa ${retryCount + 1}/${maxRetries})`);
+            
+            const fileName = `${projectId}/${Date.now()}.${videoFile.name.split('.').pop()}`;
+            
+            // Create a timeout promise
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Upload timeout')), uploadTimeout)
+            );
+            
+            // Upload with timeout
+            const uploadPromise = supabase.storage
+              .from('audiovisual-projects')
+              .upload(fileName, videoFile, {
+                contentType: videoFile.type,
+                cacheControl: '3600',
+                upsert: false
+              });
+            
+            const { error: uploadError } = await Promise.race([uploadPromise, timeoutPromise]);
 
-          if (uploadError) throw uploadError;
+            if (uploadError) {
+              // Check if error is 413 (file too large) - don't retry
+              if (uploadError.statusCode === '413' || uploadError.status === 413) {
+                console.error("❌ Arquivo muito grande, não será feito retry");
+                throw new Error('FILE_TOO_LARGE');
+              }
+              throw uploadError;
+            }
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('audiovisual-projects')
-            .getPublicUrl(fileName);
+            console.log("✅ Upload concluído com sucesso");
 
-          await supabase
-            .from('projects')
-            .update({ 
-              video_url: publicUrl,
-              status: 'pending'
-            })
-            .eq('id', projectId);
+            const { data: { publicUrl } } = supabase.storage
+              .from('audiovisual-projects')
+              .getPublicUrl(fileName);
 
-        } catch (error) {
-          console.error("Erro no upload:", error);
-          await supabase
-            .from('projects')
-            .update({ status: 'error' })
-            .eq('id', projectId);
-        }
+            await supabase
+              .from('projects')
+              .update({ 
+                video_url: publicUrl,
+                status: 'pending'
+              })
+              .eq('id', projectId);
+            
+            console.log("✅ Projeto atualizado com video_url");
+
+          } catch (error) {
+            console.error(`❌ Erro no upload (tentativa ${retryCount + 1}):`, error);
+            
+            // Don't retry if file is too large
+            if (error.message === 'FILE_TOO_LARGE') {
+              await supabase
+                .from('projects')
+                .update({ status: 'error' })
+                .eq('id', projectId);
+              return;
+            }
+            
+            // Retry if we haven't exceeded max retries
+            if (retryCount < maxRetries - 1) {
+              retryCount++;
+              const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
+              console.log(`⏳ Aguardando ${delay}ms antes de tentar novamente...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              return uploadWithRetry();
+            } else {
+              // Final failure after all retries
+              console.error("❌ Todas as tentativas de upload falharam");
+              await supabase
+                .from('projects')
+                .update({ status: 'error' })
+                .eq('id', projectId);
+            }
+          }
+        };
+        
+        await uploadWithRetry();
       }, 100);
 
     } catch (error) {

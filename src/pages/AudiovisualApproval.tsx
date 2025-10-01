@@ -479,6 +479,95 @@ export default function AudiovisualApproval() {
     );
   }
 
+  // Check if video is still uploading or unavailable
+  if (project.status === 'uploading' || !project.video_url) {
+    const handleRefreshStatus = async () => {
+      setLoading(true);
+      try {
+        const { data: updatedProject } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('share_id', shareId)
+          .single();
+        
+        if (updatedProject) {
+          setProject(updatedProject);
+          
+          if (updatedProject.status !== 'uploading' && updatedProject.video_url) {
+            toast({
+              title: "Vídeo disponível!",
+              description: "O vídeo foi processado com sucesso.",
+            });
+          } else if (updatedProject.status === 'error') {
+            toast({
+              title: "Erro no upload",
+              description: "Houve um problema ao processar o vídeo. Entre em contato com o suporte.",
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "Ainda processando",
+              description: "O vídeo ainda está sendo processado. Tente novamente em alguns instantes.",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível verificar o status do projeto.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-8 max-w-2xl mx-auto">
+        <Loader2 className="w-16 h-16 text-primary animate-spin mb-6" />
+        <h1 className="text-3xl font-bold mb-4">
+          {project.status === 'error' ? 'Erro no Processamento' : 'Vídeo em Processamento'}
+        </h1>
+        <p className="text-muted-foreground mb-6 text-lg">
+          {project.status === 'error' 
+            ? 'Houve um problema ao processar o vídeo. Por favor, entre em contato com o suporte ou solicite o reenvio do projeto.'
+            : 'O vídeo está sendo processado em segundo plano. Isso pode levar alguns minutos dependendo do tamanho do arquivo.'
+          }
+        </p>
+        <div className="bg-muted/50 p-6 rounded-lg mb-6 text-left w-full">
+          <h3 className="font-semibold mb-3 text-lg">Informações do Projeto:</h3>
+          <div className="space-y-2 text-muted-foreground">
+            <p><strong>Título:</strong> {project.title}</p>
+            <p><strong>Cliente:</strong> {project.client}</p>
+            <p><strong>Status:</strong> {project.status === 'error' ? 'Erro' : 'Processando...'}</p>
+            <p className="text-sm mt-4">
+              {project.status === 'error' 
+                ? '❌ O upload falhou. O arquivo pode ter excedido o tamanho máximo permitido.'
+                : '⏳ Aguarde alguns instantes e clique em "Verificar Status" para atualizar.'
+              }
+            </p>
+          </div>
+        </div>
+        <Button 
+          onClick={handleRefreshStatus}
+          disabled={loading}
+          size="lg"
+          className="min-w-[200px]"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Verificando...
+            </>
+          ) : (
+            'Verificar Status'
+          )}
+        </Button>
+      </div>
+    );
+  }
+
   if (showConfirmation) {
     const isApproved = project.status === 'approved';
 
