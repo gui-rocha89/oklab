@@ -14,6 +14,7 @@ import { DrawingToolbar } from '@/components/DrawingToolbar';
 import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
 import { AnnotationCommentModal } from '@/components/AnnotationCommentModal';
 import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
+import { CommentsSidebar } from '@/components/CommentsSidebar';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 
@@ -721,12 +722,13 @@ export default function AudiovisualApproval() {
           </div>
         </Card>
 
-        {/* Side-by-Side Layout: Video (left) + Actions (right) - Using 12-column grid for precise control */}
+        {/* Side-by-Side Layout: Video + Actions (left) + Comments Sidebar (right) - Using 12-column grid for precise control */}
         <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-6'}`}>
-          {/* Video Player Section - ~58% width on desktop (7/12 columns) */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-7 space-y-4'}`}>
-            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'} min-h-[400px] lg:min-h-[500px]`}>
-              <div className="relative bg-black rounded-lg overflow-hidden">
+          {/* Left Column: Video + Actions - ~66% width on desktop (8/12 columns) */}
+          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-8 space-y-4'}`}>
+            {/* Video Player Card */}
+            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: isMobile ? '250px' : '400px' }}>
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -846,128 +848,8 @@ export default function AudiovisualApproval() {
               </div>
             </Card>
 
-            {/* Keyframes */}
-            {keyframes.length > 0 && (
-              <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
-                <h3 className={`font-semibold mb-4 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>Comentários no Vídeo</h3>
-                <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
-                  {keyframes.map(keyframe => (
-                    <motion.div
-                      key={keyframe.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="border border-gray-200 rounded-lg p-4 bg-white"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <button
-                          onClick={() => seekTo(keyframe.time)}
-                          className={`text-primary hover:text-primary/80 font-medium touch-manipulation ${isMobile ? 'min-h-[44px] text-base' : ''}`}
-                        >
-                          {formatTime(keyframe.time)}
-                        </button>
-                        <Button
-                          onClick={() => handleRemoveKeyframe(keyframe.id)}
-                          variant="ghost"
-                          size={isMobile ? "default" : "sm"}
-                          className={isMobile ? "touch-manipulation min-h-[44px]" : ""}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <Textarea
-                        value={keyframe.comment}
-                        onChange={(e) => handleKeyframeCommentChange(keyframe.id, e.target.value)}
-                        placeholder="Adicione seu comentário aqui..."
-                        className={`w-full ${isMobile ? 'min-h-[100px] text-base' : ''}`}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* Visual Annotations */}
-            {annotations.length > 0 && (
-              <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className={`font-semibold text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
-                    Anotações Visuais ({annotations.length})
-                  </h3>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigateToAnnotation('prev')}
-                      disabled={annotations.length === 0}
-                      title="Anotação Anterior"
-                    >
-                      ←
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigateToAnnotation('next')}
-                      disabled={annotations.length === 0}
-                      title="Próxima Anotação"
-                    >
-                      →
-                    </Button>
-                  </div>
-                </div>
-                <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
-                  {annotations
-                    .sort((a, b) => a.timestamp_ms - b.timestamp_ms)
-                    .map((annotation, index) => (
-                    <motion.div
-                      key={annotation.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                        currentAnnotationId === annotation.id
-                          ? 'border-yellow-400 bg-yellow-50'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
-                      }`}
-                      onClick={() => handleAnnotationClick(annotation.id)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
-                            #{index + 1}
-                          </span>
-                          <span className={`font-medium touch-manipulation ${isMobile ? 'text-base' : ''}`}>
-                            {formatTime(annotation.timestamp_ms / 1000)}
-                          </span>
-                          {currentAnnotationId === annotation.id && (
-                            <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-medium">
-                              Visualizando
-                            </span>
-                          )}
-                        </div>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteAnnotation(annotation.id);
-                          }}
-                          variant="ghost"
-                          size={isMobile ? "default" : "sm"}
-                          className={`hover:bg-red-100 hover:text-red-600 ${isMobile ? 'touch-manipulation min-h-[44px]' : ''}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      {annotation.comment && (
-                        <p className="text-sm text-gray-600 ml-8">{annotation.comment}</p>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              </Card>
-            )}
-          </div>
-
-          {/* Actions Sidebar - ~42% width on desktop (5/12 columns) */}
-          <div className={`${isMobile ? 'space-y-4' : 'lg:col-span-5'}`}>
-            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6 sticky top-6'}`}>
+            {/* Actions Card - Below Video */}
+            <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
               <h3 className={`font-semibold mb-4 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
                 <MessageSquare className="w-5 h-5 text-gray-700" />
                 Ações
@@ -1107,6 +989,58 @@ export default function AudiovisualApproval() {
                 )}
               </div>
             </Card>
+
+            {/* Keyframes Editing Section (mobile/desktop) - Keep for editing */}
+            {keyframes.length > 0 && (
+              <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
+                <h3 className={`font-semibold mb-4 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>Editar Comentários</h3>
+                <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
+                  {keyframes.map(keyframe => (
+                    <motion.div
+                      key={keyframe.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border border-gray-200 rounded-lg p-4 bg-white"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          onClick={() => seekTo(keyframe.time)}
+                          className={`text-primary hover:text-primary/80 font-medium touch-manipulation ${isMobile ? 'min-h-[44px] text-base' : ''}`}
+                        >
+                          {formatTime(keyframe.time)}
+                        </button>
+                        <Button
+                          onClick={() => handleRemoveKeyframe(keyframe.id)}
+                          variant="ghost"
+                          size={isMobile ? "default" : "sm"}
+                          className={isMobile ? "touch-manipulation min-h-[44px]" : ""}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={keyframe.comment}
+                        onChange={(e) => handleKeyframeCommentChange(keyframe.id, e.target.value)}
+                        placeholder="Adicione seu comentário aqui..."
+                        className={`w-full ${isMobile ? 'min-h-[100px] text-base' : ''}`}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column: Comments Sidebar - ~33% width on desktop (4/12 columns) */}
+          <div className={`${isMobile ? '' : 'lg:col-span-4'}`} style={{ height: isMobile ? 'auto' : '800px' }}>
+            <CommentsSidebar
+              keyframes={keyframes}
+              annotations={annotations}
+              currentTime={currentTime}
+              onSeekToTime={seekTo}
+              onLoadAnnotation={handleAnnotationClick}
+              formatTime={formatTime}
+            />
           </div>
         </div>
 
