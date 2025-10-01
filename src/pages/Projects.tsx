@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { FixOrphanedProjects } from "@/components/FixOrphanedProjects";
 
 // ... keep existing code (imports)
 
@@ -349,6 +350,9 @@ export default function Projects() {
             </motion.div>
           )}
         </div>
+
+        {/* Fix Orphaned Projects Tool */}
+        <FixOrphanedProjects />
 
         {/* Lista/Grid de Projetos */}
         {viewMode === "grid" ? (
