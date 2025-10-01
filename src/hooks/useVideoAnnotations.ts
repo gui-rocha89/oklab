@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Canvas as FabricCanvas } from 'fabric';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { normalizeCanvasData, REFERENCE_WIDTH, REFERENCE_HEIGHT } from '@/lib/annotationUtils';
 
 interface Annotation {
   id: string;
@@ -47,14 +48,17 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
       const canvas = fabricCanvasRef.current;
       const canvasData = canvas.toJSON();
       
-      // CRITICAL: Include canvas dimensions in the saved data
-      canvasData.width = canvas.width;
-      canvasData.height = canvas.height;
+      // Normalizar coordenadas para a resolução de referência (1280x720)
+      const normalizedData = normalizeCanvasData(
+        canvasData,
+        canvas.width || 0,
+        canvas.height || 0
+      );
       
-      console.log('💾 Salvando anotação com dimensões:', {
-        width: canvasData.width,
-        height: canvasData.height,
-        objects: canvasData.objects?.length || 0
+      console.log('💾 Salvando anotação normalizada:', {
+        originalDimensions: `${canvas.width}x${canvas.height}`,
+        referenceDimensions: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
+        objects: normalizedData.objects?.length || 0
       });
       
       const { data, error } = await supabase
@@ -62,7 +66,7 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
         .insert({
           project_id: projectId,
           timestamp_ms: timestampMs,
-          canvas_data: canvasData,
+          canvas_data: normalizedData,
           comment: comment || null,
         })
         .select()

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Play, Pause, SkipBack, SkipForward, Maximize, MessageSquare, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { convertFromReferenceResolution, REFERENCE_WIDTH, REFERENCE_HEIGHT } from "@/lib/annotationUtils";
 
 interface VideoAnnotation {
   id: string;
@@ -113,54 +114,28 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         height: currentHeight
       });
 
-      const objects = await util.enlivenObjects(annotation.canvas_data.objects);
-      
-      // Determinar dimensões originais do canvas
-      let originalWidth = annotation.canvas_data.width;
-      let originalHeight = annotation.canvas_data.height;
+      // Converter objetos da resolução de referência para a resolução atual
+      const convertedObjects = convertFromReferenceResolution(
+        annotation.canvas_data.objects || [],
+        currentWidth,
+        currentHeight
+      );
 
-      // Se não temos dimensões salvas, calcular baseado nos objetos
-      if (!originalWidth || !originalHeight) {
-        let maxRight = 0;
-        let maxBottom = 0;
+      console.log('🎯 Carregando anotação:', {
+        reference: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
+        current: `${currentWidth}x${currentHeight}`,
+        scaleX: (currentWidth / REFERENCE_WIDTH).toFixed(3),
+        scaleY: (currentHeight / REFERENCE_HEIGHT).toFixed(3),
+        objectCount: convertedObjects.length
+      });
 
-        annotation.canvas_data.objects.forEach((obj: any) => {
-          const objWidth = (obj.width || 0) * (obj.scaleX || 1);
-          const objHeight = (obj.height || 0) * (obj.scaleY || 1);
-          const right = (obj.left || 0) + objWidth;
-          const bottom = (obj.top || 0) + objHeight;
-          
-          if (right > maxRight) maxRight = right;
-          if (bottom > maxBottom) maxBottom = bottom;
-        });
-
-        // Adicionar padding e garantir dimensões mínimas
-        originalWidth = Math.max(maxRight + 50, 600);
-        originalHeight = Math.max(maxBottom + 50, 350);
-        
-        console.log(`📐 Dimensões calculadas: ${originalWidth}x${originalHeight}`);
-        console.log(`📏 Limites dos objetos: direita=${maxRight}, baixo=${maxBottom}`);
-      }
-
-      const scaleX = currentWidth / originalWidth;
-      const scaleY = currentHeight / originalHeight;
-
-      console.log(`🎯 Canvas atual: ${currentWidth}x${currentHeight}`);
-      console.log(`📦 Canvas original: ${originalWidth}x${originalHeight}`);
-      console.log(`📊 Fatores de escala: X=${scaleX.toFixed(3)}, Y=${scaleY.toFixed(3)}`);
+      const objects = await util.enlivenObjects(convertedObjects);
 
       objects.forEach((obj: any, index: number) => {
         if (obj) {
-          const scaledLeft = (obj.left || 0) * scaleX;
-          const scaledTop = (obj.top || 0) * scaleY;
-          
-          console.log(`🎨 Objeto ${index}: ${obj.type} em (${obj.left}, ${obj.top}) → (${scaledLeft.toFixed(1)}, ${scaledTop.toFixed(1)})`);
+          console.log(`🎨 Objeto ${index} (${obj.type}): pos=(${obj.left?.toFixed(1)}, ${obj.top?.toFixed(1)}) scale=(${obj.scaleX?.toFixed(2)}, ${obj.scaleY?.toFixed(2)})`);
           
           obj.set({
-            left: scaledLeft,
-            top: scaledTop,
-            scaleX: (obj.scaleX || 1) * scaleX,
-            scaleY: (obj.scaleY || 1) * scaleY,
             selectable: false,
             evented: false,
             stroke: '#FF0000',
@@ -171,6 +146,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
           canvas.add(obj);
         }
       });
+
+      console.log(`✅ ${objects.length} objetos adicionados ao canvas`);
 
       canvas.renderAll();
     } catch (error) {
