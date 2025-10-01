@@ -665,7 +665,7 @@ export default function AudiovisualApproval() {
 
       {/* Main Content */}
       <div className={`flex-1 container mx-auto max-w-6xl ${isMobile ? 'px-3 py-4' : 'px-4 py-6'}`}>
-        {/* Project Info Cards */}
+        {/* Project Info Cards - 3 columns on top */}
         <div className={`grid grid-cols-1 md:grid-cols-3 mb-6 ${isMobile ? 'gap-3' : 'gap-4'}`}>
           <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
             <h3 className="text-sm font-bold font-['Inter'] mb-2 text-gray-700">Nome do Projeto</h3>
@@ -684,7 +684,7 @@ export default function AudiovisualApproval() {
         </div>
 
         {/* Instructions Card - Frame.io style */}
-        <Card className={`border-gray-200 shadow-sm bg-white ${isMobile ? 'mb-4' : 'mb-8'}`}>
+        <Card className={`border-gray-200 shadow-sm bg-white ${isMobile ? 'mb-4' : 'mb-6'}`}>
           <div className={`flex items-start ${isMobile ? 'p-4 gap-3' : 'p-6 gap-4'}`}>
             <div className="flex-shrink-0 mt-1">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -700,9 +700,10 @@ export default function AudiovisualApproval() {
           </div>
         </Card>
 
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-3 gap-6'}`}>
-          {/* Video Player Section */}
-          <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
+        {/* Side-by-Side Layout: Video (left) + Actions (right) */}
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-5 gap-6'}`}>
+          {/* Video Player Section - 60% width on desktop */}
+          <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-3'}`}>
             <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-3' : 'p-6'}`}>
               <div className="relative bg-black">
                 {/* Hidden video element for syncing with canvas */}
@@ -943,8 +944,8 @@ export default function AudiovisualApproval() {
             )}
           </div>
 
-          {/* Actions Sidebar */}
-          <div className="space-y-4">
+          {/* Actions Sidebar - 40% width on desktop */}
+          <div className={`space-y-4 ${isMobile ? '' : 'lg:col-span-2'}`}>
             <Card className={`bg-white border-gray-200 shadow-sm ${isMobile ? 'p-4' : 'p-6'}`}>
               <h3 className={`font-semibold mb-4 flex items-center gap-2 text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
                 <MessageSquare className="w-5 h-5 text-gray-700" />
