@@ -49,11 +49,13 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       if (!videoRef.current || !canvas) return;
       
       const video = videoRef.current;
-      const rect = video.getBoundingClientRect();
+      // Usar dimensões nativas do vídeo, não do elemento HTML renderizado
+      const videoNativeWidth = video.videoWidth || REFERENCE_WIDTH;
+      const videoNativeHeight = video.videoHeight || REFERENCE_HEIGHT;
       
       canvas.setDimensions({
-        width: rect.width,
-        height: rect.height,
+        width: videoNativeWidth,
+        height: videoNativeHeight,
       });
       canvas.renderAll();
     };
@@ -104,27 +106,27 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         return;
       }
 
-      const videoRect = video.getBoundingClientRect();
-      const currentWidth = Math.floor(videoRect.width);
-      const currentHeight = Math.floor(videoRect.height);
+      // Usar dimensões NATIVAS do vídeo, não do elemento HTML
+      const videoNativeWidth = video.videoWidth || REFERENCE_WIDTH;
+      const videoNativeHeight = video.videoHeight || REFERENCE_HEIGHT;
 
       canvas.setDimensions({
-        width: currentWidth,
-        height: currentHeight
+        width: videoNativeWidth,
+        height: videoNativeHeight
       });
 
-      // Converter objetos da resolução de referência para a resolução atual
+      // Converter objetos da resolução de referência para as dimensões nativas do vídeo
       const convertedObjects = convertFromReferenceResolution(
         annotation.canvas_data.objects || [],
-        currentWidth,
-        currentHeight
+        videoNativeWidth,
+        videoNativeHeight
       );
 
       console.log('🎯 Carregando anotação:', {
         reference: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
-        current: `${currentWidth}x${currentHeight}`,
-        scaleX: (currentWidth / REFERENCE_WIDTH).toFixed(3),
-        scaleY: (currentHeight / REFERENCE_HEIGHT).toFixed(3),
+        videoNative: `${videoNativeWidth}x${videoNativeHeight}`,
+        scaleX: (videoNativeWidth / REFERENCE_WIDTH).toFixed(3),
+        scaleY: (videoNativeHeight / REFERENCE_HEIGHT).toFixed(3),
         objectCount: convertedObjects.length
       });
 
@@ -247,11 +249,14 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                 onPause={() => setIsPlaying(false)}
               />
             
-            {/* Canvas para anotações */}
+            {/* Canvas para anotações - escala proporcionalmente com o vídeo */}
             <canvas
               ref={canvasRef}
               className="absolute top-0 left-0 w-full h-full pointer-events-none"
-              style={{ zIndex: 30 }}
+              style={{ 
+                zIndex: 30,
+                objectFit: 'cover'
+              }}
             />
 
             {/* Overlay para controles - aparece no hover */}
