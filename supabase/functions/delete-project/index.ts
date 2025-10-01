@@ -182,25 +182,41 @@ Deno.serve(async (req) => {
       console.log(`✅ Excluídos ${keyframesCount} keyframes`);
     }
 
-    // 7. Delete storage files (if video_url exists)
+    // 7. Delete storage files and folder (if video_url exists)
     if (project.video_url) {
       try {
-        // Extract file path from URL
-        // URL format: https://[project].supabase.co/storage/v1/object/public/audiovisual-projects/[path]
-        const urlParts = project.video_url.split('/audiovisual-projects/');
-        if (urlParts.length === 2) {
-          const filePath = urlParts[1];
+        // Extract folder path from URL
+        // URL format: https://[project].supabase.co/storage/v1/object/public/audiovisual-projects/[FOLDER_ID]/[FILENAME]
+        const match = project.video_url.match(/audiovisual-projects\/([^\/]+)\//);
+        
+        if (match && match[1]) {
+          const folderId = match[1];
+          console.log(`📁 Removendo pasta do Storage: ${folderId}`);
           
-          const { error: storageError } = await supabase.storage
+          // List all files in this folder
+          const { data: folderFiles, error: listError } = await supabase.storage
             .from('audiovisual-projects')
-            .remove([filePath]);
+            .list(folderId);
 
-          if (storageError) {
-            console.error('Erro ao excluir arquivo do Storage:', storageError);
-          } else {
-            summary.deletedItems.storageFiles = 1;
-            console.log(`✅ Excluído arquivo do Storage: ${filePath}`);
+          if (listError) {
+            console.error('Erro ao listar arquivos da pasta:', listError);
+          } else if (folderFiles && folderFiles.length > 0) {
+            // Delete all files in the folder
+            const filePaths = folderFiles.map(f => `${folderId}/${f.name}`);
+            
+            const { error: storageError } = await supabase.storage
+              .from('audiovisual-projects')
+              .remove(filePaths);
+
+            if (storageError) {
+              console.error('Erro ao excluir arquivos do Storage:', storageError);
+            } else {
+              summary.deletedItems.storageFiles = filePaths.length;
+              console.log(`✅ Excluídos ${filePaths.length} arquivos do Storage na pasta ${folderId}`);
+            }
           }
+        } else {
+          console.warn('⚠️ Formato de URL inválido, não foi possível extrair pasta:', project.video_url);
         }
       } catch (storageErr) {
         console.error('Erro ao processar exclusão do Storage:', storageErr);

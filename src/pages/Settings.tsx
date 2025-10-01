@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { useUser } from "@/contexts/UserContext";
 import { useTheme } from 'next-themes';
+import { CleanupOrphanedFiles } from "@/components/CleanupOrphanedFiles";
 
 export default function Settings() {
   const { user } = useUser();
@@ -600,6 +601,16 @@ export default function Settings() {
                     <Upload className="h-4 w-4" />
                     Importar Backup
                   </Button>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-2">Limpeza de Storage</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Remove vídeos órfãos que não estão associados a nenhum projeto ativo. Esta operação ajuda a liberar espaço no Storage.
+                  </p>
+                  <CleanupOrphanedFiles />
                 </div>
 
                 <Separator />
