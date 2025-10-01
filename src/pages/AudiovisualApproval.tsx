@@ -17,6 +17,7 @@ import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
 import { CommentsSidebar } from '@/components/CommentsSidebar';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
+import logoOrange from '@/assets/logo-orange-bg.png';
 
 const formatTime = (seconds: number): string => {
   if (isNaN(seconds) || seconds < 0) {
@@ -646,43 +647,43 @@ export default function AudiovisualApproval() {
         <title>Aprovação de Vídeo - {project.title}</title>
       </Helmet>
 
-      {/* Clean Header */}
-      <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-md ${isMobile ? 'py-2.5' : 'py-3'}`}>
+      {/* Header Laranja com Logo Centralizada */}
+      <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-lg ${isMobile ? 'py-4' : 'py-6'}`}>
         <div className="container mx-auto flex items-center justify-center px-4">
           <img 
-            src={logoDark} 
+            src={logoOrange} 
             alt="OK Lab Logo" 
-            className={`w-auto ${isMobile ? 'h-8' : 'h-10'}`}
+            className={`w-auto ${isMobile ? 'h-12' : 'h-16'}`}
           />
         </div>
       </header>
 
       {/* Main Content */}
-      <div className={`flex-1 container mx-auto max-w-7xl ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
-        {/* Clean Info Cards - Horizontal Layout */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-2 mb-3' : 'gap-3 mb-4'}`}>
-          <Card className={`bg-card border-border shadow-sm hover:shadow-md transition-shadow ${isMobile ? 'p-2.5' : 'p-3'}`}>
-            <div className="flex items-center gap-2.5">
-              <div className={`p-1.5 rounded-md bg-primary/10 shrink-0 ${isMobile ? '' : ''}`}>
-                <FileText className={isMobile ? 'w-4 h-4 text-primary' : 'w-5 h-5 text-primary'} />
+      <div className={`flex-1 container mx-auto max-w-7xl ${isMobile ? 'px-3 py-4' : 'px-6 py-6'}`}>
+        {/* Cards de Informação - Layout Horizontal Profissional */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 ${isMobile ? 'gap-3 mb-4' : 'gap-4 mb-6'}`}>
+          <Card className={`bg-gradient-to-br from-card to-card/80 border-primary/20 shadow-lg hover:shadow-xl transition-all ${isMobile ? 'p-3' : 'p-4'}`}>
+            <div className="flex items-start gap-3">
+              <div className={`rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
+                <FileText className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-muted-foreground mb-0.5 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Projeto</p>
-                <h2 className={`font-bold text-foreground truncate ${isMobile ? 'text-sm' : 'text-2xl'}`}>
+                <p className={`font-medium text-muted-foreground mb-1 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Projeto</p>
+                <h2 className={`font-bold text-foreground leading-tight truncate ${isMobile ? 'text-base' : 'text-2xl'}`}>
                   {project.title}
                 </h2>
               </div>
             </div>
           </Card>
           
-          <Card className={`bg-card border-border shadow-sm hover:shadow-md transition-shadow ${isMobile ? 'p-2.5' : 'p-3'}`}>
-            <div className="flex items-center gap-2.5">
-              <div className={`p-1.5 rounded-md bg-primary/10 shrink-0 ${isMobile ? '' : ''}`}>
-                <User className={isMobile ? 'w-4 h-4 text-primary' : 'w-5 h-5 text-primary'} />
+          <Card className={`bg-gradient-to-br from-primary/5 to-primary/10 border-primary/30 shadow-lg hover:shadow-xl transition-all ${isMobile ? 'p-3' : 'p-4'}`}>
+            <div className="flex items-start gap-3">
+              <div className={`rounded-xl bg-primary/20 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
+                <User className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-muted-foreground mb-0.5 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Cliente</p>
-                <h3 className={`font-semibold text-primary truncate ${isMobile ? 'text-sm' : 'text-lg'}`}>
+                <p className={`font-medium text-primary/70 mb-1 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Cliente</p>
+                <h3 className={`font-bold text-primary truncate ${isMobile ? 'text-sm' : 'text-xl'}`}>
                   {project.client}
                 </h3>
               </div>
@@ -690,14 +691,14 @@ export default function AudiovisualApproval() {
           </Card>
 
           {project.description && (
-            <Card className={`bg-card border-border shadow-sm hover:shadow-md transition-shadow ${isMobile ? 'p-2.5' : 'p-3'}`}>
-              <div className="flex items-center gap-2.5">
-                <div className={`p-1.5 rounded-md bg-primary/10 shrink-0 ${isMobile ? '' : ''}`}>
-                  <Info className={isMobile ? 'w-4 h-4 text-primary' : 'w-5 h-5 text-primary'} />
+            <Card className={`bg-gradient-to-br from-card to-card/80 border-primary/20 shadow-lg hover:shadow-xl transition-all ${isMobile ? 'p-3' : 'p-4'}`}>
+              <div className="flex items-start gap-3">
+                <div className={`rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ${isMobile ? 'h-10 w-10' : 'h-12 w-12'}`}>
+                  <Info className={isMobile ? 'w-5 h-5 text-primary' : 'w-6 h-6 text-primary'} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-muted-foreground mb-0.5 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Descrição</p>
-                  <p className={`text-foreground line-clamp-2 ${isMobile ? 'text-xs' : 'text-base'}`}>
+                  <p className={`font-medium text-muted-foreground mb-1 ${isMobile ? 'text-[10px]' : 'text-xs'}`}>Descrição</p>
+                  <p className={`text-foreground leading-tight line-clamp-2 ${isMobile ? 'text-xs' : 'text-lg'}`}>
                     {project.description}
                   </p>
                 </div>
@@ -706,23 +707,23 @@ export default function AudiovisualApproval() {
           )}
         </div>
 
-        {/* Compact Instructions */}
-        <Card className={`bg-primary/5 border-primary/20 ${isMobile ? 'mb-3' : 'mb-4'}`}>
-          <div className={`flex items-center gap-2 ${isMobile ? 'p-2.5' : 'p-3'}`}>
-            <Info className={isMobile ? 'h-3.5 w-3.5 text-primary shrink-0' : 'h-4 w-4 text-primary shrink-0'} />
-            <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
-              Assista, adicione comentários ou desenhe no vídeo, depois aprove ou envie feedback.
+        {/* Card de Instruções */}
+        <Card className={`bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 ${isMobile ? 'mb-4' : 'mb-6'}`}>
+          <div className={`flex items-center gap-3 ${isMobile ? 'p-3' : 'p-4'}`}>
+            <Info className={isMobile ? 'h-4 w-4 text-primary shrink-0' : 'h-5 w-5 text-primary shrink-0'} />
+            <p className={`text-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
+              <strong>Como revisar:</strong> Assista ao vídeo, adicione comentários nos momentos específicos ou desenhe diretamente no vídeo para marcar correções. Depois, aprove ou envie feedback.
             </p>
           </div>
         </Card>
 
-        {/* Optimized Grid - 60/40 Proportion */}
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-4'}`}>
-          {/* Left Column: Video (60% - 7/12 columns) */}
+        {/* Grid Layout - 60/40 Proportion */}
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-6'}`}>
+          {/* Coluna Esquerda: Vídeo (60% - 7/12 columns) */}
           <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-7 space-y-0'}`}>
-            {/* Video Player Card */}
-            <Card className={`bg-card border-border shadow-md ${isMobile ? 'p-3' : 'p-3'}`}>
-              <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: isMobile ? '300px' : '500px' }}>
+            {/* Card do Player de Vídeo */}
+            <Card className={`bg-card border-primary/20 shadow-xl ${isMobile ? 'p-3' : 'p-6'}`}>
+              <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: isMobile ? '300px' : '550px' }}>
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -883,14 +884,14 @@ export default function AudiovisualApproval() {
             )}
           </div>
 
-          {/* Right Column: Frame.io Style Sidebar (40% - 5/12 columns) */}
+          {/* Coluna Direita: Sidebar Unificado (40% - 5/12 columns) */}
           <div className={`${isMobile ? '' : 'lg:col-span-5'}`}>
-            <Card className={`bg-card border-border shadow-md flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : '500px' }}>
-              {/* Actions Section - Compact Top */}
-              <div className={`border-b border-border bg-muted/10 ${isMobile ? 'pb-3 mb-3 px-3 pt-3' : 'p-3 pb-3'}`}>
-                <h3 className={`font-semibold mb-2.5 flex items-center gap-2 ${isMobile ? 'text-sm' : 'text-base'}`}>
-                  <CheckCircle className="w-4 h-4 text-primary" />
-                  Ações
+            <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : '550px' }}>
+              {/* Seção de Ações no Topo */}
+              <div className={`border-b border-border bg-muted/30 ${isMobile ? 'pb-4 mb-4 px-4 pt-4' : 'p-4 pb-4'}`}>
+                <h3 className={`font-semibold mb-3 flex items-center gap-2 text-foreground ${isMobile ? 'text-base' : 'text-lg'}`}>
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  Avaliação e Ações
                 </h3>
 
                 {/* Compact Rating */}
