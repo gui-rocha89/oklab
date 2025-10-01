@@ -744,13 +744,13 @@ export default function AudiovisualApproval() {
           </div>
         </Card>
 
-        {/* Grid Layout - 60/40 Proportion */}
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-12 gap-6'}`}>
-          {/* Coluna Esquerda: Vídeo (60% - 7/12 columns) */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-7 space-y-0'}`}>
+        {/* Grid Layout - 60/40 Proportion (Padronizado com ClientReturn) */}
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-5 gap-6'}`}>
+          {/* Coluna Esquerda: Vídeo (60% - 3/5 columns) */}
+          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-3 space-y-0'}`}>
             {/* Card do Player de Vídeo */}
             <Card className={`bg-card border-primary/20 shadow-xl ${isMobile ? 'p-3' : 'p-6'}`}>
-              <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: isMobile ? '300px' : '550px' }}>
+              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -911,9 +911,9 @@ export default function AudiovisualApproval() {
             )}
           </div>
 
-          {/* Coluna Direita: Sidebar Unificado (40% - 5/12 columns) */}
-          <div className={`${isMobile ? '' : 'lg:col-span-5'}`}>
-            <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : '550px' }}>
+          {/* Coluna Direita: Sidebar Unificado (40% - 2/5 columns) */}
+          <div className={`${isMobile ? '' : 'lg:col-span-2'}`}>
+            <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : 'fit-content' }}>
               {/* Seção de Ações - Estilo Frame.io Premium */}
               <div className={`border-b border-border/50 bg-primary/5 ${isMobile ? 'pb-4 mb-4 px-4 pt-4' : 'p-5 pb-5'}`}>
                 <div className="flex items-center gap-2 mb-4">
