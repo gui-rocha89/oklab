@@ -12,6 +12,7 @@ import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { StatusBadge, statusConfig } from "@/components/StatusBadge";
+import { ProjectQuickEditModal } from "@/components/ProjectQuickEditModal";
 
 // ... keep existing code (imports)
 
@@ -22,6 +23,8 @@ export default function Projects() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleStatusChange = async (projectId: string, newStatus: string) => {
@@ -72,11 +75,31 @@ export default function Projects() {
     }
   };
 
-  const handleEditProject = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      window.open(`/projeto/${project.share_id}`, '_blank');
+  const handleEditProject = (project: any) => {
+    setEditingProject(project);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProject = async (projectId: string, updates: any) => {
+    try {
+      await updateProject(projectId, updates);
+      toast({
+        title: "Projeto atualizado",
+        description: "As alterações foram salvas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error updating project:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o projeto.",
+        variant: "destructive",
+      });
+      throw error;
     }
+  };
+
+  const handleViewComments = (projectId: string) => {
+    navigate(`/feedbacks?projectId=${projectId}`);
   };
 
   const handleDeleteProject = (projectId: string) => {
@@ -350,16 +373,22 @@ export default function Projects() {
                       </div>
                     </div>
 
-                    {/* Footer */}
+                     {/* Footer */}
                     <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto gap-3">
-                      <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewComments(project.id);
+                        }}
+                        className="text-sm text-muted-foreground flex items-center gap-2 hover:text-primary transition-colors cursor-pointer"
+                      >
                         <MessageSquare className="w-4 h-4 flex-shrink-0" />
                         <span className="whitespace-nowrap">
                           {project.keyframes?.reduce((total, keyframe) => 
                             total + (keyframe.feedbacks?.filter(feedback => feedback.status === 'pending').length || 0), 0
                           ) || 0} comentário(s)
                         </span>
-                      </div>
+                      </button>
                       
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
@@ -369,8 +398,9 @@ export default function Projects() {
                             className="h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEditProject(project.id);
+                              handleEditProject(project);
                             }}
+                            title="Editar projeto"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
