@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { nav } from '@/mkt/content';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import '@/styles/mkt.css';
 
 export function Nav() {
   const [isScrolled, setIsScrolled] = useState(false);

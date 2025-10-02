@@ -5,7 +5,7 @@ export function HowItWorks() {
   return (
     <section
       id="produto"
-      className="py-24 bg-muted/30"
+      className="py-24 lg:py-32 mkt-section-bg"
     >
       <div className="container px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -15,10 +15,10 @@ export function HowItWorks() {
           transition={{ duration: 0.3 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+          <h2 className="mkt-h2 text-foreground mb-4">
             {howItWorks.title}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="mkt-body text-muted-foreground max-w-2xl mx-auto">
             {howItWorks.subtitle}
           </p>
         </motion.div>
@@ -33,7 +33,7 @@ export function HowItWorks() {
               transition={{ duration: 0.4, delay: idx * 0.1 }}
               className="space-y-4"
             >
-              <div className="relative rounded-lg overflow-hidden border border-border/50 shadow-lg bg-card">
+              <div className="relative rounded-lg overflow-hidden mkt-card">
                 <img
                   src={step.image}
                   alt={step.title}
@@ -47,8 +47,8 @@ export function HowItWorks() {
                 </div>
               </div>
               <div className="space-y-2 px-2">
-                <h3 className="text-xl font-semibold text-foreground">{step.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+                <h3 className="mkt-h3 text-foreground">{step.title}</h3>
+                <p className="mkt-body text-muted-foreground">{step.description}</p>
               </div>
             </motion.div>
           ))}

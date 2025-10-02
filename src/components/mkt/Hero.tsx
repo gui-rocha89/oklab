@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { hero } from '@/mkt/content';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import '@/styles/mkt.css';
 
 export function Hero() {
   const [isVisible, setIsVisible] = useState(false);
@@ -33,10 +32,10 @@ export function Hero() {
         >
           {/* Headline & Subcopy */}
           <div className="space-y-6">
-            <h1 className="text-6xl sm:text-7xl lg:text-[72px] font-semibold text-foreground leading-[1.1] tracking-tight">
+            <h1 className="mkt-h1 text-foreground">
               {hero.headline}
             </h1>
-            <p className="text-xl sm:text-[22px] text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="mkt-body text-muted-foreground max-w-2xl mx-auto">
               {hero.subcopy}
             </p>
           </div>

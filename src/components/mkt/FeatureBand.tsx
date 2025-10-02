@@ -18,7 +18,7 @@ export function FeatureBand({
   reverse = false,
 }: FeatureBandProps) {
   return (
-    <div className="max-w-[1100px] mx-auto">
+    <div className="max-w-[1100px] mx-auto py-24 lg:py-32">
       <div
         className={`grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center ${
           reverse ? '' : ''
@@ -32,10 +32,10 @@ export function FeatureBand({
           transition={{ duration: 0.25, ease: 'easeOut' }}
           className={reverse ? 'lg:order-2' : ''}
         >
-          <h3 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+          <h3 className="mkt-h2 text-foreground mb-4">
             {title}
           </h3>
-          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+          <p className="mkt-body text-muted-foreground mb-8">
             {description}
           </p>
           <ul className="space-y-4">
@@ -69,7 +69,7 @@ export function FeatureBand({
           transition={{ duration: 0.28, ease: 'easeOut', delay: 0.1 }}
           className={reverse ? 'lg:order-1' : ''}
         >
-          <div className="relative rounded-lg overflow-hidden border border-border/50 bg-card shadow-lg">
+          <div className="relative rounded-lg overflow-hidden mkt-card">
             <img
               src={image}
               alt={title}

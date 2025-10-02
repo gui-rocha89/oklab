@@ -1,6 +1,37 @@
 /* Marketing Page Styles - Animated Backgrounds & Effects */
 
-/* Hero Animated Background */
+/* Typography Scale - Marketing */
+.mkt-h1 {
+  font-size: clamp(3rem, 5vw, 4.5rem); /* 48-72px */
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.mkt-h2 {
+  font-size: clamp(2.25rem, 3.5vw, 3rem); /* 36-48px */
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.mkt-h3 {
+  font-size: clamp(1.5rem, 2.5vw, 2rem); /* 24-32px */
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.mkt-body {
+  font-size: clamp(1.125rem, 1.5vw, 1.25rem); /* 18-20px */
+  line-height: 1.6;
+}
+
+.mkt-small {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+}
+
+/* Hero Animated Background with Noise */
 .mkt-hero-bg {
   position: absolute;
   inset: 0;
@@ -12,6 +43,15 @@
   mask-image: radial-gradient(120% 100% at 50% 0%, #000 60%, transparent 100%);
   animation: mktShift 14s ease-in-out infinite alternate;
   will-change: transform;
+}
+
+.mkt-hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
 }
 
 @keyframes mktShift {
@@ -86,7 +126,28 @@
   will-change: transform;
 }
 
-/* Smooth Performance */
+/* Section Backgrounds with Radials */
+.mkt-section-bg {
+  position: relative;
+}
+
+.mkt-section-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(50% 50% at 50% 50%, #0EA5B708 0%, transparent 100%);
+  opacity: 0.5;
+}
+
+/* Card Surface */
+.mkt-card {
+  background-color: hsl(var(--surface));
+  border: 1px solid #1D222B;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Smooth Performance & Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .mkt-hero-bg,
   .logo-pop,

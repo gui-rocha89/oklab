@@ -52,8 +52,8 @@ const Home = () => {
           <HowItWorks />
           
           {/* Feature Bands */}
-          <section id="recursos" className="py-24 bg-background">
-            <div className="container px-4 sm:px-6 lg:px-8 space-y-32">
+          <section id="recursos" className="py-24 lg:py-32 mkt-section-bg">
+            <div className="container px-4 sm:px-6 lg:px-8">
               {features.map((feature, idx) => (
                 <FeatureBand
                   key={feature.id}
