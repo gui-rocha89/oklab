@@ -67,12 +67,17 @@ serve(async (req) => {
       throw new Error('No permission to resend this project');
     }
 
-    // Update project with new video and status
+    // Generate new share_id for each resend to invalidate old links
+    const newShareId = `av-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    
+    // Update project with new video, new share_id and status
     const { error: updateError } = await supabase
       .from('projects')
       .update({
         video_url: videoUrl,
+        share_id: newShareId,
         status: 'in-revision',
+        completed_at: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', projectId);
@@ -128,17 +133,18 @@ serve(async (req) => {
       console.log('✅ Notificação criada');
     }
 
-    // Generate share URL
+    // Generate share URL with NEW share_id
     const baseUrl = 'https://817d038c-18c1-4aa7-95dd-26a14d1a02ea.lovableproject.com';
-    const shareUrl = `${baseUrl}/aprovacao-audiovisual/${project.share_id}`;
+    const shareUrl = `${baseUrl}/aprovacao-audiovisual/${newShareId}`;
 
-    console.log('🎉 Reenvio concluído com sucesso:', { shareUrl });
+    console.log('🎉 Reenvio concluído com sucesso:', { shareUrl, newShareId });
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         projectId,
         newVideoUrl: videoUrl,
+        newShareId,
         shareUrl
       }),
       { 

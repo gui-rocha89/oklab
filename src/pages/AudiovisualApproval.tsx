@@ -102,8 +102,8 @@ export default function AudiovisualApproval() {
           return;
         }
 
-        // Check if project has already been completed
-        if (projectData.completed_at) {
+        // Check if project has been completed, but allow access if status is 'in-revision' (corrected video resent)
+        if (projectData.completed_at && projectData.status !== 'in-revision') {
           console.log('⚠️ Projeto já foi completado em:', projectData.completed_at);
           console.log('🚫 Bloqueando acesso ao formulário');
           setProject(projectData);
