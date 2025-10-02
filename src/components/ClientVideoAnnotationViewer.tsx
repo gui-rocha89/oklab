@@ -48,14 +48,31 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       if (!videoRef.current || !canvas) return;
       
       const video = videoRef.current;
+      const canvasEl = canvas.getElement();
       const videoRect = video.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
       
-      // Canvas segue o tamanho renderizado do vídeo
+      // Set CSS dimensions to match video
+      canvasEl.style.width = videoRect.width + 'px';
+      canvasEl.style.height = videoRect.height + 'px';
+      
+      // Set internal canvas dimensions with DPR for crisp rendering
+      canvasEl.width = Math.round(videoRect.width * dpr);
+      canvasEl.height = Math.round(videoRect.height * dpr);
+      
+      // Set Fabric.js dimensions (logical dimensions, not DPR-scaled)
       canvas.setDimensions({
         width: videoRect.width,
         height: videoRect.height,
       });
       
+      // Apply DPR scaling for crisp lines
+      const ctx = canvasEl.getContext('2d');
+      if (ctx) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      
+      // Re-render current annotation
       if (currentAnnotationIndex !== null && annotations[currentAnnotationIndex]) {
         setTimeout(() => {
           loadAnnotationToCanvas(annotations[currentAnnotationIndex]);
@@ -93,12 +110,29 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         if (videoRef.current && fabricCanvasRef.current) {
           const canvas = fabricCanvasRef.current;
           const video = videoRef.current;
+          const canvasEl = canvas.getElement();
           const videoRect = video.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
           
+          // Set CSS dimensions to match video
+          canvasEl.style.width = videoRect.width + 'px';
+          canvasEl.style.height = videoRect.height + 'px';
+          
+          // Set internal canvas dimensions with DPR
+          canvasEl.width = Math.round(videoRect.width * dpr);
+          canvasEl.height = Math.round(videoRect.height * dpr);
+          
+          // Set Fabric.js dimensions
           canvas.setDimensions({
             width: videoRect.width,
             height: videoRect.height,
           });
+          
+          // Apply DPR scaling
+          const ctx = canvasEl.getContext('2d');
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          }
           
           if (currentAnnotationIndex !== null && annotations[currentAnnotationIndex]) {
             loadAnnotationToCanvas(annotations[currentAnnotationIndex]);
@@ -385,8 +419,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               style={{ 
                 zIndex: 10,
                 width: '100%',
-                height: '100%',
-                border: '2px solid red' // TEMPORARY - for debugging overlay positioning
+                height: '100%'
               }}
             />
 
