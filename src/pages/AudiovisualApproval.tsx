@@ -852,6 +852,7 @@ export default function AudiovisualApproval() {
                     onTimeUpdate={setCurrentTime}
                     onDurationChange={setDuration}
                     annotations={annotations}
+                    keyframes={keyframes}
                     onSeek={(time) => {
                       if (videoRef.current) {
                         videoRef.current.currentTime = time;
@@ -861,6 +862,12 @@ export default function AudiovisualApproval() {
                     onPlayPauseChange={setIsPlaying}
                     isDrawingMode={isDrawingMode}
                     onAnnotationClick={handleAnnotationClick}
+                    onKeyframeClick={(keyframeId) => {
+                      const keyframe = keyframes.find(k => k.id === keyframeId);
+                      if (keyframe) {
+                        seekTo(keyframe.time);
+                      }
+                    }}
                   />
                   
                   {/* Drawing Canvas Overlay - Positioned absolutely over the video */}

@@ -10,12 +10,14 @@ interface CustomVideoPlayerProps {
   onTimeUpdate: (time: number) => void;
   onDurationChange: (duration: number) => void;
   annotations?: Array<{ timestamp_ms: number; id: string; comment?: string | null }>;
+  keyframes?: Array<{ id: string; time: number; comment: string }>;
   onSeek?: (time: number) => void;
   className?: string;
   isPlaying?: boolean;
   onPlayPauseChange?: (isPlaying: boolean) => void;
   isDrawingMode?: boolean;
   onAnnotationClick?: (annotationId: string) => void;
+  onKeyframeClick?: (keyframeId: string) => void;
 }
 
 export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
@@ -24,12 +26,14 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   onTimeUpdate,
   onDurationChange,
   annotations = [],
+  keyframes = [],
   onSeek,
   className,
   isPlaying: externalIsPlaying,
   onPlayPauseChange,
   isDrawingMode = false,
   onAnnotationClick,
+  onKeyframeClick,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -322,7 +326,7 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
               style={{ width: `${progress}%` }}
             />
             
-            {/* Annotation Markers */}
+            {/* Annotation Markers (Yellow) */}
             {annotations.map((annotation) => {
               const position = duration > 0 ? (annotation.timestamp_ms / 1000 / duration) * 100 : 0;
               return (
@@ -334,6 +338,23 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     onAnnotationClick?.(annotation.id);
+                  }}
+                />
+              );
+            })}
+
+            {/* Keyframe Markers (Blue) */}
+            {keyframes.map((keyframe) => {
+              const position = duration > 0 ? (keyframe.time / duration) * 100 : 0;
+              return (
+                <div
+                  key={keyframe.id}
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform z-10"
+                  style={{ left: `${position}%` }}
+                  title={keyframe.comment || 'Comentário'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onKeyframeClick?.(keyframe.id);
                   }}
                 />
               );
