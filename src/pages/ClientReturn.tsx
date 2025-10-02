@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil, Play } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -60,6 +60,8 @@ const ClientReturn = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [review, setReview] = useState<PlatformReview | null>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     fetchProjectReturn();
@@ -131,6 +133,20 @@ const ClientReturn = () => {
         ))}
       </div>
     );
+  };
+
+  const seekToTime = (timeInSeconds: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = timeInSeconds;
+      videoRef.current.play();
+      toast.success(`Navegando para ${formatTime(timeInSeconds)}`);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
 
@@ -288,13 +304,38 @@ const ClientReturn = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <video 
-                  controls 
-                  className="w-full rounded-lg aspect-video"
-                  src={project.video_url}
-                >
-                  Seu navegador não suporta a reprodução de vídeos.
-                </video>
+                {/* Video Player */}
+                <div className="relative">
+                  <video 
+                    ref={videoRef}
+                    controls 
+                    className="w-full rounded-lg aspect-video"
+                    src={project.video_url}
+                    onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
+                  >
+                    Seu navegador não suporta a reprodução de vídeos.
+                  </video>
+
+                  {/* Timeline markers - Visual indicators */}
+                  {hasKeyframes && videoDuration > 0 && (
+                    <div className="absolute bottom-12 left-0 right-0 h-1 pointer-events-none">
+                      {keyframes.map((keyframe) => {
+                        const timePosition = (keyframe.attachments[0]?.time / videoDuration) * 100;
+                        return (
+                          <div
+                            key={keyframe.id}
+                            className="absolute w-1 h-3 bg-primary rounded-full shadow-lg"
+                            style={{ 
+                              left: `${timePosition}%`,
+                              bottom: '0px',
+                              transform: 'translateX(-50%)'
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
                 {/* Timeline de keyframes */}
                 {hasKeyframes && (
@@ -304,40 +345,60 @@ const ClientReturn = () => {
                       Momentos com Comentários
                     </h3>
                     <div className="space-y-3">
-                      {keyframes.map((keyframe, index) => (
-                        <Card key={keyframe.id} className="border-l-4 border-l-primary">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <CardTitle className="text-base flex items-center gap-2">
-                                  <Badge variant="outline" className="font-mono">
-                                    {keyframe.attachments[0]?.timeStr || 'N/A'}
-                                  </Badge>
-                                  {keyframe.title}
-                                </CardTitle>
-                                <CardDescription className="mt-1">
-                                  {keyframe.project_feedback.length} comentário{keyframe.project_feedback.length !== 1 ? 's' : ''}
-                                </CardDescription>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="space-y-2">
-                              {keyframe.project_feedback.map((feedback) => (
-                                <div 
-                                  key={feedback.id} 
-                                  className="bg-muted/30 rounded-lg p-3 text-sm"
-                                >
-                                  <div className="flex items-start gap-2">
-                                    <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5" />
-                                    <p className="flex-1">{feedback.comment}</p>
-                                  </div>
+                      {keyframes.map((keyframe) => {
+                        const timeInSeconds = keyframe.attachments[0]?.time || 0;
+                        const commentsCount = keyframe.project_feedback?.length || 0;
+                        
+                        return (
+                          <Card key={keyframe.id} className="border-l-4 border-l-primary hover:bg-accent/50 transition-colors">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => seekToTime(timeInSeconds)}
+                                      className="font-mono h-7 px-2"
+                                    >
+                                      <Play className="w-3 h-3 mr-1" />
+                                      {formatTime(timeInSeconds)}
+                                    </Button>
+                                    <span>{keyframe.title}</span>
+                                  </CardTitle>
+                                  <CardDescription className="mt-1">
+                                    {commentsCount > 0 ? (
+                                      <span>{commentsCount} comentário{commentsCount !== 1 ? 's' : ''}</span>
+                                    ) : (
+                                      <span className="text-muted-foreground/60">Marcação sem comentários</span>
+                                    )}
+                                  </CardDescription>
                                 </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                              </div>
+                            </CardHeader>
+                            {commentsCount > 0 && (
+                              <CardContent className="pt-0">
+                                <div className="space-y-2">
+                                  {keyframe.project_feedback.map((feedback) => (
+                                    <div 
+                                      key={feedback.id} 
+                                      className="bg-muted/30 rounded-lg p-3 text-sm"
+                                    >
+                                      <div className="flex items-start gap-2">
+                                        <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                        <p className="flex-1">{feedback.comment}</p>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground mt-1 ml-6">
+                                        {format(new Date(feedback.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            )}
+                          </Card>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
