@@ -54,7 +54,7 @@ export const features = [
     id: 'video',
     title: 'Vídeo com marcação no frame',
     description: 'Aprovação audiovisual com precisão cirúrgica',
-    image: '/mkt/player-annot.png',
+    image: '/mkt/feature-video.png',
     bullets: [
       'Desenhe diretamente sobre o frame do vídeo',
       'Comentários sincronizados com o timecode',
@@ -67,7 +67,7 @@ export const features = [
     id: 'briefings',
     title: 'Briefings e Roteiros',
     description: 'Organize suas ideias antes da produção',
-    image: '/mkt/briefings.png',
+    image: '/mkt/feature-briefings.png',
     bullets: [
       'Templates personalizáveis de briefing',
       'Gestão de roteiros com versionamento',
@@ -80,7 +80,7 @@ export const features = [
     id: 'social',
     title: 'Social Media',
     description: 'Planejamento visual de posts e carrosséis',
-    image: '/mkt/social.png',
+    image: '/mkt/feature-social.png',
     bullets: [
       'Preview de posts para Instagram e Facebook',
       'Carrosséis com múltiplas imagens',
