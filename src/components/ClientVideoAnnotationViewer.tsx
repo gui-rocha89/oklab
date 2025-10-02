@@ -24,18 +24,22 @@ interface ClientVideoAnnotationViewerProps {
 }
 
 export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVideoAnnotationViewerProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoPlayerContainerRef = useRef<HTMLDivElement>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
 
-  // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
-  const { aspectRatio, isReady: videoReady } = useVideoAspectRatio(videoRef);
+  // Função para obter o vídeo real renderizado
+  const getRenderedVideo = (): HTMLVideoElement | null => {
+    if (!containerRef.current) return null;
+    const video = containerRef.current.querySelector('video:not(.hidden)') as HTMLVideoElement;
+    return video;
+  };
 
   // Inicializar canvas e configurar dimensões baseadas no player renderizado
   useEffect(() => {
@@ -50,22 +54,24 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     fabricCanvasRef.current = canvas;
 
     const updateCanvasSize = () => {
-      if (!canvas || !containerRef.current || !canvasRef.current) return;
+      const videoElement = getRenderedVideo();
+      
+      if (!canvas || !containerRef.current || !canvasRef.current || !videoElement) {
+        console.warn('⚠️ Elementos não disponíveis para atualização do canvas');
+        return;
+      }
       
       const container = containerRef.current;
       const canvasElement = canvasRef.current;
       
-      // Buscar o elemento de vídeo REAL dentro do CustomVideoPlayer
-      const videoElement = container.querySelector('video:not(.hidden)') as HTMLVideoElement;
-      
-      if (!videoElement) {
-        console.warn('⚠️ Vídeo não encontrado no CustomVideoPlayer');
-        return;
-      }
-      
       // Obter dimensões RENDERIZADAS do vídeo real
       const videoRect = videoElement.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
+      
+      if (videoRect.width === 0 || videoRect.height === 0) {
+        console.warn('⚠️ Vídeo ainda não renderizado');
+        return;
+      }
       
       const offsetLeft = videoRect.left - containerRect.left;
       const offsetTop = videoRect.top - containerRect.top;
@@ -90,37 +96,55 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         canvas.renderAll();
       }
       
-      console.log('📐 Canvas redimensionado e anotação recarregada:', {
+      console.log('📐 Canvas sincronizado com vídeo:', {
         videoSize: `${videoRect.width}x${videoRect.height}`,
         offset: `left=${offsetLeft}px, top=${offsetTop}px`,
         activeAnnotation: currentAnnotationIndex !== null
       });
     };
 
-    // Aguardar renderização do CustomVideoPlayer
-    const timer = setTimeout(updateCanvasSize, 100);
-    window.addEventListener('resize', updateCanvasSize);
+    // Aguardar CustomVideoPlayer renderizar completamente
+    const initTimer = setTimeout(() => {
+      updateCanvasSize();
+      
+      // Observer para detectar mudanças no DOM (quando o vídeo é renderizado)
+      const observer = new MutationObserver(() => {
+        updateCanvasSize();
+      });
+      
+      if (containerRef.current) {
+        observer.observe(containerRef.current, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'class']
+        });
+      }
+      
+      window.addEventListener('resize', updateCanvasSize);
+      
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('resize', updateCanvasSize);
+      };
+    }, 200);
 
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateCanvasSize);
+      clearTimeout(initTimer);
       canvas.dispose();
     };
   }, [currentAnnotationIndex, annotations]);
 
-  // Listener para fullscreen
+  // Listener para fullscreen e mudanças no player
   useEffect(() => {
     const handleFullscreenChange = () => {
       setTimeout(() => {
-        if (fabricCanvasRef.current && containerRef.current && canvasRef.current) {
+        const videoElement = getRenderedVideo();
+        
+        if (fabricCanvasRef.current && containerRef.current && canvasRef.current && videoElement) {
           const canvas = fabricCanvasRef.current;
           const container = containerRef.current;
           const canvasElement = canvasRef.current;
-          
-          // Buscar o vídeo real renderizado
-          const videoElement = container.querySelector('video:not(.hidden)') as HTMLVideoElement;
-          
-          if (!videoElement) return;
           
           const videoRect = videoElement.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
@@ -143,8 +167,10 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
           } else {
             canvas.renderAll();
           }
+          
+          console.log('🔄 Canvas atualizado após fullscreen');
         }
-      }, 100);
+      }, 150);
     };
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -185,21 +211,14 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   }, [currentTime, annotations]);
 
   const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
-    if (!fabricCanvasRef.current || !containerRef.current) {
-      console.error('❌ Canvas ou container não disponível');
+    const videoElement = getRenderedVideo();
+    
+    if (!fabricCanvasRef.current || !videoElement) {
+      console.error('❌ Canvas ou vídeo não disponível');
       return;
     }
 
     const canvas = fabricCanvasRef.current;
-    const container = containerRef.current;
-    
-    // Buscar o vídeo real renderizado pelo CustomVideoPlayer
-    const videoElement = container.querySelector('video:not(.hidden)') as HTMLVideoElement;
-    
-    if (!videoElement) {
-      console.error('❌ Vídeo não encontrado no CustomVideoPlayer');
-      return;
-    }
     
     try {
       console.group('🎯 CARREGANDO ANOTAÇÃO');
@@ -404,7 +423,6 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
             ref={containerRef} 
             className="relative w-full bg-black group flex items-center justify-center"
             style={{ 
-              aspectRatio: aspectRatio.toString(),
               maxHeight: '70vh'
             }}
           >
@@ -425,40 +443,34 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               className="w-full"
             />
             
-            {/* Hidden video for canvas calculations */}
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              className="hidden"
-            />
-            
-            {/* Canvas para anotações - posicionado exatamente sobre o vídeo */}
+            {/* Canvas para anotações - SEMPRE visível sobre o vídeo */}
             <canvas
               ref={canvasRef}
-              className="absolute pointer-events-none top-0 left-0"
-              style={{ zIndex: 50 }}
+              className="absolute pointer-events-none"
+              style={{ 
+                zIndex: 100,
+                border: '2px solid transparent' // debug helper
+              }}
             />
 
             {/* Indicador de anotação atual */}
             {currentAnnotation && (
-              <div className="absolute top-4 left-4 z-50 bg-primary/90 text-white px-4 py-2 rounded-lg backdrop-blur-sm shadow-lg">
-                <div className="text-xs font-medium">
-                  Anotação {(currentAnnotationIndex || 0) + 1}/{annotations.length}
-                </div>
+              <div className="absolute top-4 left-4 bg-primary text-white px-4 py-2 rounded-lg backdrop-blur-sm shadow-lg font-medium" style={{ zIndex: 101 }}>
+                Anotação {(currentAnnotationIndex || 0) + 1}/{annotations.length}
               </div>
             )}
 
             {/* Navegação entre anotações */}
-            <div className="absolute top-4 right-4 flex gap-2 z-50">
+            <div className="absolute top-4 right-4 flex gap-2" style={{ zIndex: 101 }}>
               <Button
                 size="icon"
                 variant="secondary"
                 onClick={skipToPrevAnnotation}
                 disabled={currentAnnotationIndex === null || currentAnnotationIndex === 0}
-                className="bg-black/60 hover:bg-black/80 text-white disabled:opacity-30 h-9 w-9"
+                className="bg-black/80 hover:bg-black text-white disabled:opacity-30 h-10 w-10 shadow-lg"
                 title="Anotação anterior"
               >
-                <SkipBack className="w-4 h-4" />
+                <SkipBack className="w-5 h-5" />
               </Button>
               
               <Button
@@ -466,10 +478,10 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                 variant="secondary"
                 onClick={skipToNextAnnotation}
                 disabled={currentAnnotationIndex === null || currentAnnotationIndex >= annotations.length - 1}
-                className="bg-black/60 hover:bg-black/80 text-white disabled:opacity-30 h-9 w-9"
+                className="bg-black/80 hover:bg-black text-white disabled:opacity-30 h-10 w-10 shadow-lg"
                 title="Próxima anotação"
               >
-                <SkipForward className="w-4 h-4" />
+                <SkipForward className="w-5 h-5" />
               </Button>
             </div>
           </div>
@@ -481,7 +493,6 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         <Card 
           className="w-full flex flex-col overflow-hidden shadow-lg border-0" 
           style={{ 
-            aspectRatio: aspectRatio || 'auto',
             maxHeight: '70vh'
           }}
         >
