@@ -423,95 +423,136 @@ const ClientReturn = () => {
           </div>
         )}
 
-        {/* Feedback Visual Detalhado (Lista) */}
+        {/* Resumo Executivo do Feedback */}
         {annotations.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Pencil className="w-5 h-5" />
-                Feedback Visual Detalhado
+                <MessageSquare className="w-5 h-5" />
+                Resumo do Feedback
               </CardTitle>
               <CardDescription>
-                Lista completa de todas as {annotations.length} anotações visuais e comentários do cliente
+                Visão geral consolidada do retorno do cliente
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {annotations.map((annotation, index) => {
-                const hasDrawing = annotation.canvas_data?.objects?.length > 0;
-                const drawingCount = annotation.canvas_data?.objects?.length || 0;
-                
-                return (
-                  <div
-                    key={annotation.id}
-                    className="p-5 border rounded-lg hover:bg-muted/30 transition-all duration-200 space-y-4"
-                  >
-                    {/* Header com número e badges */}
-                    <div className="flex items-center justify-between gap-4">
-                      {/* Lado esquerdo: Número e Timestamp */}
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-lg shrink-0">
-                          {index + 1}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-mono font-bold text-lg">
-                              {formatTimestamp(annotation.timestamp_ms)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(annotation.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                          </p>
-                        </div>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Coluna Esquerda - Estatísticas */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Estatísticas do Feedback</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm">Total de Anotações</span>
+                        <Badge variant="secondary" className="font-bold">
+                          {annotations.length}
+                        </Badge>
                       </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm">Anotações com Comentário</span>
+                        <Badge variant="secondary" className="font-bold">
+                          {annotations.filter(a => a.comment && a.comment.trim()).length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm">Anotações com Desenhos</span>
+                        <Badge variant="secondary" className="font-bold">
+                          {annotations.filter(a => a.canvas_data?.objects?.length > 0).length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm">Total de Desenhos</span>
+                        <Badge variant="secondary" className="font-bold">
+                          {annotations.reduce((sum, a) => sum + (a.canvas_data?.objects?.length || 0), 0)}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
 
-                      {/* Lado direito: Badges */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        {hasDrawing && (
-                          <Badge variant="secondary" className="text-xs h-7">
-                            <Pencil className="w-3 h-3 mr-1.5" />
-                            {drawingCount} {drawingCount === 1 ? 'desenho' : 'desenhos'}
-                          </Badge>
-                        )}
-                        {annotation.comment && (
-                          <Badge variant="secondary" className="text-xs h-7">
-                            <MessageSquare className="w-3 h-3 mr-1.5" />
-                            Comentário
-                          </Badge>
+                  {/* Avaliação Geral se existir */}
+                  {review && (
+                    <div className="pt-4 border-t">
+                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Avaliação Geral</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          {renderStars(review.rating)}
+                          <span className="text-sm font-bold">{review.rating}/5</span>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm bg-muted/50 p-3 rounded-lg leading-relaxed">
+                            "{review.comment}"
+                          </p>
                         )}
                       </div>
                     </div>
+                  )}
+                </div>
 
-                    {/* Comentário */}
-                    {annotation.comment && (
-                      <div className="bg-muted/50 p-4 rounded-lg border border-border/50">
-                        <p className="text-sm font-semibold mb-2 text-foreground">Comentário:</p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {annotation.comment}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Info sobre desenhos */}
-                    {hasDrawing && (
-                      <div className="bg-blue-500/5 p-3 rounded-lg border border-blue-500/20">
-                        <p className="text-xs text-muted-foreground flex items-center gap-2">
-                          <Pencil className="w-3.5 h-3.5 text-blue-500" />
-                          Cliente desenhou {drawingCount} {drawingCount === 1 ? 'elemento' : 'elementos'} na tela para indicar o feedback visual
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Mensagem quando não há comentário nem desenho */}
-                    {!annotation.comment && !hasDrawing && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground italic py-2">
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Marcação temporal sem comentário ou desenho</span>
-                      </div>
-                    )}
+                {/* Coluna Direita - Comentários Consolidados */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Comentários do Cliente</h4>
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                      {annotations
+                        .filter(a => a.comment && a.comment.trim())
+                        .map((annotation, index) => (
+                          <div 
+                            key={annotation.id}
+                            className="p-3 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="text-xs">
+                                {formatTimestamp(annotation.timestamp_ms)}
+                              </Badge>
+                              {annotation.canvas_data?.objects?.length > 0 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  <Pencil className="w-3 h-3 mr-1" />
+                                  {annotation.canvas_data.objects.length} desenho(s)
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm leading-relaxed">
+                              {annotation.comment}
+                            </p>
+                          </div>
+                        ))
+                      }
+                      {annotations.filter(a => a.comment && a.comment.trim()).length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                          <p className="text-sm">Nenhum comentário de texto registrado.</p>
+                          <p className="text-xs mt-1">O cliente utilizou apenas desenhos e marcações visuais.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                );
-              })}
+
+                  {/* Status e Próximos Passos */}
+                  <div className="pt-4 border-t">
+                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Próximos Passos</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                        <p className="text-muted-foreground">
+                          {annotations.length} {annotations.length === 1 ? 'ponto de atenção identificado' : 'pontos de atenção identificados'}
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Clock className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+                        <p className="text-muted-foreground">
+                          Revisar anotações visuais no player acima
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Pencil className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        <p className="text-muted-foreground">
+                          Implementar alterações solicitadas pelo cliente
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
