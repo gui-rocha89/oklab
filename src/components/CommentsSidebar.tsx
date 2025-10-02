@@ -4,11 +4,15 @@ import { MessageSquare, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { AttachmentUploader } from '@/components/AttachmentUploader';
+import { AttachmentList } from '@/components/AttachmentList';
+import { Attachment } from '@/lib/attachmentUtils';
 
 interface Keyframe {
   id: string;
   time: number;
   comment: string;
+  attachments?: Attachment[];
   created_at?: string;
 }
 
@@ -16,6 +20,7 @@ interface Annotation {
   id: string;
   timestamp_ms: number;
   comment?: string;
+  attachments?: Attachment[];
   screenshot_url?: string;
 }
 
@@ -25,9 +30,9 @@ interface CommentsSidebarProps {
   currentTime: number;
   onSeekToTime: (time: number) => void;
   onLoadAnnotation: (annotationId: string) => void;
-  onUpdateKeyframe: (id: string, comment: string) => void;
+  onUpdateKeyframe: (id: string, comment: string, attachments?: Attachment[]) => void;
   onDeleteKeyframe: (id: string) => void;
-  onUpdateAnnotation: (id: string, comment: string) => void;
+  onUpdateAnnotation: (id: string, comment: string, attachments?: Attachment[]) => void;
   onDeleteAnnotation: (id: string) => void;
   formatTime: (seconds: number) => string;
 }
@@ -47,6 +52,7 @@ export function CommentsSidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [editingType, setEditingType] = useState<'keyframe' | 'annotation' | null>(null);
+  const [editingAttachments, setEditingAttachments] = useState<Attachment[]>([]);
   
   // Show ALL keyframes including empty ones + annotations
   const totalComments = keyframes.length + annotations.length;
@@ -61,25 +67,27 @@ export function CommentsSidebar({
     }
   }, [keyframes, editingId]);
 
-  const startEditing = (id: string, currentText: string, type: 'keyframe' | 'annotation') => {
+  const startEditing = (id: string, currentText: string, type: 'keyframe' | 'annotation', currentAttachments?: Attachment[]) => {
     setEditingId(id);
     setEditingText(currentText);
     setEditingType(type);
+    setEditingAttachments(currentAttachments || []);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditingText('');
     setEditingType(null);
+    setEditingAttachments([]);
   };
 
   const saveEditing = () => {
     if (!editingId || !editingType) return;
     
     if (editingType === 'keyframe') {
-      onUpdateKeyframe(editingId, editingText);
+      onUpdateKeyframe(editingId, editingText, editingAttachments);
     } else {
-      onUpdateAnnotation(editingId, editingText);
+      onUpdateAnnotation(editingId, editingText, editingAttachments);
     }
     
     cancelEditing();
@@ -184,6 +192,12 @@ export function CommentsSidebar({
                                   }
                                 }}
                               />
+                              
+                              <AttachmentUploader
+                                attachments={editingAttachments}
+                                onAttachmentsChange={setEditingAttachments}
+                              />
+                              
                               <div className="flex items-center gap-2">
                                 <Button
                                   size="sm"
@@ -218,6 +232,16 @@ export function CommentsSidebar({
                                 }
                               </p>
                               
+                              {/* Attachments */}
+                              {'attachments' in item && item.attachments && item.attachments.length > 0 && (
+                                <div className="mt-2">
+                                  <AttachmentList
+                                    attachments={item.attachments}
+                                    editable={false}
+                                  />
+                                </div>
+                              )}
+                              
                               {/* Action Buttons */}
                               <div className="flex items-center gap-2">
                                 <Button
@@ -229,7 +253,8 @@ export function CommentsSidebar({
                                     startEditing(
                                       item.id, 
                                       isKeyframe ? item.comment : ('comment' in item ? item.comment || '' : ''),
-                                      item.type
+                                      item.type,
+                                      'attachments' in item ? item.attachments : undefined
                                     );
                                   }}
                                 >

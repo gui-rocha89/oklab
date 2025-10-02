@@ -15,6 +15,7 @@ import { useVideoAspectRatio } from '@/hooks/useVideoAspectRatio';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 import logoOrange from '@/assets/logo-orange-bg.png';
+import { Attachment } from '@/lib/attachmentUtils';
 
 const formatTime = (seconds: number): string => {
   if (isNaN(seconds) || seconds < 0) {
@@ -29,6 +30,7 @@ interface Keyframe {
   id: string;
   time: number;
   comment: string;
+  attachments?: Attachment[];
   created_at?: string;
 }
 
@@ -193,8 +195,8 @@ export default function AudiovisualApproval() {
     });
   };
 
-  const handleKeyframeCommentChange = (id: string, comment: string) => {
-    setKeyframes(keyframes.map(k => k.id === id ? { ...k, comment } : k));
+  const handleKeyframeCommentChange = (id: string, comment: string, attachments?: Attachment[]) => {
+    setKeyframes(keyframes.map(k => k.id === id ? { ...k, comment, attachments: attachments || k.attachments } : k));
   };
   
   const handleRemoveKeyframe = (id: string) => {

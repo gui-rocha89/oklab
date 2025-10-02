@@ -169,6 +169,7 @@ export type Database = {
       }
       project_feedback: {
         Row: {
+          attachments: Json | null
           comment: string
           created_at: string
           id: string
@@ -181,6 +182,7 @@ export type Database = {
           y_position: number
         }
         Insert: {
+          attachments?: Json | null
           comment: string
           created_at?: string
           id?: string
@@ -193,6 +195,7 @@ export type Database = {
           y_position: number
         }
         Update: {
+          attachments?: Json | null
           comment?: string
           created_at?: string
           id?: string

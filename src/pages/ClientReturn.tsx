@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { VideoPlayerWithKeyframes, VideoPlayerRef } from "@/components/VideoPlayerWithKeyframes";
+import { AttachmentList } from "@/components/AttachmentList";
+import { Attachment } from "@/lib/attachmentUtils";
 
 
 
@@ -48,6 +50,7 @@ interface Keyframe {
   project_feedback: Array<{
     id: string;
     comment: string;
+    attachments?: Attachment[];
     x_position: number;
     y_position: number;
     created_at: string;
@@ -356,7 +359,7 @@ const ClientReturn = () => {
                                   {keyframe.project_feedback.map((feedback) => (
                                     <div 
                                       key={feedback.id} 
-                                      className="bg-muted/30 rounded-lg p-3 text-sm"
+                                      className="bg-muted/30 rounded-lg p-3 text-sm space-y-2"
                                     >
                                       <div className="flex items-start gap-2">
                                         <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -365,6 +368,15 @@ const ClientReturn = () => {
                                       <p className="text-xs text-muted-foreground mt-1 ml-6">
                                         {format(new Date(feedback.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                                       </p>
+                                      
+                                      {feedback.attachments && feedback.attachments.length > 0 && (
+                                        <div className="ml-6 mt-2">
+                                          <AttachmentList
+                                            attachments={feedback.attachments}
+                                            editable={false}
+                                          />
+                                        </div>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
