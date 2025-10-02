@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/ui/logo';
 import { nav } from '@/mkt/content';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import '@/styles/mkt.css';
 
 export function Nav() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -18,17 +18,20 @@ export function Nav() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-background/95 backdrop-blur-md border-b border-border shadow-sm'
-          : 'bg-transparent'
+      className={`fixed top-0 left-0 right-0 z-50 glass-nav ${
+        isScrolled ? 'scrolled' : ''
       }`}
     >
       <div className="container px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center">
-            <Logo className="h-8 w-auto" />
+          <a href="/" className="flex items-center logo-glint logo-pop" aria-label="OK Lab - Página inicial">
+            <img 
+              src="/mkt/brand-mark.svg" 
+              alt="OK Lab" 
+              className="h-5 w-auto"
+              style={{ height: '20px' }}
+            />
           </a>
 
           {/* Desktop Nav */}
