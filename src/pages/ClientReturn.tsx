@@ -10,6 +10,7 @@ import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail,
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { KeyframeTimeline } from "@/components/KeyframeTimeline";
 
 
 interface Project {
@@ -61,6 +62,7 @@ const ClientReturn = () => {
   const [review, setReview] = useState<PlatformReview | null>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -305,35 +307,26 @@ const ClientReturn = () => {
             <CardContent>
               <div className="space-y-4">
                 {/* Video Player */}
-                <div className="relative">
+                <div className="space-y-2">
                   <video 
                     ref={videoRef}
                     controls 
                     className="w-full rounded-lg aspect-video"
                     src={project.video_url}
                     onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
+                    onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
                   >
                     Seu navegador não suporta a reprodução de vídeos.
                   </video>
 
-                  {/* Timeline markers - Visual indicators */}
+                  {/* Professional Keyframe Timeline */}
                   {hasKeyframes && videoDuration > 0 && (
-                    <div className="absolute bottom-12 left-0 right-0 h-1 pointer-events-none">
-                      {keyframes.map((keyframe) => {
-                        const timePosition = (keyframe.attachments[0]?.time / videoDuration) * 100;
-                        return (
-                          <div
-                            key={keyframe.id}
-                            className="absolute w-1 h-3 bg-primary rounded-full shadow-lg"
-                            style={{ 
-                              left: `${timePosition}%`,
-                              bottom: '0px',
-                              transform: 'translateX(-50%)'
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
+                    <KeyframeTimeline
+                      keyframes={keyframes}
+                      videoDuration={videoDuration}
+                      currentTime={currentTime}
+                      onSeek={seekToTime}
+                    />
                   )}
                 </div>
 
