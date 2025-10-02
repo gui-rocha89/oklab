@@ -14,8 +14,8 @@ export const nav = {
 };
 
 export const hero = {
-  headline: 'Aprove conteúdos audiovisuais com precisão e agilidade',
-  subcopy: 'Marque diretamente no frame do vídeo, gerencie briefings e organize sua produção de social media. Tudo em uma plataforma unificada.',
+  headline: 'Sua central de aprovação para vídeos, roteiros e social.',
+  subcopy: 'Marque no frame, comente nos roteiros e aprove posts no mesmo painel. Em reais e com suporte em português.',
   ctas: [
     { label: 'Teste grátis 14 dias', href: '/auth', variant: 'default' as const },
     { label: 'Ver planos', href: '#precos', variant: 'outline' as const },

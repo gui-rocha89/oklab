@@ -32,10 +32,10 @@ export function Hero() {
         >
           {/* Headline & Subcopy */}
           <div className="space-y-6">
-            <h1 className="mkt-h1 text-foreground">
+            <h1 className="mkt-h1 text-foreground font-semibold">
               {hero.headline}
             </h1>
-            <p className="mkt-body text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {hero.subcopy}
             </p>
           </div>
@@ -64,12 +64,17 @@ export function Hero() {
             <div className="relative max-w-5xl mx-auto">
               <picture>
                 <source
-                  srcSet="/mkt/panel-approval-hero@2x.png 2x, /mkt/panel-approval-hero.png 1x"
-                  type="image/png"
+                  media="(max-width: 768px)"
+                  srcSet="/mkt/panel-hero-mobile.webp"
+                  type="image/webp"
+                />
+                <source
+                  srcSet="/mkt/panel-hero-desktop.webp"
+                  type="image/webp"
                 />
                 <img
-                  src="/mkt/panel-approval-hero.png"
-                  alt="Interface do OK Lab mostrando aprovação de vídeo com anotações e comentários em tempo real"
+                  src="/mkt/panel-hero-desktop.webp"
+                  alt="Interface do OK Lab mostrando player de vídeo pausado com anotações desenhadas no frame e comentários nos timestamps 0:07 e 0:13"
                   className="w-full h-auto rounded-lg shadow-2xl border border-border/50"
                   loading="eager"
                   width={1440}
@@ -81,7 +86,7 @@ export function Hero() {
               <div 
                 className="absolute inset-0 -z-10 blur-3xl opacity-30" 
                 style={{
-                  background: 'radial-gradient(circle at 50% 50%, #0EA5B7 0%, transparent 70%)'
+                  background: 'radial-gradient(circle at 50% 50%, hsl(var(--primary)) 0%, transparent 70%)'
                 }}
                 aria-hidden="true"
               />
