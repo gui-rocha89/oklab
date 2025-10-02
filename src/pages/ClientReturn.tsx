@@ -123,7 +123,7 @@ const ClientReturn = () => {
     0
   );
 
-  const isInNewRound = project?.status === 'in-revision' && historicalKeyframes.length > 0;
+  const isInNewRound = currentRound > 1;
 
   const fetchProjectReturn = async () => {
     try {
@@ -434,10 +434,17 @@ const ClientReturn = () => {
         {currentKeyframes.length > 0 && totalComments > 0 && (
           <Card className="border-primary/30 bg-primary/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-primary" />
-                Progresso dos Ajustes - Rodada {isInNewRound ? 2 : 1}
-              </CardTitle>
+              <div className="flex items-center gap-2 flex-wrap">
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  Progresso dos Ajustes
+                </CardTitle>
+                {isInNewRound && (
+                  <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-400">
+                    Rodada {currentRound}
+                  </Badge>
+                )}
+              </div>
               <CardDescription>
                 {resolvedComments} de {totalComments} ajustes marcados como resolvidos
               </CardDescription>
@@ -505,11 +512,11 @@ const ClientReturn = () => {
                 />
 
                 {/* Gestão de Ajustes - Apenas Feedbacks Atuais */}
-                {currentKeyframes.length > 0 && (
+                {currentKeyframes.length > 0 ? (
                   <div className="space-y-4 pt-4 border-t">
                     <h3 className="font-semibold flex items-center gap-2">
                       <Pencil className="w-4 h-4" />
-                      Gestão de Ajustes {isInNewRound ? '- Rodada 2' : ''}
+                      Gestão de Ajustes {isInNewRound ? `- Rodada ${currentRound}` : ''}
                     </h3>
                     <div className="space-y-3">
                       {currentKeyframes.map((keyframe) => {
@@ -629,6 +636,28 @@ const ClientReturn = () => {
                       })}
                     </div>
                   </div>
+                ) : (
+                  <div className="pt-4 border-t">
+                    <Card className="border-dashed">
+                      <CardContent className="py-8">
+                        <div className="text-center space-y-2">
+                          <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto opacity-50" />
+                          <h3 className="font-semibold text-lg">
+                            {isInNewRound 
+                              ? `Aguardando novos feedbacks do cliente - Rodada ${currentRound}`
+                              : 'Nenhum ajuste pendente no momento'
+                            }
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {isInNewRound
+                              ? 'O vídeo foi reenviado. Assim que o cliente enviar novos comentários, eles aparecerão aqui.'
+                              : 'Todos os ajustes foram concluídos ou ainda não há feedbacks.'
+                            }
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -636,7 +665,7 @@ const ClientReturn = () => {
         )}
 
         {/* Seção de Reenvio de Vídeo Corrigido */}
-        {currentKeyframes.length > 0 && totalComments > 0 && (
+        {project && (
           <>
             {generatedShareLink ? (
               <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
@@ -691,7 +720,10 @@ const ClientReturn = () => {
                     Reenviar Projeto Corrigido
                   </CardTitle>
                   <CardDescription>
-                    Faça upload do vídeo corrigido e gere um novo link para o cliente. O link de aprovação será atualizado com o novo conteúdo.
+                    {currentKeyframes.length > 0 
+                      ? 'Faça upload do vídeo corrigido e gere um novo link para o cliente.'
+                      : 'Faça upload de uma nova versão do vídeo. Útil para correções adicionais ou melhorias.'
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
