@@ -73,12 +73,20 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         width: videoRect.width,
         height: videoRect.height,
       });
-      canvas.renderAll();
       
-      console.log('📐 Canvas posicionado:', {
+      // ✅ Recarregar anotação atual após redimensionar
+      if (currentAnnotationIndex !== null && annotations[currentAnnotationIndex]) {
+        setTimeout(() => {
+          loadAnnotationToCanvas(annotations[currentAnnotationIndex]);
+        }, 50);
+      } else {
+        canvas.renderAll();
+      }
+      
+      console.log('📐 Canvas redimensionado e anotação recarregada:', {
         videoSize: `${videoRect.width}x${videoRect.height}`,
         offset: `left=${offsetLeft}px, top=${offsetTop}px`,
-        aspectRatio: (videoRect.width / videoRect.height).toFixed(3)
+        activeAnnotation: currentAnnotationIndex !== null
       });
     };
 
@@ -96,7 +104,55 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       window.removeEventListener('resize', updateCanvasSize);
       canvas.dispose();
     };
-  }, []);
+  }, [currentAnnotationIndex, annotations]);
+
+  // Listener para fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setTimeout(() => {
+        if (videoRef.current && fabricCanvasRef.current && containerRef.current && canvasRef.current) {
+          const canvas = fabricCanvasRef.current;
+          const video = videoRef.current;
+          const container = containerRef.current;
+          const canvasElement = canvasRef.current;
+          
+          const videoRect = video.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          
+          const offsetLeft = videoRect.left - containerRect.left;
+          const offsetTop = videoRect.top - containerRect.top;
+          
+          canvasElement.style.left = `${offsetLeft}px`;
+          canvasElement.style.top = `${offsetTop}px`;
+          canvasElement.style.width = `${videoRect.width}px`;
+          canvasElement.style.height = `${videoRect.height}px`;
+          
+          canvas.setDimensions({
+            width: videoRect.width,
+            height: videoRect.height,
+          });
+          
+          if (currentAnnotationIndex !== null && annotations[currentAnnotationIndex]) {
+            loadAnnotationToCanvas(annotations[currentAnnotationIndex]);
+          } else {
+            canvas.renderAll();
+          }
+        }
+      }, 100);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, [currentAnnotationIndex, annotations]);
 
   // Atualizar anotação atual baseado no tempo do vídeo
   useEffect(() => {
