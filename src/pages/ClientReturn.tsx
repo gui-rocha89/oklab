@@ -37,8 +37,9 @@ interface PlatformReview {
 interface VideoAnnotation {
   id: string;
   timestamp_ms: number;
+  timecode: string;
+  image_url: string;
   comment: string | null;
-  canvas_data: any;
   created_at: string;
 }
 
