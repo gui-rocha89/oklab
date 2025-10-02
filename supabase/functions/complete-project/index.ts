@@ -5,10 +5,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface Attachment {
+  id: string
+  name: string
+  url: string
+  type: string
+  mimeType: string
+  size: number
+  uploadedAt: string
+}
+
 interface KeyframeComment {
   id: string
   time: number
   comment: string
+  attachments?: Attachment[]
 }
 
 interface RequestBody {
@@ -88,26 +99,54 @@ Deno.serve(async (req) => {
         const seconds = kf.time % 60
         const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`
         
+        // Prepare keyframe attachments with timestamp
+        const keyframeAttachments = [{
+          type: 'timestamp',
+          time: kf.time,
+          timeStr: timeStr
+        }]
+        
         // Create new keyframe with client comment
-        const { error: kfError } = await supabase
+        const { data: newKeyframe, error: kfError } = await supabase
           .from('project_keyframes')
           .insert({
             project_id: project.id,
             title: kf.comment, // Save client comment directly in title
             status: 'pending',
-            attachments: [{
-              type: 'timestamp',
-              time: kf.time,
-              timeStr: timeStr
-            }]
+            attachments: keyframeAttachments
           })
+          .select()
+          .single()
         
-        if (kfError) {
+        if (kfError || !newKeyframe) {
           console.error('[complete-project] Error creating keyframe:', kfError)
           continue
         }
         
         console.log('[complete-project] Saved keyframe feedback at', timeStr)
+        
+        // If there are file attachments, save them to project_feedback
+        if (kf.attachments && kf.attachments.length > 0) {
+          console.log('[complete-project] Saving', kf.attachments.length, 'file attachments')
+          
+          const { error: feedbackError } = await supabase
+            .from('project_feedback')
+            .insert({
+              keyframe_id: newKeyframe.id,
+              user_id: project.user_id,
+              comment: kf.comment,
+              x_position: 0,
+              y_position: 0,
+              status: 'pending',
+              attachments: kf.attachments
+            })
+          
+          if (feedbackError) {
+            console.error('[complete-project] Error saving feedback attachments:', feedbackError)
+          } else {
+            console.log('[complete-project] File attachments saved successfully')
+          }
+        }
       }
       
       console.log('[complete-project] All keyframe feedbacks saved')

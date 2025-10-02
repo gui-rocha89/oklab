@@ -93,6 +93,7 @@ const ClientReturn = () => {
         .eq("project_id", projectId)
         .order("created_at", { ascending: true });
 
+      console.log('📦 Keyframes com feedbacks:', keyframesData);
       setKeyframes(keyframesData || []);
 
       // Buscar review/rating
