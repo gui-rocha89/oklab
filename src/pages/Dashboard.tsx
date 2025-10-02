@@ -98,6 +98,34 @@ const ProjectCard = ({ project, index }: any) => {
             <h3 className="font-semibold text-foreground/90">{project.title}</h3>
             <div className={`w-2 h-2 rounded-full ${priorityColors[project.priority as keyof typeof priorityColors]}`}></div>
           </div>
+
+          {/* Status Badges */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {project.type === 'Audiovisual' && (
+              <Badge className="bg-purple-500 text-white hover:bg-purple-600 flex items-center gap-1">
+                <Film className="w-3 h-3" />
+                AUDIOVISUAL
+              </Badge>
+            )}
+            {project.status === 'feedback-sent' && (
+              <Badge className="bg-cyan-500 text-white hover:bg-cyan-600 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                RETORNO RECEBIDO
+              </Badge>
+            )}
+            {project.status === 'pending' && (
+              <Badge className="bg-orange-500 text-white hover:bg-orange-600 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                PENDENTE
+              </Badge>
+            )}
+            {project.status === 'approved' && (
+              <Badge className="bg-green-500 text-white hover:bg-green-600 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                APROVADO
+              </Badge>
+            )}
+          </div>
           
           {/* Description - less prominent */}
           {project.description && (
@@ -117,11 +145,6 @@ const ProjectCard = ({ project, index }: any) => {
             })}</span>
           </div>
 
-        </div>
-
-        <div className={`px-3 py-1 rounded-full flex items-center space-x-1 ${config.color}`}>
-          <StatusIcon className="w-3 h-3" />
-          <span className="text-xs font-medium">{config.text}</span>
         </div>
       </div>
       
