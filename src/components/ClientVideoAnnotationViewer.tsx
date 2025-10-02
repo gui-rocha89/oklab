@@ -32,9 +32,9 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   const [duration, setDuration] = useState(0);
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
 
-  // Inicializar canvas - SIMPLES E DIRETO
+  // Inicializar canvas com overlay total usando inset:0
   useEffect(() => {
-    if (!canvasRef.current || !videoRef.current || !containerRef.current) return;
+    if (!canvasRef.current || !videoRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
       selection: false,
@@ -45,23 +45,12 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     fabricCanvasRef.current = canvas;
 
     const updateCanvasSize = () => {
-      if (!videoRef.current || !canvas || !containerRef.current || !canvasRef.current) return;
+      if (!videoRef.current || !canvas) return;
       
       const video = videoRef.current;
-      const container = containerRef.current;
-      const canvasElement = canvasRef.current;
-      
       const videoRect = video.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
       
-      const offsetLeft = videoRect.left - containerRect.left;
-      const offsetTop = videoRect.top - containerRect.top;
-      
-      canvasElement.style.left = `${offsetLeft}px`;
-      canvasElement.style.top = `${offsetTop}px`;
-      canvasElement.style.width = `${videoRect.width}px`;
-      canvasElement.style.height = `${videoRect.height}px`;
-      
+      // Canvas segue o tamanho renderizado do vídeo
       canvas.setDimensions({
         width: videoRect.width,
         height: videoRect.height,
@@ -76,41 +65,35 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       }
     };
 
+    // ResizeObserver para monitorar mudanças no tamanho do vídeo
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasSize();
+    });
+    
     const video = videoRef.current;
+    resizeObserver.observe(video);
+    
     video.addEventListener('loadedmetadata', updateCanvasSize);
     video.addEventListener('canplay', updateCanvasSize);
     
     updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
 
     return () => {
+      resizeObserver.disconnect();
       video.removeEventListener('loadedmetadata', updateCanvasSize);
       video.removeEventListener('canplay', updateCanvasSize);
-      window.removeEventListener('resize', updateCanvasSize);
       canvas.dispose();
     };
   }, [currentAnnotationIndex, annotations]);
 
-  // Fullscreen handler
+  // Fullscreen handler - redimensiona canvas automaticamente
   useEffect(() => {
     const handleFullscreenChange = () => {
       setTimeout(() => {
-        if (videoRef.current && fabricCanvasRef.current && containerRef.current && canvasRef.current) {
+        if (videoRef.current && fabricCanvasRef.current) {
           const canvas = fabricCanvasRef.current;
           const video = videoRef.current;
-          const container = containerRef.current;
-          const canvasElement = canvasRef.current;
-          
           const videoRect = video.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
-          
-          const offsetLeft = videoRect.left - containerRect.left;
-          const offsetTop = videoRect.top - containerRect.top;
-          
-          canvasElement.style.left = `${offsetLeft}px`;
-          canvasElement.style.top = `${offsetTop}px`;
-          canvasElement.style.width = `${videoRect.width}px`;
-          canvasElement.style.height = `${videoRect.height}px`;
           
           canvas.setDimensions({
             width: videoRect.width,
@@ -128,14 +111,10 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
     
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
     };
   }, [currentAnnotationIndex, annotations]);
 
@@ -382,12 +361,13 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       {/* Video Player (60%) - Adaptativo */}
       <div className="lg:col-span-3">
         <Card className="overflow-hidden border-0 shadow-lg">
-          {/* Player nativo com canvas sobreposto - POSICIONAMENTO CORRETO */}
+          {/* video-wrap: container relativo */}
           <div 
             ref={containerRef} 
             className="relative w-full bg-black rounded-lg overflow-hidden"
             style={{ maxHeight: '70vh' }}
           >
+            {/* Vídeo nativo */}
             <video
               ref={videoRef}
               src={videoUrl}
@@ -398,14 +378,13 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               onPause={() => setIsPlaying(false)}
             />
             
-            {/* Canvas - ABSOLUTAMENTE posicionado sobre o vídeo */}
+            {/* Canvas overlay: inset:0 para cobrir todo o container */}
             <canvas
               ref={canvasRef}
-              className="absolute top-0 left-0 pointer-events-none"
+              className="absolute pointer-events-none"
               style={{ 
-                zIndex: 10,
-                width: '100%',
-                height: '100%'
+                inset: 0,
+                zIndex: 10
               }}
             />
 
