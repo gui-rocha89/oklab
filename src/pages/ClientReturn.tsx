@@ -138,8 +138,8 @@ const ClientReturn = () => {
   const seekToTime = (timeInSeconds: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = timeInSeconds;
-      videoRef.current.play();
-      toast.success(`Navegando para ${formatTime(timeInSeconds)}`);
+      videoRef.current.pause();
+      toast.success(`Pausado em ${formatTime(timeInSeconds)}`);
     }
   };
 
