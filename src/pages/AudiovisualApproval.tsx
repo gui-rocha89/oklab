@@ -56,6 +56,7 @@ export default function AudiovisualApproval() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -783,6 +784,7 @@ export default function AudiovisualApproval() {
             <Card className={`bg-card border-primary/20 shadow-xl ${isMobile ? 'p-3' : 'p-6'}`}>
               {/* Container adaptativo que respeita a proporção do vídeo */}
               <div 
+                ref={videoContainerRef}
                 className="relative bg-black rounded-lg overflow-hidden flex items-center justify-center"
                 style={{ 
                   aspectRatio: aspectRatio.toString(),
@@ -824,6 +826,17 @@ export default function AudiovisualApproval() {
                       }
                     }}
                   />
+                  
+                  {/* Annotation Creator Overlay - renders directly over the video */}
+                  {showAnnotationCreator && videoRef.current && videoContainerRef.current && (
+                    <SimpleAnnotationCreator
+                      videoElement={videoRef.current}
+                      timestampMs={creatorTimestamp}
+                      onSave={handleSaveAnnotationWithComment}
+                      onCancel={() => setShowAnnotationCreator(false)}
+                      videoContainerRef={videoContainerRef}
+                    />
+                  )}
                 </div>
               </div>
               
@@ -865,16 +878,6 @@ export default function AudiovisualApproval() {
               </div>
             </Card>
           </div>
-
-          {/* Simple Annotation Creator Modal */}
-          {showAnnotationCreator && videoRef.current && (
-            <SimpleAnnotationCreator
-              videoElement={videoRef.current}
-              timestampMs={creatorTimestamp}
-              onSave={handleSaveAnnotationWithComment}
-              onCancel={() => setShowAnnotationCreator(false)}
-            />
-          )}
 
           {/* Coluna Direita: Sidebar Unificado (40% - 2/5 columns) */}
           <div className={`${isMobile ? '' : 'lg:col-span-2 sticky top-6'}`}>

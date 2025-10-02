@@ -10,13 +10,15 @@ interface SimpleAnnotationCreatorProps {
   timestampMs: number;
   onSave: (comment: string, imageBlob: Blob) => void;
   onCancel: () => void;
+  videoContainerRef: React.RefObject<HTMLDivElement>;
 }
 
 export const SimpleAnnotationCreator = ({
   videoElement,
   timestampMs,
   onSave,
-  onCancel
+  onCancel,
+  videoContainerRef
 }: SimpleAnnotationCreatorProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
@@ -25,38 +27,38 @@ export const SimpleAnnotationCreator = ({
   const [brushColor, setBrushColor] = useState('#FF0000');
   const [history, setHistory] = useState<string[]>([]);
   const [historyStep, setHistoryStep] = useState(-1);
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
 
+  // Get video container dimensions and position canvas overlay
   useEffect(() => {
-    if (!canvasRef.current || !videoElement) return;
+    if (!videoContainerRef.current || !videoElement) return;
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
+    const updateCanvasSize = () => {
+      const container = videoContainerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      setCanvasDimensions({
+        width: rect.width,
+        height: rect.height
+      });
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
     
-    // Set canvas size to video dimensions
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
-    
-    // Draw current video frame
-    ctx.drawImage(videoElement, 0, 0);
-    
-    // Set this as background for the annotation canvas
-    const bgImage = canvas.toDataURL();
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, [videoContainerRef, videoElement]);
+
+  // Initialize Fabric canvas
+  useEffect(() => {
+    if (!canvasRef.current || !videoElement || canvasDimensions.width === 0) return;
     
     const fabricCanvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 450,
-      backgroundColor: '#000'
+      width: canvasDimensions.width,
+      height: canvasDimensions.height,
+      backgroundColor: 'transparent'
     });
-
-    // Set background image using Fabric.js v6 API
-    (async () => {
-      const { FabricImage } = await import('fabric');
-      const img = await FabricImage.fromURL(bgImage);
-      img.scaleToWidth(800);
-      img.scaleToHeight(450);
-      fabricCanvas.backgroundImage = img;
-      fabricCanvas.renderAll();
-    })();
 
     const brush = new PencilBrush(fabricCanvas);
     brush.color = brushColor;
@@ -72,7 +74,7 @@ export const SimpleAnnotationCreator = ({
     return () => {
       fabricCanvas.dispose();
     };
-  }, []);
+  }, [canvasDimensions]);
 
   useEffect(() => {
     if (!fabricCanvasRef.current) return;
@@ -229,109 +231,119 @@ export const SimpleAnnotationCreator = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-background/95 z-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-semibold">Create Annotation</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
+    <>
+      {/* Transparent canvas overlay directly over the video */}
+      <div 
+        className="absolute inset-0 z-40"
+        style={{ 
+          pointerEvents: 'auto',
+          cursor: 'crosshair'
+        }}
+      >
+        <canvas 
+          ref={canvasRef}
+          className="w-full h-full"
+          style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+          }}
+        />
+      </div>
+
+      {/* Floating toolbar at the top */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-3">
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          <Button
+            variant={currentTool === 'pen' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setCurrentTool('pen')}
+          >
+            <Pencil className="w-4 h-4" />
           </Button>
-          <Button onClick={handleSave}>
-            Save Annotation
+          <Button
+            variant={currentTool === 'circle' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setCurrentTool('circle')}
+          >
+            <CircleIcon className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={currentTool === 'rectangle' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setCurrentTool('rectangle')}
+          >
+            <Square className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={currentTool === 'text' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setCurrentTool('text')}
+          >
+            <Type className="w-4 h-4" />
+          </Button>
+          
+          <div className="w-px h-6 bg-border mx-1" />
+          
+          {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#FFFFFF'].map(color => (
+            <button
+              key={color}
+              className="w-7 h-7 rounded border-2 transition-transform hover:scale-110"
+              style={{ 
+                backgroundColor: color,
+                borderColor: brushColor === color ? '#000' : '#666'
+              }}
+              onClick={() => setBrushColor(color)}
+            />
+          ))}
+          
+          <div className="w-px h-6 bg-border mx-1" />
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={undo}
+            disabled={historyStep <= 0}
+          >
+            <Undo className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={redo}
+            disabled={historyStep >= history.length - 1}
+          >
+            <Redo className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row gap-4 p-4 overflow-hidden">
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="bg-black rounded-lg overflow-hidden shadow-lg">
-            <canvas ref={canvasRef} />
-          </div>
-          
-          <div className="flex gap-2 mt-4 flex-wrap justify-center">
-            <Button
-              variant={currentTool === 'pen' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCurrentTool('pen')}
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={currentTool === 'circle' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCurrentTool('circle')}
-            >
-              <CircleIcon className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={currentTool === 'rectangle' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCurrentTool('rectangle')}
-            >
-              <Square className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={currentTool === 'text' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCurrentTool('text')}
-            >
-              <Type className="w-4 h-4" />
-            </Button>
-            
-            <div className="w-px bg-border mx-2" />
-            
-            {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#FFFFFF'].map(color => (
-              <button
-                key={color}
-                className="w-8 h-8 rounded border-2 transition-transform hover:scale-110"
-                style={{ 
-                  backgroundColor: color,
-                  borderColor: brushColor === color ? '#000' : '#666'
-                }}
-                onClick={() => setBrushColor(color)}
-              />
-            ))}
-            
-            <div className="w-px bg-border mx-2" />
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={undo}
-              disabled={historyStep <= 0}
-            >
-              <Undo className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={redo}
-              disabled={historyStep >= history.length - 1}
-            >
-              <Redo className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="w-full md:w-80 space-y-4">
+      {/* Floating comment and actions panel at the bottom */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-4 w-[90%] max-w-md">
+        <div className="space-y-3">
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Comment (optional)
+              Comentário (opcional)
             </label>
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Add a comment about this annotation..."
-              rows={6}
+              placeholder="Adicione um comentário sobre esta anotação..."
+              rows={3}
+              className="resize-none"
             />
           </div>
           
-          <div className="text-sm text-muted-foreground">
-            <p>Draw on the video frame to highlight areas.</p>
-            <p className="mt-2">Use the tools above to add annotations.</p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onCancel} className="flex-1">
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} className="flex-1">
+              Salvar Anotação
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
