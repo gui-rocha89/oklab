@@ -296,6 +296,7 @@ export default function AudiovisualApproval() {
           shareId: shareId,
           status: newStatus,
           rating: rating || undefined,
+          ratingComment: ratingComment || undefined,
           clientName: project.client,
           clientEmail: 'client@example.com',
           keyframes: keyframesToSave.length > 0 ? keyframesToSave : undefined
@@ -651,16 +652,12 @@ export default function AudiovisualApproval() {
         <title>Aprovação de Vídeo - {project.title}</title>
       </Helmet>
 
-      {/* Header Premium Clean com Logo, Título e Badge */}
+      {/* Header Premium Clean com Título e Badge */}
       <header className={`bg-gradient-to-r from-primary to-primary/90 shadow-lg ${isMobile ? 'py-3' : 'py-4'}`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Logo */}
-            <img 
-              src={logoOrange} 
-              alt="OK Lab Logo" 
-              className={`w-auto ${isMobile ? 'h-10' : 'h-14'}`}
-            />
+            {/* Espaçador */}
+            <div className="w-20" />
             
             {/* Título Centralizado */}
             <div className="flex-1 text-center">
@@ -679,6 +676,22 @@ export default function AudiovisualApproval() {
         </div>
       </header>
 
+      {/* Logo Section - Destaque Centralizado */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-background py-6 sm:py-8 border-b shadow-sm"
+      >
+        <div className="container mx-auto px-4 flex justify-center">
+          <img 
+            src={logoWhite} 
+            alt="OK Lab Logo" 
+            className={`w-auto ${isMobile ? 'h-16' : 'h-20 md:h-24'}`}
+          />
+        </div>
+      </motion.div>
+
       {/* Main Content */}
       <div className={`flex-1 container mx-auto max-w-7xl ${isMobile ? 'px-3 py-4' : 'px-6 py-6'}`}>
         {/* Cards de Informação - Layout Horizontal com Tipografia Hierárquica */}
@@ -689,10 +702,10 @@ export default function AudiovisualApproval() {
                 <FileText className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-bold`}>
-                  Projeto
+                <p className="text-sm text-muted-foreground mb-1.5 uppercase tracking-wider font-bold">
+                  PROJETO
                 </p>
-                <h2 className={`font-normal text-foreground leading-snug ${isMobile ? 'text-base' : 'text-2xl'}`}>
+                <h2 className={`font-normal text-foreground leading-snug ${isMobile ? 'text-base' : 'text-lg'}`}>
                   {project.title}
                 </h2>
               </div>
@@ -705,8 +718,8 @@ export default function AudiovisualApproval() {
                 <User className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <p className={`text-primary/70 mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-bold`}>
-                  Cliente
+                <p className="text-sm text-primary/70 mb-1.5 uppercase tracking-wider font-bold">
+                  CLIENTE
                 </p>
                 <h3 className={`font-normal text-primary ${isMobile ? 'text-sm' : 'text-lg'}`}>
                   {project.client}
@@ -722,10 +735,10 @@ export default function AudiovisualApproval() {
                   <Info className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-bold`}>
-                    Descrição
+                  <p className="text-sm text-muted-foreground mb-1.5 uppercase tracking-wider font-bold">
+                    DESCRIÇÃO
                   </p>
-                  <p className={`text-foreground leading-snug line-clamp-2 ${isMobile ? 'text-xs' : 'text-base'}`}>
+                  <p className={`text-foreground leading-snug line-clamp-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                     {project.description}
                   </p>
                 </div>
@@ -953,7 +966,7 @@ export default function AudiovisualApproval() {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-3 mb-3">
                   <div>
                       <label className={`block font-medium mb-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                         Avalie sua experiência com a plataforma
@@ -977,6 +990,26 @@ export default function AudiovisualApproval() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Campo de comentário aparece quando rating > 0 */}
+                    {rating > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <label className={`block font-medium mb-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                          Deixe seu depoimento (opcional)
+                        </label>
+                        <Textarea
+                          value={ratingComment}
+                          onChange={(e) => setRatingComment(e.target.value)}
+                          placeholder="Conte sobre sua experiência usando a plataforma de aprovação..."
+                          className={`w-full resize-none ${isMobile ? 'min-h-[80px] text-sm' : 'min-h-[100px]'}`}
+                          disabled={hasSubmittedRating}
+                        />
+                      </motion.div>
+                    )}
 
                     {rating === 0 && (
                       <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md p-1.5">
