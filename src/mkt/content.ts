@@ -27,24 +27,24 @@ export const howItWorks = {
   subtitle: 'Aprovação de conteúdo simplificada em 4 passos',
   steps: [
     {
-      title: 'Envie o vídeo',
-      description: 'Upload direto na plataforma com suporte para diversos formatos',
-      image: '/mkt/player-annot.png',
+      title: 'Envie seu conteúdo',
+      description: 'Upload de vídeos ou cole link direto do Vimeo e YouTube',
+      image: '/mkt/steps-upload.png',
     },
     {
       title: 'Marque no frame',
-      description: 'Desenhe e anote diretamente sobre o frame do vídeo no momento exato',
-      image: '/mkt/player-annot.png',
+      description: 'Desenhe e aponte diretamente no momento exato do vídeo',
+      image: '/mkt/steps-mark.png',
     },
     {
       title: 'Comente e aprove',
-      description: 'Feedback visual e textual centralizado para toda a equipe',
-      image: '/mkt/briefings.png',
+      description: 'Adicione comentários com timestamp para revisão precisa',
+      image: '/mkt/steps-comment.png',
     },
     {
-      title: 'Versões e histórico',
-      description: 'Controle completo de revisões com histórico de alterações',
-      image: '/mkt/briefings.png',
+      title: 'Gerencie versões',
+      description: 'Histórico completo de todas as revisões e aprovações',
+      image: '/mkt/steps-versions.png',
     },
   ],
 };
