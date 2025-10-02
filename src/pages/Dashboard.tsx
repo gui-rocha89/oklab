@@ -118,12 +118,6 @@ const ProjectCard = ({ project, index }: any) => {
                 RETORNO RECEBIDO
               </Badge>
             )}
-            {project.status === 'pending' && (
-              <Badge className="bg-orange-500 text-white hover:bg-orange-600 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                PENDENTE
-              </Badge>
-            )}
             {project.status === 'approved' && (
               <Badge className="bg-green-500 text-white hover:bg-green-600 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
