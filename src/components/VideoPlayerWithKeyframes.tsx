@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,11 +27,15 @@ interface VideoPlayerWithKeyframesProps {
   onDurationChange?: (duration: number) => void;
 }
 
-export const VideoPlayerWithKeyframes = ({ 
+export interface VideoPlayerRef {
+  seekTo: (time: number) => void;
+}
+
+export const VideoPlayerWithKeyframes = forwardRef<VideoPlayerRef, VideoPlayerWithKeyframesProps>(({ 
   src, 
   keyframes,
   onDurationChange 
-}: VideoPlayerWithKeyframesProps) => {
+}, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -39,6 +43,16 @@ export const VideoPlayerWithKeyframes = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hoveredKeyframe, setHoveredKeyframe] = useState<string | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    seekTo: (time: number) => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = time;
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  }));
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -222,4 +236,4 @@ export const VideoPlayerWithKeyframes = ({
       </div>
     </div>
   );
-};
+});

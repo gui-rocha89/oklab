@@ -10,7 +10,7 @@ import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail,
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { VideoPlayerWithKeyframes } from "@/components/VideoPlayerWithKeyframes";
+import { VideoPlayerWithKeyframes, VideoPlayerRef } from "@/components/VideoPlayerWithKeyframes";
 
 
 
@@ -63,6 +63,7 @@ const ClientReturn = () => {
   const [review, setReview] = useState<PlatformReview | null>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [videoDuration, setVideoDuration] = useState(0);
+  const videoPlayerRef = useRef<VideoPlayerRef>(null);
 
   useEffect(() => {
     fetchProjectReturn();
@@ -136,6 +137,11 @@ const ClientReturn = () => {
     );
   };
 
+
+  const seekToTime = (timeInSeconds: number) => {
+    videoPlayerRef.current?.seekTo(timeInSeconds);
+    toast.success(`Pausado em ${formatTime(timeInSeconds)}`);
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -300,6 +306,7 @@ const ClientReturn = () => {
               <div className="space-y-4">
                 {/* Custom Video Player with Integrated Keyframes */}
                 <VideoPlayerWithKeyframes
+                  ref={videoPlayerRef}
                   src={project.video_url!}
                   keyframes={keyframes}
                   onDurationChange={setVideoDuration}
@@ -320,7 +327,8 @@ const ClientReturn = () => {
                         return (
                           <Card 
                             key={keyframe.id} 
-                            className="border-l-4 border-l-primary hover:bg-accent/50 transition-colors"
+                            className="border-l-4 border-l-primary hover:bg-accent/50 transition-colors cursor-pointer"
+                            onClick={() => seekToTime(timeInSeconds)}
                           >
                             <CardHeader className="pb-3">
                               <div className="flex items-start justify-between gap-4">
