@@ -61,8 +61,14 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
     }
 
     try {
+      console.log('🎨 Iniciando upload da anotação...');
+      console.log('📊 Tamanho do blob:', imageBlob.size, 'bytes');
+      console.log('📊 Tipo do blob:', imageBlob.type);
+      
       // Upload image to Supabase Storage
       const fileName = `${projectId}/${Date.now()}.webp`;
+      console.log('📁 Nome do arquivo:', fileName);
+      
       const { error: uploadError } = await supabase.storage
         .from('audiovisual-projects')
         .upload(`annotations/${fileName}`, imageBlob, {
@@ -70,12 +76,19 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Erro no upload:', uploadError);
+        throw uploadError;
+      }
+      
+      console.log('✅ Upload concluído!');
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('audiovisual-projects')
         .getPublicUrl(`annotations/${fileName}`);
+      
+      console.log('🔗 URL pública:', publicUrl);
 
       // Save annotation to database
       const { error: dbError } = await supabase
@@ -88,12 +101,16 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
           comment: comment || null
         });
 
-      if (dbError) throw dbError;
-
+      if (dbError) {
+        console.error('❌ Erro ao salvar no banco:', dbError);
+        throw dbError;
+      }
+      
+      console.log('✅ Anotação salva no banco!');
       toast.success('Annotation saved successfully');
       await loadAnnotations();
     } catch (error) {
-      console.error('Error saving annotation:', error);
+      console.error('❌ Error saving annotation:', error);
       toast.error('Failed to save annotation');
       throw error;
     }

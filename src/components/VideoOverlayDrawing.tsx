@@ -180,11 +180,12 @@ export const VideoOverlayDrawing = ({
         
         tempCanvas.toBlob((blob) => {
           if (blob) {
+            console.log('✅ Blob gerado com sucesso:', blob.size, 'bytes');
             onSave(blob, comment);
           } else {
             toast.error('Erro ao gerar imagem');
           }
-        }, 'image/png');
+        }, 'image/webp', 0.95);
       };
       img.src = fabricData;
     } catch (error) {
