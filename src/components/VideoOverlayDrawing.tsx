@@ -1,52 +1,40 @@
 import { useEffect, useRef, useState } from 'react';
 import { Canvas as FabricCanvas, PencilBrush } from 'fabric';
 import { Button } from '@/components/ui/button';
-import { Undo2, Redo2, Trash2, Circle, Square, Type, Pencil } from 'lucide-react';
+import { Undo2, Redo2, Trash2, Pencil, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VideoOverlayDrawingProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
-  videoContainerRef: React.RefObject<HTMLDivElement>;
+  frameUrl: string;
+  containerWidth: number;
+  containerHeight: number;
   onSave: (imageBlob: Blob, comment: string) => void;
   onCancel: () => void;
 }
 
 export const VideoOverlayDrawing = ({
-  videoRef,
-  videoContainerRef,
+  frameUrl,
+  containerWidth,
+  containerHeight,
   onSave,
   onCancel,
 }: VideoOverlayDrawingProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
-  const [activeTool, setActiveTool] = useState<'pen' | 'circle' | 'rectangle' | 'text'>('pen');
+  const [activeTool, setActiveTool] = useState<'pen'>('pen');
   const [brushColor, setBrushColor] = useState('#FF0000');
   const [history, setHistory] = useState<string[]>([]);
   const [historyStep, setHistoryStep] = useState(0);
   const [comment, setComment] = useState('');
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  // Calculate canvas dimensions based on video container
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (videoContainerRef.current) {
-        const rect = videoContainerRef.current.getBoundingClientRect();
-        setDimensions({ width: rect.width, height: rect.height });
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, [videoContainerRef]);
 
   // Initialize Fabric.js canvas
   useEffect(() => {
-    if (!canvasRef.current || dimensions.width === 0 || dimensions.height === 0) return;
+    if (!canvasRef.current || containerWidth === 0 || containerHeight === 0) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: dimensions.width,
-      height: dimensions.height,
+      width: containerWidth,
+      height: containerHeight,
       backgroundColor: 'transparent',
     });
 
@@ -62,25 +50,25 @@ export const VideoOverlayDrawing = ({
     setHistory([initialState]);
     setHistoryStep(0);
 
-    console.log('✅ Overlay canvas inicializado:', dimensions);
+    console.log('✅ Canvas de desenho inicializado:', { containerWidth, containerHeight });
 
     return () => {
       canvas.dispose();
     };
-  }, [dimensions.width, dimensions.height]);
+  }, [containerWidth, containerHeight]);
 
-  // Update drawing mode and brush
+  // Update brush color
   useEffect(() => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    canvas.isDrawingMode = activeTool === 'pen';
+    canvas.isDrawingMode = true;
     
     if (canvas.freeDrawingBrush) {
       canvas.freeDrawingBrush.color = brushColor;
       canvas.freeDrawingBrush.width = 3;
     }
-  }, [activeTool, brushColor]);
+  }, [brushColor]);
 
   // Track canvas changes for undo/redo
   useEffect(() => {
@@ -143,7 +131,7 @@ export const VideoOverlayDrawing = ({
   };
 
   const handleSave = async () => {
-    if (!videoRef.current || !fabricCanvasRef.current) {
+    if (!imgRef.current || !fabricCanvasRef.current) {
       toast.error('Erro ao salvar anotação');
       return;
     }
@@ -154,18 +142,18 @@ export const VideoOverlayDrawing = ({
     }
 
     try {
-      // Create temporary canvas to combine video frame + drawings
+      // Create temporary canvas to combine frame + drawings
       const tempCanvas = document.createElement('canvas');
-      const video = videoRef.current;
+      const img = imgRef.current;
       
-      tempCanvas.width = video.videoWidth;
-      tempCanvas.height = video.videoHeight;
+      tempCanvas.width = img.naturalWidth;
+      tempCanvas.height = img.naturalHeight;
       
       const ctx = tempCanvas.getContext('2d');
       if (!ctx) throw new Error('Failed to get canvas context');
 
-      // Draw video frame
-      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+      // Draw captured frame
+      ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
       // Draw Fabric.js canvas on top
       const fabricCanvas = fabricCanvasRef.current;
@@ -174,20 +162,20 @@ export const VideoOverlayDrawing = ({
         multiplier: tempCanvas.width / fabricCanvas.width!,
       });
 
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+      const fabricImg = new Image();
+      fabricImg.onload = () => {
+        ctx.drawImage(fabricImg, 0, 0, tempCanvas.width, tempCanvas.height);
         
         tempCanvas.toBlob((blob) => {
           if (blob) {
-            console.log('✅ Blob gerado com sucesso:', blob.size, 'bytes');
+            console.log('✅ Anotação combinada gerada:', blob.size, 'bytes');
             onSave(blob, comment);
           } else {
             toast.error('Erro ao gerar imagem');
           }
         }, 'image/webp', 0.95);
       };
-      img.src = fabricData;
+      fabricImg.src = fabricData;
     } catch (error) {
       console.error('Erro ao salvar anotação:', error);
       toast.error('Erro ao salvar anotação');
@@ -197,15 +185,15 @@ export const VideoOverlayDrawing = ({
   const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFFFFF', '#000000'];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4 gap-3">
-      {/* Toolbar ACIMA do vídeo */}
+    <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 gap-3">
+      {/* Toolbar ACIMA */}
       <div className="w-full max-w-5xl bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-3 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Ferramenta:</span>
           <Button
             size="sm"
-            variant={activeTool === 'pen' ? 'default' : 'outline'}
-            onClick={() => setActiveTool('pen')}
+            variant="default"
+            disabled
           >
             <Pencil className="h-4 w-4 mr-1" />
             Desenhar
@@ -224,6 +212,7 @@ export const VideoOverlayDrawing = ({
                   borderColor: brushColor === color ? 'hsl(var(--primary))' : 'transparent'
                 }}
                 onClick={() => setBrushColor(color)}
+                aria-label={`Cor ${color}`}
               />
             ))}
           </div>
@@ -242,23 +231,29 @@ export const VideoOverlayDrawing = ({
         </div>
       </div>
 
-      {/* Container do vídeo com canvas - SEM controles internos */}
+      {/* Frame + Canvas */}
       <div 
-        className="relative bg-black rounded-lg overflow-hidden" 
+        className="relative bg-black rounded-lg overflow-hidden shadow-2xl" 
         style={{ 
-          width: dimensions.width, 
-          height: dimensions.height,
+          width: containerWidth, 
+          height: containerHeight,
           maxWidth: '100%',
           maxHeight: '60vh'
         }}
       >
+        <img 
+          ref={imgRef}
+          src={frameUrl} 
+          alt="Frame capturado" 
+          className="w-full h-full object-contain"
+        />
         <canvas 
           ref={canvasRef} 
           className="absolute inset-0 cursor-crosshair"
         />
       </div>
 
-      {/* Painel de comentário ABAIXO do vídeo */}
+      {/* Painel de comentário ABAIXO */}
       <div className="w-full max-w-5xl bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-4">
         <textarea
           className="w-full p-3 border rounded-md bg-background text-foreground resize-none mb-3"
@@ -273,6 +268,7 @@ export const VideoOverlayDrawing = ({
             Cancelar
           </Button>
           <Button onClick={handleSave}>
+            <CheckCircle className="w-4 h-4 mr-2" />
             Salvar Anotação
           </Button>
         </div>

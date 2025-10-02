@@ -73,6 +73,8 @@ export default function AudiovisualApproval() {
   const [showAnnotationOverlay, setShowAnnotationOverlay] = useState(false);
 
   const [isDrawingOverVideo, setIsDrawingOverVideo] = useState(false);
+  const [capturedFrame, setCapturedFrame] = useState<string | null>(null);
+  const [capturedDimensions, setCapturedDimensions] = useState({ width: 0, height: 0 });
 
   // Annotation system
   const {
@@ -400,8 +402,9 @@ export default function AudiovisualApproval() {
       // Save annotation using the hook
       await saveAnnotation(timestamp_ms, imageBlob, comment);
       
-      // Close drawing overlay
+      // Close drawing overlay and clear captured frame
       setIsDrawingOverVideo(false);
+      setCapturedFrame(null);
       
       toast({
         title: "Anotação salva!",
@@ -459,12 +462,47 @@ export default function AudiovisualApproval() {
   };
 
   const handleCreateAnnotation = () => {
+    if (!videoRef.current || !videoContainerRef.current) return;
+    
     setIsPlaying(false); // Pause video
-    setIsDrawingOverVideo(true);
-    toast({
-      title: "Modo de Desenho Ativado",
-      description: "Desenhe sobre o vídeo e adicione um comentário.",
-    });
+    
+    try {
+      // Capture current video frame
+      const video = videoRef.current;
+      const container = videoContainerRef.current;
+      
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = video.videoWidth;
+      tempCanvas.height = video.videoHeight;
+      
+      const ctx = tempCanvas.getContext('2d');
+      if (!ctx) throw new Error('Failed to get canvas context');
+      
+      // Draw current video frame
+      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Convert to data URL
+      const frameDataUrl = tempCanvas.toDataURL('image/webp', 0.95);
+      setCapturedFrame(frameDataUrl);
+      
+      // Get container dimensions for proper rendering
+      const rect = container.getBoundingClientRect();
+      setCapturedDimensions({ width: rect.width, height: rect.height });
+      
+      setIsDrawingOverVideo(true);
+      
+      toast({
+        title: "Modo de Desenho Ativado",
+        description: "Desenhe sobre o frame capturado e adicione um comentário.",
+      });
+    } catch (error) {
+      console.error('Erro ao capturar frame:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível capturar o frame do vídeo.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Only count keyframes with actual comments for feedback validation
@@ -821,12 +859,16 @@ export default function AudiovisualApproval() {
                   />
 
                   {/* Drawing Overlay */}
-                  {isDrawingOverVideo && (
+                  {isDrawingOverVideo && capturedFrame && (
                     <VideoOverlayDrawing
-                      videoRef={videoRef}
-                      videoContainerRef={videoContainerRef}
+                      frameUrl={capturedFrame}
+                      containerWidth={capturedDimensions.width}
+                      containerHeight={capturedDimensions.height}
                       onSave={handleSaveDrawing}
-                      onCancel={() => setIsDrawingOverVideo(false)}
+                      onCancel={() => {
+                        setIsDrawingOverVideo(false);
+                        setCapturedFrame(null);
+                      }}
                     />
                   )}
                 </div>
