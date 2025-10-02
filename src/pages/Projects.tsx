@@ -282,13 +282,8 @@ export default function Projects() {
                   return;
                 }
                 
-                // Abrir link do projeto para o cliente (rota correta por tipo)
-                if (project.share_id) {
-                  const clientLink = isAudiovisual 
-                    ? `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`
-                    : `${window.location.origin}/projeto/${project.share_id}`;
-                  window.open(clientLink, '_blank');
-                }
+                // Abrir retorno do cliente (mesma função do botão Eye)
+                handleViewProject(project);
               };
               
               return (
@@ -471,14 +466,8 @@ export default function Projects() {
                       return;
                     }
                     
-                    // Abrir link do projeto para o cliente (rota correta por tipo)
-                    if (project.share_id) {
-                      const isAudiovisual = project.type === 'Audiovisual';
-                      const clientLink = isAudiovisual 
-                        ? `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`
-                        : `${window.location.origin}/projeto/${project.share_id}`;
-                      window.open(clientLink, '_blank');
-                    }
+                    // Abrir retorno do cliente (mesma função do botão Eye)
+                    handleViewProject(project);
                   };
                   
                   return (
@@ -545,7 +534,7 @@ export default function Projects() {
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleEditProject(project.id);
+                            handleEditProject(project);
                           }}
                         >
                           <Edit className="h-4 w-4" />
@@ -610,6 +599,16 @@ export default function Projects() {
           </Card>
         )}
       </div>
+
+      <ProjectQuickEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingProject(null);
+        }}
+        project={editingProject}
+        onSave={handleSaveProject}
+      />
     </div>
   );
 }
