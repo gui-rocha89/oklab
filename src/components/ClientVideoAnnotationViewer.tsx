@@ -378,13 +378,15 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               onPause={() => setIsPlaying(false)}
             />
             
-            {/* Canvas overlay: inset:0 para cobrir todo o container */}
+            {/* Canvas overlay: absolute positioning to cover the entire video */}
             <canvas
               ref={canvasRef}
-              className="absolute pointer-events-none"
+              className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none"
               style={{ 
-                inset: 0,
-                zIndex: 10
+                zIndex: 10,
+                width: '100%',
+                height: '100%',
+                border: '2px solid red' // TEMPORARY - for debugging overlay positioning
               }}
             />
 
