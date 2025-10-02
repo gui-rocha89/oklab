@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil, Play, Upload, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil, Play, Upload, Send, CheckCircle, AlertCircle, Copy, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -78,9 +79,13 @@ const ClientReturn = () => {
   const [newVideoFile, setNewVideoFile] = useState<File | null>(null);
   const [resendMessage, setResendMessage] = useState("");
   const [teamResponses, setTeamResponses] = useState<Record<string, string>>({});
+  const [savingFeedback, setSavingFeedback] = useState<Record<string, boolean>>({});
+  const [savedFeedback, setSavedFeedback] = useState<Record<string, boolean>>({});
+  const [generatedShareLink, setGeneratedShareLink] = useState<string | null>(null);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
-  const { updateFeedback, resendProject, isUpdating, isResending } = useProjectFeedbackManagement();
+  const { updateFeedback, resendProject, isUpdating, isResending, uploadProgress } = useProjectFeedbackManagement();
 
   useEffect(() => {
     fetchProjectReturn();
@@ -177,24 +182,49 @@ const ClientReturn = () => {
 
   const handleTeamResponseChange = (feedbackId: string, response: string) => {
     setTeamResponses(prev => ({ ...prev, [feedbackId]: response }));
+    
+    // Clear existing timer
+    if (debounceTimers.current[feedbackId]) {
+      clearTimeout(debounceTimers.current[feedbackId]);
+    }
+    
+    // Clear saved indicator
+    setSavedFeedback(prev => ({ ...prev, [feedbackId]: false }));
+    
+    // Set new timer for auto-save
+    debounceTimers.current[feedbackId] = setTimeout(async () => {
+      if (response.trim()) {
+        setSavingFeedback(prev => ({ ...prev, [feedbackId]: true }));
+        
+        const success = await updateFeedback(feedbackId, { team_response: response });
+        
+        setSavingFeedback(prev => ({ ...prev, [feedbackId]: false }));
+        
+        if (success) {
+          setSavedFeedback(prev => ({ ...prev, [feedbackId]: true }));
+          // Clear saved indicator after 3 seconds
+          setTimeout(() => {
+            setSavedFeedback(prev => ({ ...prev, [feedbackId]: false }));
+          }, 3000);
+        }
+      }
+    }, 2000);
   };
 
-  const handleSaveTeamResponse = async (feedbackId: string) => {
-    const response = teamResponses[feedbackId];
-    if (!response?.trim()) {
-      toast.error("Digite uma resposta antes de salvar");
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const maxSize = 500 * 1024 * 1024; // 500MB
+    
+    if (file.size > maxSize) {
+      toast.error("Vídeo muito grande! Tamanho máximo: 500MB");
+      e.target.value = '';
       return;
     }
-
-    const success = await updateFeedback(feedbackId, { team_response: response });
-    if (success) {
-      setTeamResponses(prev => {
-        const newState = { ...prev };
-        delete newState[feedbackId];
-        return newState;
-      });
-      fetchProjectReturn();
-    }
+    
+    setNewVideoFile(file);
+    toast.success(`Vídeo selecionado: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
   };
 
   const handleResendProject = async () => {
@@ -208,10 +238,17 @@ const ClientReturn = () => {
     const result = await resendProject(projectId, newVideoFile, resendMessage);
     
     if (result) {
-      toast.success("Link regenerado com sucesso!");
+      setGeneratedShareLink(result.shareUrl);
       setNewVideoFile(null);
       setResendMessage("");
       fetchProjectReturn();
+    }
+  };
+
+  const copyLinkToClipboard = () => {
+    if (generatedShareLink) {
+      navigator.clipboard.writeText(generatedShareLink);
+      toast.success("Link copiado para a área de transferência!");
     }
   };
 
@@ -504,14 +541,20 @@ const ClientReturn = () => {
                                             onChange={(e) => handleTeamResponseChange(feedback.id, e.target.value)}
                                             className="min-h-[80px]"
                                           />
-                                          <Button
-                                            size="sm"
-                                            onClick={() => handleSaveTeamResponse(feedback.id)}
-                                            disabled={isUpdating || !teamResponses[feedback.id]?.trim()}
-                                          >
-                                            <Send className="w-3 h-3 mr-2" />
-                                            Enviar Resposta
-                                          </Button>
+                                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            {savingFeedback[feedback.id] && (
+                                              <>
+                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                <span>Salvando...</span>
+                                              </>
+                                            )}
+                                            {savedFeedback[feedback.id] && (
+                                              <>
+                                                <CheckCircle className="w-3 h-3 text-green-600" />
+                                                <span className="text-green-600">Salvo automaticamente</span>
+                                              </>
+                                            )}
+                                          </div>
                                         </div>
                                       )}
                                     </div>
@@ -532,79 +575,138 @@ const ClientReturn = () => {
 
         {/* Seção de Reenvio de Vídeo Corrigido */}
         {hasKeyframes && totalComments > 0 && (
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="w-5 h-5 text-primary" />
-                Reenviar Projeto Corrigido
-              </CardTitle>
-              <CardDescription>
-                Faça upload do vídeo corrigido e reenvie para o cliente. O link permanece o mesmo, mas o conteúdo será atualizado.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="video-upload">Novo Vídeo Corrigido</Label>
-                <Input
-                  id="video-upload"
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => setNewVideoFile(e.target.files?.[0] || null)}
-                  className="cursor-pointer"
-                />
-                {newVideoFile && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    {newVideoFile.name}
-                  </p>
-                )}
-              </div>
+          <>
+            {generatedShareLink ? (
+              <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <CheckCircle2 className="w-5 h-5" />
+                    Link Gerado com Sucesso!
+                  </CardTitle>
+                  <CardDescription>
+                    O vídeo foi atualizado e o cliente pode acessar as correções através do link abaixo.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Link de Aprovação:</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        value={generatedShareLink} 
+                        readOnly 
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        onClick={copyLinkToClipboard}
+                        variant="outline"
+                        size="icon"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="resend-message">Mensagem para o Cliente (Opcional)</Label>
-                <Textarea
-                  id="resend-message"
-                  placeholder="Ex: Fizemos todos os ajustes solicitados. Por favor, revise novamente."
-                  value={resendMessage}
-                  onChange={(e) => setResendMessage(e.target.value)}
-                  className="min-h-[80px]"
-                />
-              </div>
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <p className="text-sm text-muted-foreground">
+                      ℹ️ O vídeo foi atualizado com sucesso. Envie este link para o cliente revisar as correções.
+                    </p>
+                  </div>
 
-              <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-warning" />
-                  Ao reenviar o projeto:
-                </p>
-                <ul className="text-sm text-muted-foreground space-y-1 ml-6 list-disc">
-                  <li>O vídeo atual será substituído pelo novo</li>
-                  <li>O status mudará para "Em Revisão"</li>
-                  <li>Os checkboxes de "resolvido" serão desmarcados</li>
-                  <li>O cliente receberá uma notificação</li>
-                  <li>O link de aprovação permanece o mesmo</li>
-                </ul>
-              </div>
+                  <Button
+                    onClick={() => setGeneratedShareLink(null)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Fazer Novo Reenvio
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-primary">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="w-5 h-5 text-primary" />
+                    Reenviar Projeto Corrigido
+                  </CardTitle>
+                  <CardDescription>
+                    Faça upload do vídeo corrigido e gere um novo link para o cliente. O link de aprovação será atualizado com o novo conteúdo.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="video-upload">Novo Vídeo Corrigido (máx. 500MB)</Label>
+                    <Input
+                      id="video-upload"
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoFileChange}
+                      className="cursor-pointer"
+                    />
+                    {newVideoFile && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        {newVideoFile.name} ({(newVideoFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                  </div>
 
-              <Button
-                onClick={handleResendProject}
-                disabled={!newVideoFile || isResending}
-                className="w-full"
-                size="lg"
-              >
-                {isResending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Reenviando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Reenviar Link para Cliente
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+                  {isResending && uploadProgress > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Enviando vídeo...</span>
+                        <span className="font-semibold text-primary">{uploadProgress}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="h-2" />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="resend-message">Mensagem para o Cliente (Opcional)</Label>
+                    <Textarea
+                      id="resend-message"
+                      placeholder="Ex: Fizemos todos os ajustes solicitados. Por favor, revise novamente."
+                      value={resendMessage}
+                      onChange={(e) => setResendMessage(e.target.value)}
+                      className="min-h-[80px]"
+                    />
+                  </div>
+
+                  <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-2">
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-warning" />
+                      Ao gerar novo link:
+                    </p>
+                    <ul className="text-sm text-muted-foreground space-y-1 ml-6 list-disc">
+                      <li>O vídeo atual será substituído pelo novo</li>
+                      <li>O status mudará para "Em Revisão"</li>
+                      <li>Os checkboxes de "resolvido" serão desmarcados</li>
+                      <li>Um novo link será gerado para enviar ao cliente</li>
+                      <li>As respostas da equipe serão preservadas</li>
+                    </ul>
+                  </div>
+
+                  <Button
+                    onClick={handleResendProject}
+                    disabled={!newVideoFile || isResending}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isResending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {uploadProgress > 0 ? `Enviando... ${uploadProgress}%` : 'Processando...'}
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Gerar Novo Link para Enviar ao Cliente
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </>

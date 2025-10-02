@@ -12,6 +12,7 @@ interface FeedbackUpdate {
 export const useProjectFeedbackManagement = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
 
   const updateFeedback = async (feedbackId: string, updates: Partial<FeedbackUpdate>) => {
@@ -59,12 +60,25 @@ export const useProjectFeedbackManagement = () => {
 
   const resendProject = async (projectId: string, videoFile: File, message?: string) => {
     setIsResending(true);
+    setUploadProgress(0);
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         throw new Error('Usuário não autenticado');
       }
+
+      // Simulate upload progress (since FormData doesn't provide real progress)
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 500);
 
       const formData = new FormData();
       formData.append('projectId', projectId);
@@ -77,11 +91,14 @@ export const useProjectFeedbackManagement = () => {
         body: formData,
       });
 
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
       if (response.error) throw response.error;
 
       toast({
         title: 'Projeto reenviado com sucesso',
-        description: 'O vídeo foi atualizado e o cliente será notificado',
+        description: 'O vídeo foi atualizado e um novo link foi gerado',
       });
 
       return response.data;
@@ -95,6 +112,7 @@ export const useProjectFeedbackManagement = () => {
       return null;
     } finally {
       setIsResending(false);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -103,5 +121,6 @@ export const useProjectFeedbackManagement = () => {
     resendProject,
     isUpdating,
     isResending,
+    uploadProgress,
   };
 };

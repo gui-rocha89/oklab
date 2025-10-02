@@ -39,7 +39,18 @@ serve(async (req) => {
       throw new Error('Missing required fields: projectId and videoFile');
     }
 
-    console.log('Reenvio de projeto iniciado:', { projectId, userId: user.id });
+    // Validate file size (max 500MB)
+    const maxSize = 500 * 1024 * 1024; // 500MB
+    if (videoFile.size > maxSize) {
+      throw new Error('Video file too large. Maximum size: 500MB');
+    }
+
+    console.log('📦 Reenvio de projeto iniciado:', { 
+      projectId, 
+      userId: user.id,
+      videoSize: `${(videoFile.size / 1024 / 1024).toFixed(2)} MB`,
+      videoName: videoFile.name
+    });
 
     // Get project info
     const { data: project, error: projectError } = await supabase
@@ -52,26 +63,41 @@ serve(async (req) => {
       throw new Error('Project not found');
     }
 
-    // Upload new video to storage
+    // Upload new video to storage with timeout
     const fileName = `${projectId}/${Date.now()}-${videoFile.name}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    
+    console.log('⏱️ Iniciando upload do vídeo:', new Date().toISOString());
+    
+    const uploadPromise = supabase.storage
       .from('audiovisual-projects')
       .upload(fileName, videoFile, {
         contentType: videoFile.type,
         upsert: false
       });
 
+    // 55 second timeout (Supabase edge function limit is 60s)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Upload timeout after 55 seconds')), 55000)
+    );
+
+    const { data: uploadData, error: uploadError } = await Promise.race([
+      uploadPromise,
+      timeoutPromise
+    ]) as any;
+
     if (uploadError) {
-      console.error('Erro ao fazer upload do vídeo:', uploadError);
+      console.error('❌ Erro ao fazer upload do vídeo:', uploadError);
       throw uploadError;
     }
+
+    console.log('✅ Upload concluído:', new Date().toISOString());
 
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('audiovisual-projects')
       .getPublicUrl(fileName);
 
-    console.log('Novo vídeo carregado:', publicUrl);
+    console.log('🔗 Novo vídeo carregado:', publicUrl);
 
     // Update project with new video and status
     const { error: updateError } = await supabase
