@@ -199,8 +199,9 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
         try {
           let obj;
+          const normalizedType = objData.type?.toLowerCase();
           
-          if (objData.type === 'path') {
+          if (normalizedType === 'path') {
             // Para caminhos (desenho livre)
             const { Path } = await import('fabric');
             obj = new Path(objData.path, {
@@ -211,7 +212,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               selectable: false,
               evented: false
             });
-          } else if (objData.type === 'circle') {
+          } else if (normalizedType === 'circle') {
             const { Circle } = await import('fabric');
             obj = new Circle({
               ...objData,
@@ -221,7 +222,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               selectable: false,
               evented: false
             });
-          } else if (objData.type === 'rect') {
+          } else if (normalizedType === 'rect') {
             const { Rect } = await import('fabric');
             obj = new Rect({
               ...objData,
@@ -231,7 +232,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
               selectable: false,
               evented: false
             });
-          } else if (objData.type === 'textbox' || objData.type === 'text') {
+          } else if (normalizedType === 'textbox' || normalizedType === 'text') {
             const { Textbox } = await import('fabric');
             obj = new Textbox(objData.text || '', {
               ...objData,
