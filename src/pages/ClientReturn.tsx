@@ -34,6 +34,24 @@ interface PlatformReview {
   created_at: string;
 }
 
+interface Keyframe {
+  id: string;
+  title: string;
+  attachments: Array<{
+    time: number;
+    timeStr: string;
+    type: string;
+  }>;
+  feedback_count: number;
+  project_feedback: Array<{
+    id: string;
+    comment: string;
+    x_position: number;
+    y_position: number;
+    created_at: string;
+  }>;
+}
+
 
 const ClientReturn = () => {
   const { projectId } = useParams();
@@ -41,6 +59,7 @@ const ClientReturn = () => {
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<Project | null>(null);
   const [review, setReview] = useState<PlatformReview | null>(null);
+  const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
 
   useEffect(() => {
     fetchProjectReturn();
@@ -59,6 +78,15 @@ const ClientReturn = () => {
 
       if (projectError) throw projectError;
       setProject(projectData);
+
+      // Buscar keyframes com feedback
+      const { data: keyframesData } = await supabase
+        .from("project_keyframes")
+        .select("*, project_feedback(*)")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: true });
+
+      setKeyframes(keyframesData || []);
 
       // Buscar review/rating
       const { data: reviewData } = await supabase
@@ -139,6 +167,9 @@ const ClientReturn = () => {
   }
 
   const hasClientReturn = project.completed_at || review;
+  const hasKeyframes = keyframes.length > 0;
+  const totalComments = keyframes.reduce((sum, kf) => sum + kf.project_feedback.length, 0);
+  const isApprovedWithoutChanges = hasClientReturn && !hasKeyframes;
 
   return (
     <>
@@ -228,48 +259,91 @@ const ClientReturn = () => {
           </Card>
         )}
 
-        {/* Vídeo - aprovado na íntegra */}
+        {/* Vídeo com keyframes e comentários */}
         {project.video_url && (
-          <div>
-            <div>
-              <Card className="h-full">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Video className="w-5 h-5 text-primary" />
-                      Vídeo Aprovado pelo Cliente
-                    </CardTitle>
-                    <Badge variant="success" className="flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Aprovado na íntegra
-                    </Badge>
-                  </div>
-                  <CardDescription>
-                    Este vídeo foi aprovado sem comentários ou modificações sugeridas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <video 
-                      controls 
-                      className="w-full rounded-lg aspect-video"
-                      src={project.video_url}
-                    >
-                      Seu navegador não suporta a reprodução de vídeos.
-                    </video>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                      <CheckCircle2 className="w-4 h-4 text-success" />
-                      <p>
-                        O cliente aprovou este vídeo sem solicitar alterações. 
-                        Não há anotações visuais ou comentários adicionais.
-                      </p>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="w-5 h-5 text-primary" />
+                  Vídeo do Projeto
+                </CardTitle>
+                {isApprovedWithoutChanges ? (
+                  <Badge variant="success" className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Aprovado na íntegra
+                  </Badge>
+                ) : (
+                  <Badge variant="warning" className="flex items-center gap-1">
+                    <MessageSquare className="w-3 h-3" />
+                    {totalComments} comentário{totalComments !== 1 ? 's' : ''}
+                  </Badge>
+                )}
+              </div>
+              <CardDescription>
+                {isApprovedWithoutChanges 
+                  ? "Vídeo aprovado sem comentários ou modificações" 
+                  : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <video 
+                  controls 
+                  className="w-full rounded-lg aspect-video"
+                  src={project.video_url}
+                >
+                  Seu navegador não suporta a reprodução de vídeos.
+                </video>
+
+                {/* Timeline de keyframes */}
+                {hasKeyframes && (
+                  <div className="space-y-4 pt-4 border-t">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Pencil className="w-4 h-4" />
+                      Momentos com Comentários
+                    </h3>
+                    <div className="space-y-3">
+                      {keyframes.map((keyframe, index) => (
+                        <Card key={keyframe.id} className="border-l-4 border-l-primary">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <CardTitle className="text-base flex items-center gap-2">
+                                  <Badge variant="outline" className="font-mono">
+                                    {keyframe.attachments[0]?.timeStr || 'N/A'}
+                                  </Badge>
+                                  {keyframe.title}
+                                </CardTitle>
+                                <CardDescription className="mt-1">
+                                  {keyframe.project_feedback.length} comentário{keyframe.project_feedback.length !== 1 ? 's' : ''}
+                                </CardDescription>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="space-y-2">
+                              {keyframe.project_feedback.map((feedback) => (
+                                <div 
+                                  key={feedback.id} 
+                                  className="bg-muted/30 rounded-lg p-3 text-sm"
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5" />
+                                    <p className="flex-1">{feedback.comment}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-          </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
       </div>
