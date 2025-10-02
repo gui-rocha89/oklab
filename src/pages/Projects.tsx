@@ -141,7 +141,11 @@ export default function Projects() {
       return;
     }
 
-    const clientLink = `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`;
+    // Usar a rota correta dependendo do tipo de projeto
+    const isAudiovisual = project.type === 'Audiovisual';
+    const clientLink = isAudiovisual 
+      ? `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`
+      : `${window.location.origin}/projeto/${project.share_id}`;
     
     navigator.clipboard.writeText(clientLink).then(() => {
       toast({
@@ -389,9 +393,11 @@ export default function Projects() {
                   return;
                 }
                 
-                // Abrir link do projeto para o cliente
+                // Abrir link do projeto para o cliente (rota correta por tipo)
                 if (project.share_id) {
-                  const clientLink = `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`;
+                  const clientLink = isAudiovisual 
+                    ? `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`
+                    : `${window.location.origin}/projeto/${project.share_id}`;
                   window.open(clientLink, '_blank');
                 }
               };
@@ -507,7 +513,7 @@ export default function Projects() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          {isAudiovisual && project.share_id && (
+                          {project.share_id && (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -574,9 +580,12 @@ export default function Projects() {
                       return;
                     }
                     
-                    // Abrir link do projeto para o cliente
+                    // Abrir link do projeto para o cliente (rota correta por tipo)
                     if (project.share_id) {
-                      const clientLink = `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`;
+                      const isAudiovisual = project.type === 'Audiovisual';
+                      const clientLink = isAudiovisual 
+                        ? `${window.location.origin}/aprovacao-audiovisual/${project.share_id}`
+                        : `${window.location.origin}/projeto/${project.share_id}`;
                       window.open(clientLink, '_blank');
                     }
                   };
