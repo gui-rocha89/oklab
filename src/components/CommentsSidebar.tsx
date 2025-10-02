@@ -122,11 +122,17 @@ export function CommentsSidebar({
                       key={item.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
+                      onClick={() => {
+                        onSeekToTime(item.time);
+                        if (!isKeyframe) {
+                          onLoadAnnotation(item.id);
+                        }
+                      }}
                       className={`
-                        p-2 rounded-md border transition-all duration-200
+                        p-2 rounded-md border transition-all duration-200 cursor-pointer
                         ${isActive 
                           ? 'bg-primary/10 border-primary/50 shadow-sm' 
-                          : 'bg-card border-border/50 hover:bg-muted/30'
+                          : 'bg-card border-border/50 hover:bg-muted/50 hover:border-border'
                         }
                       `}
                     >
@@ -151,17 +157,9 @@ export function CommentsSidebar({
                         <div className="flex-1 min-w-0">
                           {/* Time and Status */}
                           <div className="flex items-center gap-2 mb-1">
-                            <button
-                              onClick={() => {
-                                onSeekToTime(item.time);
-                                if (!isKeyframe) {
-                                  onLoadAnnotation(item.id);
-                                }
-                              }}
-                              className={`text-xs font-mono font-semibold hover:underline ${isActive ? 'text-primary' : 'text-foreground'}`}
-                            >
+                            <span className={`text-xs font-mono font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>
                               {formatTime(item.time)}
-                            </button>
+                            </span>
                             {isActive && (
                               <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium">
                                 ATUAL
