@@ -143,18 +143,9 @@ Deno.serve(async (req) => {
       console.log(`✅ Excluídas ${annotationsCount} anotações`);
     }
 
-    // 4. Delete platform reviews
-    const { error: reviewsError, count: reviewsCount } = await supabase
-      .from('platform_reviews')
-      .delete({ count: 'exact' })
-      .eq('project_id', projectId);
-
-    if (reviewsError) {
-      console.error('Erro ao excluir reviews:', reviewsError);
-    } else {
-      summary.deletedItems.reviews = reviewsCount || 0;
-      console.log(`✅ Excluídos ${reviewsCount} reviews`);
-    }
+    // 4. Preserve platform reviews for historical satisfaction statistics
+    summary.deletedItems.reviews = 0;
+    console.log(`ℹ️  Reviews preservados para histórico de satisfação`);
 
     // 5. Delete download records
     const { error: downloadsError, count: downloadsCount } = await supabase
