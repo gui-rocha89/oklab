@@ -289,12 +289,12 @@ const ClientReturn = () => {
                     <CheckCircle2 className="w-3 h-3" />
                     Aprovado na íntegra
                   </Badge>
-                ) : (
+                ) : totalComments > 0 ? (
                   <Badge variant="warning" className="flex items-center gap-1">
                     <MessageSquare className="w-3 h-3" />
                     {totalComments} comentário{totalComments !== 1 ? 's' : ''}
                   </Badge>
-                )}
+                ) : null}
               </div>
               <CardDescription>
                 {isApprovedWithoutChanges 
