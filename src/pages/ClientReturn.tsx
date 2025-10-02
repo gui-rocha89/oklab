@@ -10,6 +10,7 @@ import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail,
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { VideoPlayerWithKeyframes } from "@/components/VideoPlayerWithKeyframes";
 
 
 
@@ -62,7 +63,6 @@ const ClientReturn = () => {
   const [review, setReview] = useState<PlatformReview | null>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [videoDuration, setVideoDuration] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     fetchProjectReturn();
@@ -136,13 +136,6 @@ const ClientReturn = () => {
     );
   };
 
-  const seekToTime = (timeInSeconds: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = timeInSeconds;
-      videoRef.current.pause();
-      toast.success(`Pausado em ${formatTime(timeInSeconds)}`);
-    }
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -305,41 +298,12 @@ const ClientReturn = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* Video Player with Keyframe Markers */}
-                <div className="relative">
-                  <video 
-                    ref={videoRef}
-                    controls 
-                    className="w-full rounded-lg aspect-video"
-                    src={project.video_url}
-                    onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
-                  >
-                    Seu navegador não suporta a reprodução de vídeos.
-                  </video>
-                  
-                  {/* Keyframe markers on video timeline */}
-                  {hasKeyframes && videoDuration > 0 && (
-                    <div className="absolute bottom-12 left-0 right-0 h-1 pointer-events-none px-3">
-                      {keyframes.map((keyframe) => {
-                        const timePosition = (keyframe.attachments[0]?.time / videoDuration) * 100;
-                        const commentsCount = keyframe.project_feedback?.length || 0;
-                        
-                        return (
-                          <div
-                            key={keyframe.id}
-                            className="absolute top-0 w-1 h-4 rounded-full shadow-lg pointer-events-auto cursor-pointer hover:h-6 transition-all"
-                            style={{ 
-                              left: `${timePosition}%`,
-                              backgroundColor: commentsCount > 0 ? 'hsl(var(--warning))' : 'hsl(var(--primary))',
-                            }}
-                            onClick={() => seekToTime(keyframe.attachments[0]?.time || 0)}
-                            title={`${keyframe.title} - ${formatTime(keyframe.attachments[0]?.time || 0)}${commentsCount > 0 ? ` (${commentsCount} comentário${commentsCount !== 1 ? 's' : ''})` : ''}`}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                {/* Custom Video Player with Integrated Keyframes */}
+                <VideoPlayerWithKeyframes
+                  src={project.video_url!}
+                  keyframes={keyframes}
+                  onDurationChange={setVideoDuration}
+                />
 
                 {/* Timeline de keyframes */}
                 {hasKeyframes && (
@@ -356,8 +320,7 @@ const ClientReturn = () => {
                         return (
                           <Card 
                             key={keyframe.id} 
-                            className="border-l-4 border-l-primary hover:bg-accent/50 transition-colors cursor-pointer"
-                            onClick={() => seekToTime(timeInSeconds)}
+                            className="border-l-4 border-l-primary hover:bg-accent/50 transition-colors"
                           >
                             <CardHeader className="pb-3">
                               <div className="flex items-start justify-between gap-4">
