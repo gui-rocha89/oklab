@@ -174,9 +174,20 @@ const ClientReturn = () => {
   };
 
   const handleResolveToggle = async (feedbackId: string, currentResolved: boolean) => {
+    // Optimistic update - atualizar UI imediatamente
+    setKeyframes(prev => prev.map(kf => ({
+      ...kf,
+      project_feedback: kf.project_feedback.map(f => 
+        f.id === feedbackId ? { ...f, resolved: !currentResolved } : f
+      )
+    })));
+
+    // Fazer chamada ao servidor em background
     const success = await updateFeedback(feedbackId, { resolved: !currentResolved });
-    if (success) {
-      fetchProjectReturn();
+    
+    if (!success) {
+      // Se falhar, reverter estado local
+      await fetchProjectReturn();
     }
   };
 
@@ -529,34 +540,28 @@ const ClientReturn = () => {
                                     <div className="ml-9 space-y-2">
                                       <Label className="text-sm font-medium">Resposta da Equipe:</Label>
                                       
-                                      {feedback.team_response ? (
-                                        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg p-3">
-                                          <p className="text-sm">{feedback.team_response}</p>
+                                      <div className="space-y-2">
+                                        <Textarea
+                                          placeholder="Descreva o que foi ajustado ou responda ao comentário..."
+                                          value={teamResponses[feedback.id] || feedback.team_response || ''}
+                                          onChange={(e) => handleTeamResponseChange(feedback.id, e.target.value)}
+                                          className="min-h-[80px]"
+                                        />
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                          {savingFeedback[feedback.id] && (
+                                            <>
+                                              <Loader2 className="w-3 h-3 animate-spin" />
+                                              <span>Salvando...</span>
+                                            </>
+                                          )}
+                                          {savedFeedback[feedback.id] && (
+                                            <>
+                                              <CheckCircle className="w-3 h-3 text-green-600" />
+                                              <span className="text-green-600">Salvo automaticamente</span>
+                                            </>
+                                          )}
                                         </div>
-                                      ) : (
-                                        <div className="space-y-2">
-                                          <Textarea
-                                            placeholder="Descreva o que foi ajustado ou responda ao comentário..."
-                                            value={teamResponses[feedback.id] || ''}
-                                            onChange={(e) => handleTeamResponseChange(feedback.id, e.target.value)}
-                                            className="min-h-[80px]"
-                                          />
-                                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            {savingFeedback[feedback.id] && (
-                                              <>
-                                                <Loader2 className="w-3 h-3 animate-spin" />
-                                                <span>Salvando...</span>
-                                              </>
-                                            )}
-                                            {savedFeedback[feedback.id] && (
-                                              <>
-                                                <CheckCircle className="w-3 h-3 text-green-600" />
-                                                <span className="text-green-600">Salvo automaticamente</span>
-                                              </>
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
+                                      </div>
                                     </div>
                                   </div>
                                 ))}

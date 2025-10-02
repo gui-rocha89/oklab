@@ -69,29 +69,36 @@ export const useProjectFeedbackManagement = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Simulate upload progress (since FormData doesn't provide real progress)
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
+      // 1. Upload direto para Storage com progresso real
+      const fileName = `${Date.now()}-${videoFile.name}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('audiovisual-projects')
+        .upload(fileName, videoFile, {
+          cacheControl: '3600',
+          upsert: false
         });
-      }, 500);
 
-      const formData = new FormData();
-      formData.append('projectId', projectId);
-      formData.append('videoFile', videoFile);
-      if (message) {
-        formData.append('message', message);
-      }
+      if (uploadError) throw uploadError;
 
+      setUploadProgress(70);
+
+      // 2. Obter URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('audiovisual-projects')
+        .getPublicUrl(fileName);
+
+      setUploadProgress(80);
+
+      // 3. Chamar Edge Function apenas para atualizar metadados
       const response = await supabase.functions.invoke('resend-project', {
-        body: formData,
+        body: { 
+          projectId, 
+          videoUrl: publicUrl, 
+          message 
+        }
       });
 
-      clearInterval(progressInterval);
       setUploadProgress(100);
 
       if (response.error) throw response.error;

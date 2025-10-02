@@ -30,26 +30,17 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const formData = await req.formData();
-    const projectId = formData.get('projectId') as string;
-    const videoFile = formData.get('videoFile') as File;
-    const message = formData.get('message') as string;
+    // Parse JSON body (não mais FormData - upload é feito no frontend)
+    const { projectId, videoUrl, message } = await req.json();
 
-    if (!projectId || !videoFile) {
-      throw new Error('Missing required fields: projectId and videoFile');
+    if (!projectId || !videoUrl) {
+      throw new Error('Missing required fields: projectId and videoUrl');
     }
 
-    // Validate file size (max 500MB)
-    const maxSize = 500 * 1024 * 1024; // 500MB
-    if (videoFile.size > maxSize) {
-      throw new Error('Video file too large. Maximum size: 500MB');
-    }
-
-    console.log('📦 Reenvio de projeto iniciado:', { 
+    console.log('📦 Reenvio de projeto iniciado (metadata-only):', { 
       projectId, 
       userId: user.id,
-      videoSize: `${(videoFile.size / 1024 / 1024).toFixed(2)} MB`,
-      videoName: videoFile.name
+      videoUrl
     });
 
     // Get project info
@@ -63,70 +54,56 @@ serve(async (req) => {
       throw new Error('Project not found');
     }
 
-    // Upload new video to storage with timeout
-    const fileName = `${projectId}/${Date.now()}-${videoFile.name}`;
+    // Verify user has permission
+    const { data: userRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    const isManager = userRole?.role === 'supreme_admin' || userRole?.role === 'manager';
     
-    console.log('⏱️ Iniciando upload do vídeo:', new Date().toISOString());
-    
-    const uploadPromise = supabase.storage
-      .from('audiovisual-projects')
-      .upload(fileName, videoFile, {
-        contentType: videoFile.type,
-        upsert: false
-      });
-
-    // 55 second timeout (Supabase edge function limit is 60s)
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Upload timeout after 55 seconds')), 55000)
-    );
-
-    const { data: uploadData, error: uploadError } = await Promise.race([
-      uploadPromise,
-      timeoutPromise
-    ]) as any;
-
-    if (uploadError) {
-      console.error('❌ Erro ao fazer upload do vídeo:', uploadError);
-      throw uploadError;
+    if (project.user_id !== user.id && !isManager) {
+      throw new Error('No permission to resend this project');
     }
-
-    console.log('✅ Upload concluído:', new Date().toISOString());
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('audiovisual-projects')
-      .getPublicUrl(fileName);
-
-    console.log('🔗 Novo vídeo carregado:', publicUrl);
 
     // Update project with new video and status
     const { error: updateError } = await supabase
       .from('projects')
       .update({
-        video_url: publicUrl,
+        video_url: videoUrl,
         status: 'in-revision',
         updated_at: new Date().toISOString()
       })
       .eq('id', projectId);
 
     if (updateError) {
-      console.error('Erro ao atualizar projeto:', updateError);
+      console.error('❌ Erro ao atualizar projeto:', updateError);
       throw updateError;
     }
 
-    // Reset all feedback resolved status
-    const { error: feedbackResetError } = await supabase
-      .from('project_feedback')
-      .update({ resolved: false, resolved_at: null })
-      .in('keyframe_id', 
-        supabase
-          .from('project_keyframes')
-          .select('id')
-          .eq('project_id', projectId)
-      );
+    console.log('✅ Projeto atualizado com sucesso');
 
-    if (feedbackResetError) {
-      console.error('Erro ao resetar feedback:', feedbackResetError);
+    // Get all keyframes for this project
+    const { data: keyframes } = await supabase
+      .from('project_keyframes')
+      .select('id')
+      .eq('project_id', projectId);
+
+    // Reset all feedback resolved status
+    if (keyframes && keyframes.length > 0) {
+      const keyframeIds = keyframes.map(k => k.id);
+      
+      const { error: feedbackResetError } = await supabase
+        .from('project_feedback')
+        .update({ resolved: false, resolved_at: null })
+        .in('keyframe_id', keyframeIds);
+
+      if (feedbackResetError) {
+        console.error('❌ Erro ao resetar feedback:', feedbackResetError);
+      } else {
+        console.log('✅ Feedbacks resetados');
+      }
     }
 
     // Create notification for team
@@ -146,17 +123,23 @@ serve(async (req) => {
       });
 
     if (notifError) {
-      console.error('Erro ao criar notificação:', notifError);
+      console.error('❌ Erro ao criar notificação:', notifError);
+    } else {
+      console.log('✅ Notificação criada');
     }
 
-    console.log('Projeto reenviado com sucesso:', projectId);
+    // Generate share URL
+    const baseUrl = 'https://yhahrnadvnwpztpiuoed.lovable.app';
+    const shareUrl = `${baseUrl}/aprovacao/${project.share_id}`;
+
+    console.log('🎉 Reenvio concluído com sucesso:', { shareUrl });
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         projectId,
-        newVideoUrl: publicUrl,
-        shareUrl: `${req.headers.get('origin')}/aprovacao/${project.share_id}`
+        newVideoUrl: videoUrl,
+        shareUrl
       }),
       { 
         headers: { 
@@ -167,7 +150,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Erro na função resend-project:', error);
+    console.error('❌ Erro na função resend-project:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
