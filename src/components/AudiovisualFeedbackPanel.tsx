@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
-import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
+
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,13 +45,9 @@ export const AudiovisualFeedbackPanel: React.FC<AudiovisualFeedbackPanelProps> =
   const [responses, setResponses] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
-  const {
-    annotations,
-    loadAnnotations,
-  } = useVideoAnnotations(projectId);
+  const [annotations] = useState<any[]>([]);
 
   useEffect(() => {
-    loadAnnotations();
     loadKeyframes();
   }, [projectId]);
 
@@ -90,79 +86,8 @@ export const AudiovisualFeedbackPanel: React.FC<AudiovisualFeedbackPanelProps> =
     }
   };
 
-  const handleResolveAnnotation = async (annotationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('video_annotations')
-        .update({ 
-          comment: annotations.find(a => a.id === annotationId)?.comment + ' [RESOLVIDO]' 
-        })
-        .eq('id', annotationId);
-
-      if (error) throw error;
-
-      toast({
-        title: "✅ Anotação Resolvida",
-        description: "Anotação marcada como resolvida com sucesso.",
-      });
-
-      loadAnnotations();
-      onStatusChange?.('resolved');
-    } catch (error) {
-      console.error('Error resolving annotation:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível resolver a anotação.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRespondToAnnotation = async (annotationId: string) => {
-    const response = responses[annotationId];
-    if (!response?.trim()) {
-      toast({
-        title: "Atenção",
-        description: "Digite uma resposta antes de enviar.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const annotation = annotations.find(a => a.id === annotationId);
-      const newComment = `${annotation?.comment || ''}\n\n[RESPOSTA]: ${response}`;
-
-      const { error } = await supabase
-        .from('video_annotations')
-        .update({ comment: newComment })
-        .eq('id', annotationId);
-
-      if (error) throw error;
-
-      toast({
-        title: "✅ Resposta Enviada",
-        description: "Sua resposta foi registrada com sucesso.",
-      });
-
-      setResponses(prev => ({ ...prev, [annotationId]: '' }));
-      loadAnnotations();
-    } catch (error) {
-      console.error('Error responding to annotation:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar a resposta.",
-        variant: "destructive"
-      });
-    }
-  };
 
   const allAnnotations = [
-    ...annotations.map(a => ({ 
-      type: 'visual' as const, 
-      ...a, 
-      timestamp: a.timestamp_ms 
-    })),
     ...keyframes.flatMap(kf => 
       kf.attachments?.map((att: any, idx: number) => ({
         type: 'keyframe' as const,
@@ -206,13 +131,11 @@ export const AudiovisualFeedbackPanel: React.FC<AudiovisualFeedbackPanelProps> =
                   currentTime={currentTime}
                   onTimeUpdate={setCurrentTime}
                   onDurationChange={setDuration}
-                  annotations={annotations}
+                  annotations={[]}
                   isPlaying={isPlaying}
                   onPlayPauseChange={setIsPlaying}
                   isDrawingMode={false}
-                  onAnnotationClick={(id) => {
-                    setSelectedAnnotation(id);
-                  }}
+                  onAnnotationClick={() => {}}
                 />
               </div>
             </CardContent>
@@ -227,8 +150,6 @@ export const AudiovisualFeedbackPanel: React.FC<AudiovisualFeedbackPanelProps> =
                   <p className="font-medium text-foreground mb-1">Como revisar:</p>
                   <ul className="space-y-1 list-disc list-inside">
                     <li>Clique nas anotações ao lado para navegar pelo vídeo</li>
-                    <li>Responda aos comentários quando necessário</li>
-                    <li>Marque como resolvido após atender o feedback</li>
                   </ul>
                 </div>
               </div>
@@ -290,49 +211,6 @@ export const AudiovisualFeedbackPanel: React.FC<AudiovisualFeedbackPanelProps> =
                             <p className="text-sm text-foreground mb-3 line-clamp-3">
                               {annotation.comment}
                             </p>
-                          )}
-
-                          {/* Área de Resposta */}
-                          {isSelected && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="mt-3 pt-3 border-t border-border space-y-2"
-                            >
-                              <Textarea
-                                placeholder="Digite sua resposta..."
-                                value={responses[annotation.id] || ''}
-                                onChange={(e) => setResponses(prev => ({ 
-                                  ...prev, 
-                                  [annotation.id]: e.target.value 
-                                }))}
-                                className="min-h-[80px] text-sm"
-                              />
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRespondToAnnotation(annotation.id);
-                                  }}
-                                  className="flex-1"
-                                >
-                                  Responder
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleResolveAnnotation(annotation.id);
-                                  }}
-                                  className="flex-1"
-                                >
-                                  <CheckCircle className="w-4 h-4 mr-1" />
-                                  Resolver
-                                </Button>
-                              </div>
-                            </motion.div>
                           )}
                         </motion.div>
                       );

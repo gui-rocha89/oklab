@@ -10,7 +10,7 @@ import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail,
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { ClientVideoAnnotationViewer } from "@/components/ClientVideoAnnotationViewer";
+
 
 interface Project {
   id: string;
@@ -34,30 +34,6 @@ interface PlatformReview {
   created_at: string;
 }
 
-interface VideoAnnotation {
-  id: string;
-  timestamp_ms: number;
-  timecode: string;
-  image_url: string;
-  comment: string | null;
-  created_at: string;
-}
-
-interface SimpleComment {
-  id: string;
-  keyframe_id: string;
-  comment: string;
-  created_at: string;
-}
-
-interface UnifiedFeedback {
-  id: string;
-  timestamp_ms: number;
-  comment: string;
-  type: 'drawing' | 'simple';
-  canvas_data?: any;
-  created_at: string;
-}
 
 const ClientReturn = () => {
   const { projectId } = useParams();
@@ -65,8 +41,6 @@ const ClientReturn = () => {
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<Project | null>(null);
   const [review, setReview] = useState<PlatformReview | null>(null);
-  const [annotations, setAnnotations] = useState<VideoAnnotation[]>([]);
-  const [allFeedback, setAllFeedback] = useState<UnifiedFeedback[]>([]);
 
   useEffect(() => {
     fetchProjectReturn();
@@ -96,62 +70,6 @@ const ClientReturn = () => {
         .maybeSingle();
 
       setReview(reviewData);
-
-      // Buscar anotações visuais (feedback detalhado do cliente)
-      const { data: annotationsData } = await supabase
-        .from("video_annotations")
-        .select("*")
-        .eq("project_id", projectId)
-        .order("timestamp_ms", { ascending: true });
-
-      setAnnotations(annotationsData || []);
-
-      // Buscar comentários simples (sem desenho) dos keyframes
-      const { data: keyframesData } = await supabase
-        .from("project_keyframes")
-        .select(`
-          id,
-          project_feedback (
-            id,
-            comment,
-            created_at
-          )
-        `)
-        .eq("project_id", projectId);
-
-      // Unificar todos os feedbacks
-      const unified: UnifiedFeedback[] = [];
-
-      // Adicionar anotações visuais
-      (annotationsData || []).forEach(ann => {
-        unified.push({
-          id: ann.id,
-          timestamp_ms: ann.timestamp_ms,
-          comment: ann.comment || '',
-          type: 'drawing',
-          canvas_data: ann.canvas_data,
-          created_at: ann.created_at
-        });
-      });
-
-      // Adicionar comentários simples
-      (keyframesData || []).forEach(kf => {
-        if (kf.project_feedback && Array.isArray(kf.project_feedback)) {
-          kf.project_feedback.forEach((feedback: any) => {
-            unified.push({
-              id: feedback.id,
-              timestamp_ms: 0, // Comentários simples não têm timestamp
-              comment: feedback.comment,
-              type: 'simple',
-              created_at: feedback.created_at
-            });
-          });
-        }
-      });
-
-      // Ordenar por data de criação
-      unified.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-      setAllFeedback(unified);
     } catch (error: any) {
       console.error("Erro ao buscar retorno do cliente:", error);
       toast.error("Erro ao carregar retorno do cliente");
@@ -187,12 +105,6 @@ const ClientReturn = () => {
     );
   };
 
-  const formatTimestamp = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
 
   if (loading) {
     return (
@@ -226,7 +138,7 @@ const ClientReturn = () => {
     );
   }
 
-  const hasClientReturn = project.completed_at || review || annotations.length > 0;
+  const hasClientReturn = project.completed_at || review;
 
   return (
     <>
@@ -300,49 +212,6 @@ const ClientReturn = () => {
           </CardContent>
         </Card>
 
-        {/* Estatísticas do Retorno */}
-        {hasClientReturn && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <MessageSquare className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{allFeedback.length}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Total de Comentários
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-blue-500/10 rounded-lg">
-                    <Video className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {annotations.length > 0
-                        ? formatTimestamp(
-                            Math.max(...annotations.map((a) => a.timestamp_ms))
-                          )
-                        : "00:00"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Último Comentário
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Status sem Retorno */}
         {!hasClientReturn && (
@@ -359,16 +228,8 @@ const ClientReturn = () => {
           </Card>
         )}
 
-        {/* Vídeo Aprovado pelo Cliente com Anotações */}
-        {project.video_url && annotations.length > 0 && (
-          <ClientVideoAnnotationViewer 
-            videoUrl={project.video_url}
-            annotations={annotations}
-          />
-        )}
-
-        {/* Vídeo sem anotações - aprovado na íntegra */}
-        {project.video_url && annotations.length === 0 && (
+        {/* Vídeo - aprovado na íntegra */}
+        {project.video_url && (
           <div>
             <div>
               <Card className="h-full">
@@ -411,145 +272,6 @@ const ClientReturn = () => {
           </div>
         )}
 
-        {/* Resumo Executivo do Feedback */}
-        {annotations.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Resumo do Feedback
-              </CardTitle>
-              <CardDescription>
-                Visão geral consolidada do retorno do cliente
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Coluna Esquerda - Estatísticas */}
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Estatísticas do Feedback</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="text-sm">Total de Anotações</span>
-                        <Badge variant="secondary" className="font-bold">
-                          {annotations.length}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="text-sm">Anotações com Comentário</span>
-                        <Badge variant="secondary" className="font-bold">
-                          {allFeedback.filter(f => f.comment && f.comment.trim()).length}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="text-sm">Com Desenhos</span>
-                        <Badge variant="secondary" className="font-bold">
-                          {allFeedback.filter(f => f.type === 'drawing').length}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="text-sm">Apenas Texto</span>
-                        <Badge variant="secondary" className="font-bold">
-                          {allFeedback.filter(f => f.type === 'simple').length}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Avaliação Geral se existir */}
-                  {review && (
-                    <div className="pt-4 border-t">
-                      <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Avaliação Geral</h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          {renderStars(review.rating)}
-                          <span className="text-sm font-bold">{review.rating}/5</span>
-                        </div>
-                        {review.comment && (
-                          <p className="text-sm bg-muted/50 p-3 rounded-lg leading-relaxed">
-                            "{review.comment}"
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Coluna Direita - Comentários Consolidados */}
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Todos os Comentários</h4>
-                    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                      {allFeedback
-                        .filter(f => f.comment && f.comment.trim())
-                        .map((feedback, index) => (
-                          <div 
-                            key={feedback.id}
-                            className="p-3 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              {feedback.type === 'drawing' && (
-                                <Badge variant="outline" className="text-xs">
-                                  {formatTimestamp(feedback.timestamp_ms)}
-                                </Badge>
-                              )}
-                              {feedback.type === 'drawing' ? (
-                                <Badge variant="secondary" className="text-xs">
-                                  <Pencil className="w-3 h-3 mr-1" />
-                                  Com desenho
-                                </Badge>
-                              ) : (
-                                <Badge variant="default" className="text-xs">
-                                  <MessageSquare className="w-3 h-3 mr-1" />
-                                  Texto
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm leading-relaxed">
-                              {feedback.comment}
-                            </p>
-                          </div>
-                        ))
-                      }
-                      {allFeedback.filter(f => f.comment && f.comment.trim()).length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                          <p className="text-sm">Nenhum comentário registrado.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status e Próximos Passos */}
-                  <div className="pt-4 border-t">
-                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Próximos Passos</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                        <p className="text-muted-foreground">
-                          {annotations.length} {annotations.length === 1 ? 'ponto de atenção identificado' : 'pontos de atenção identificados'}
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <Clock className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                        <p className="text-muted-foreground">
-                          Revisar anotações visuais no player acima
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <Pencil className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                        <p className="text-muted-foreground">
-                          Implementar alterações solicitadas pelo cliente
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </>
   );

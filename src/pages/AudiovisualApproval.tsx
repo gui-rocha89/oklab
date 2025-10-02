@@ -9,9 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
-import { VideoOverlayDrawing } from '@/components/VideoOverlayDrawing';
-import { AnnotationCommentModal } from '@/components/AnnotationCommentModal';
 import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
 import { CommentsSidebar } from '@/components/CommentsSidebar';
 import { useVideoAspectRatio } from '@/hooks/useVideoAspectRatio';
@@ -66,23 +63,6 @@ export default function AudiovisualApproval() {
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
-  const [showCommentModal, setShowCommentModal] = useState(false);
-  const [pendingAnnotationTime, setPendingAnnotationTime] = useState<number>(0);
-  const [pendingAnnotationTimestamp, setPendingAnnotationTimestamp] = useState<number | null>(null);
-  const [currentAnnotationId, setCurrentAnnotationId] = useState<string | null>(null);
-  const [showAnnotationOverlay, setShowAnnotationOverlay] = useState(false);
-
-  const [isDrawingOverVideo, setIsDrawingOverVideo] = useState(false);
-  const [capturedFrame, setCapturedFrame] = useState<string | null>(null);
-  const [capturedDimensions, setCapturedDimensions] = useState({ width: 0, height: 0 });
-
-  // Annotation system
-  const {
-    annotations,
-    loadAnnotations,
-    saveAnnotation,
-    deleteAnnotation,
-  } = useVideoAnnotations(project?.id);
 
   // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
   const { aspectRatio, isReady: videoReady } = useVideoAspectRatio(videoRef);
@@ -176,12 +156,6 @@ export default function AudiovisualApproval() {
     fetchProject();
   }, [shareId]);
 
-  // Load annotations when project is loaded
-  useEffect(() => {
-    if (project?.id) {
-      loadAnnotations();
-    }
-  }, [project?.id, loadAnnotations]);
 
 
   const handleAddKeyframe = () => {
@@ -226,49 +200,6 @@ export default function AudiovisualApproval() {
     });
   };
 
-  const handleUpdateAnnotation = async (id: string, comment: string) => {
-    try {
-      // Update annotation comment in database
-      const { error } = await supabase
-        .from('video_annotations')
-        .update({ comment })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // Reload annotations to reflect changes
-      await loadAnnotations();
-      
-      toast({
-        title: "Anotação atualizada",
-        description: "O comentário foi salvo com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar anotação:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a anotação.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteAnnotation = async (id: string) => {
-    try {
-      await deleteAnnotation(id);
-      toast({
-        title: "Anotação removida",
-        description: "O feedback visual foi excluído com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao deletar anotação:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir a anotação.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const seekTo = (time: number) => {
     if (!videoRef.current) return;
@@ -376,81 +307,9 @@ export default function AudiovisualApproval() {
 
 
 
-  const handleSaveAnnotation = () => {
-    // Use currentTime from state (synced with CustomVideoPlayer), not videoRef
-    const currentTimeMs = Math.floor(currentTime * 1000);
-    setPendingAnnotationTime(currentTimeMs);
-    setPendingAnnotationTimestamp(currentTimeMs);
-    
-    console.log('Salvando anotação no tempo:', currentTimeMs, 'ms (', formatTime(currentTime), ')');
-    
-    setShowCommentModal(true);
-  };
-
-  const handleSaveDrawing = async (imageBlob: Blob, comment: string) => {
-    if (!project) return;
-
-    try {
-      const timestamp_ms = Math.floor(currentTime * 1000);
-      
-      console.log('Salvando anotação com desenho:', {
-        time: timestamp_ms,
-        timeFormatted: formatTime(currentTime),
-        comment: comment
-      });
-      
-      // Save annotation using the hook
-      await saveAnnotation(timestamp_ms, imageBlob, comment);
-      
-      // Close drawing overlay and clear captured frame
-      setIsDrawingOverVideo(false);
-      setCapturedFrame(null);
-      
-      toast({
-        title: "Anotação salva!",
-        description: `Marcação visual salva em ${formatTime(currentTime)}`,
-      });
-    } catch (error) {
-      console.error("Erro ao salvar anotação:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar a anotação.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAnnotationClick = (annotationId: string) => {
-    const annotation = annotations.find(a => a.id === annotationId);
-    if (annotation) {
-      const timeInSeconds = annotation.timestamp_ms / 1000;
-      seekTo(timeInSeconds);
-      setIsPlaying(false);
-      setCurrentAnnotationId(annotationId);
-    }
-  };
-
-  const navigateToAnnotation = (direction: 'prev' | 'next') => {
-    const sortedAnnotations = [...annotations].sort((a, b) => a.timestamp_ms - b.timestamp_ms);
-    const currentIndex = sortedAnnotations.findIndex(a => a.id === currentAnnotationId);
-    
-    let targetIndex: number;
-    if (currentIndex === -1) {
-      // If no current annotation, go to first or last
-      targetIndex = direction === 'next' ? 0 : sortedAnnotations.length - 1;
-    } else {
-      targetIndex = direction === 'next' 
-        ? Math.min(currentIndex + 1, sortedAnnotations.length - 1)
-        : Math.max(currentIndex - 1, 0);
-    }
-    
-    if (sortedAnnotations[targetIndex]) {
-      handleAnnotationClick(sortedAnnotations[targetIndex].id);
-    }
-  };
 
   const togglePlayPause = () => {
-    if (!videoRef.current || isDrawingOverVideo) return;
+    if (!videoRef.current) return;
     
     if (isPlaying) {
       videoRef.current.pause();
@@ -461,54 +320,9 @@ export default function AudiovisualApproval() {
     }
   };
 
-  const handleCreateAnnotation = () => {
-    if (!videoRef.current || !videoContainerRef.current) return;
-    
-    setIsPlaying(false); // Pause video
-    
-    try {
-      // Capture current video frame
-      const video = videoRef.current;
-      const container = videoContainerRef.current;
-      
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = video.videoWidth;
-      tempCanvas.height = video.videoHeight;
-      
-      const ctx = tempCanvas.getContext('2d');
-      if (!ctx) throw new Error('Failed to get canvas context');
-      
-      // Draw current video frame
-      ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-      
-      // Convert to data URL
-      const frameDataUrl = tempCanvas.toDataURL('image/webp', 0.95);
-      setCapturedFrame(frameDataUrl);
-      
-      // Get container dimensions for proper rendering
-      const rect = container.getBoundingClientRect();
-      setCapturedDimensions({ width: rect.width, height: rect.height });
-      
-      setIsDrawingOverVideo(true);
-      
-      toast({
-        title: "Modo de Desenho Ativado",
-        description: "Desenhe sobre o frame capturado e adicione um comentário.",
-      });
-    } catch (error) {
-      console.error('Erro ao capturar frame:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível capturar o frame do vídeo.",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Only count keyframes with actual comments for feedback validation
   const hasComments = keyframes.some(k => k.comment.trim().length > 0);
-  const hasAnnotations = annotations.length > 0;
-  const hasFeedback = hasComments || hasAnnotations;
+  const hasFeedback = hasComments;
   const canApprove = !hasFeedback;
   const canSendFeedback = hasFeedback;
 
@@ -839,7 +653,7 @@ export default function AudiovisualApproval() {
                     currentTime={currentTime}
                     onTimeUpdate={setCurrentTime}
                     onDurationChange={setDuration}
-                    annotations={annotations}
+                    annotations={[]}
                     keyframes={keyframes}
                     onSeek={(time) => {
                       if (videoRef.current) {
@@ -848,8 +662,8 @@ export default function AudiovisualApproval() {
                     }}
                     isPlaying={isPlaying}
                     onPlayPauseChange={setIsPlaying}
-                    isDrawingMode={isDrawingOverVideo}
-                    onAnnotationClick={handleAnnotationClick}
+                    isDrawingMode={false}
+                    onAnnotationClick={() => {}}
                     onKeyframeClick={(keyframeId) => {
                       const keyframe = keyframes.find(k => k.id === keyframeId);
                       if (keyframe) {
@@ -857,35 +671,11 @@ export default function AudiovisualApproval() {
                       }
                     }}
                   />
-
-                  {/* Drawing Overlay */}
-                  {isDrawingOverVideo && capturedFrame && (
-                    <VideoOverlayDrawing
-                      frameUrl={capturedFrame}
-                      containerWidth={capturedDimensions.width}
-                      containerHeight={capturedDimensions.height}
-                      onSave={handleSaveDrawing}
-                      onCancel={() => {
-                        setIsDrawingOverVideo(false);
-                        setCapturedFrame(null);
-                      }}
-                    />
-                  )}
                 </div>
               </div>
               
-              {/* Drawing and Comment Controls */}
+              {/* Comment Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
-                <Button
-                  onClick={handleCreateAnnotation}
-                  variant="outline"
-                  size={isMobile ? "default" : "sm"}
-                  className={isMobile ? "touch-manipulation min-h-[44px] px-6 flex-1" : ""}
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Criar Anotação Visual
-                </Button>
-                
                 <Button
                   onClick={handleAddKeyframe}
                   className={`bg-primary hover:bg-primary/90 touch-manipulation ${isMobile ? 'w-full min-h-[44px]' : ''}`}
@@ -1033,20 +823,14 @@ export default function AudiovisualApproval() {
               <div className="flex-1 overflow-hidden">
                 <CommentsSidebar
                   keyframes={keyframes}
-                  annotations={annotations}
+                  annotations={[]}
                   currentTime={currentTime}
                   onSeekToTime={seekTo}
-                  onLoadAnnotation={(annotationId) => {
-                    const annotation = annotations.find(a => a.id === annotationId);
-                    if (annotation) {
-                      seekTo(annotation.timestamp_ms / 1000);
-                      setCurrentAnnotationId(annotationId);
-                    }
-                  }}
+                  onLoadAnnotation={() => {}}
                   onUpdateKeyframe={handleKeyframeCommentChange}
                   onDeleteKeyframe={handleRemoveKeyframe}
-                  onUpdateAnnotation={handleUpdateAnnotation}
-                  onDeleteAnnotation={handleDeleteAnnotation}
+                  onUpdateAnnotation={() => {}}
+                  onDeleteAnnotation={() => {}}
                   formatTime={formatTime}
                 />
               </div>

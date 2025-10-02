@@ -345,50 +345,6 @@ export type Database = {
         }
         Relationships: []
       }
-      video_annotations: {
-        Row: {
-          comment: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          image_url: string | null
-          project_id: string
-          timecode: string | null
-          timestamp_ms: number
-          updated_at: string
-        }
-        Insert: {
-          comment?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          image_url?: string | null
-          project_id: string
-          timecode?: string | null
-          timestamp_ms: number
-          updated_at?: string
-        }
-        Update: {
-          comment?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          image_url?: string | null
-          project_id?: string
-          timecode?: string | null
-          timestamp_ms?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "video_annotations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
