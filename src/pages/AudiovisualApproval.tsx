@@ -159,6 +159,12 @@ export default function AudiovisualApproval() {
 
 
   const handleAddKeyframe = () => {
+    // Pause video immediately
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setIsPlaying(false);
+    
     // Check for existing keyframe within 0.5 seconds (reduced from 1 second)
     const conflictingKeyframe = keyframes.find(k => Math.abs(k.time - currentTime) < 0.5);
     
@@ -179,7 +185,6 @@ export default function AudiovisualApproval() {
     };
     
     setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
-    setIsPlaying(false);
     
     toast({
       title: "✅ Comentário adicionado",
