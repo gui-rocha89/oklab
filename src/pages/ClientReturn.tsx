@@ -288,17 +288,12 @@ const ClientReturn = () => {
                   <Video className="w-5 h-5 text-primary" />
                   Vídeo do Projeto
                 </CardTitle>
-                {isApprovedWithoutChanges ? (
+                {isApprovedWithoutChanges && (
                   <Badge variant="success" className="flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
                     Aprovado na íntegra
                   </Badge>
-                ) : totalComments > 0 ? (
-                  <Badge variant="warning" className="flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
-                    {totalComments} comentário{totalComments !== 1 ? 's' : ''}
-                  </Badge>
-                ) : null}
+                )}
               </div>
               <CardDescription>
                 {isApprovedWithoutChanges 
