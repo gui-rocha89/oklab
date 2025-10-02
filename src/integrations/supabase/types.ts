@@ -347,32 +347,35 @@ export type Database = {
       }
       video_annotations: {
         Row: {
-          canvas_data: Json
           comment: string | null
           created_at: string
           created_by: string | null
           id: string
+          image_url: string | null
           project_id: string
+          timecode: string | null
           timestamp_ms: number
           updated_at: string
         }
         Insert: {
-          canvas_data: Json
           comment?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          image_url?: string | null
           project_id: string
+          timecode?: string | null
           timestamp_ms: number
           updated_at?: string
         }
         Update: {
-          canvas_data?: Json
           comment?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          image_url?: string | null
           project_id?: string
+          timecode?: string | null
           timestamp_ms?: number
           updated_at?: string
         }

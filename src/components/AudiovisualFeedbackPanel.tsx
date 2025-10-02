@@ -15,7 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
-import { VideoAnnotationCanvas } from './VideoAnnotationCanvas';
 import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,8 +48,6 @@ export const AudiovisualFeedbackPanel: React.FC<AudiovisualFeedbackPanelProps> =
   const {
     annotations,
     loadAnnotations,
-    isDrawingMode,
-    setCanvas,
   } = useVideoAnnotations(projectId);
 
   useEffect(() => {
@@ -212,22 +209,11 @@ export const AudiovisualFeedbackPanel: React.FC<AudiovisualFeedbackPanelProps> =
                   annotations={annotations}
                   isPlaying={isPlaying}
                   onPlayPauseChange={setIsPlaying}
-                  isDrawingMode={isDrawingMode}
+                  isDrawingMode={false}
                   onAnnotationClick={(id) => {
                     setSelectedAnnotation(id);
                   }}
                 />
-                
-                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                  <VideoAnnotationCanvas
-                    videoRef={videoRef}
-                    isDrawingMode={false}
-                    currentTool="select"
-                    brushColor="#ff0000"
-                    brushWidth={3}
-                    onCanvasReady={setCanvas}
-                  />
-                </div>
               </div>
             </CardContent>
           </Card>

@@ -9,9 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { VideoAnnotationCanvas } from '@/components/VideoAnnotationCanvas';
-import { DrawingToolbar } from '@/components/DrawingToolbar';
 import { useVideoAnnotations } from '@/hooks/useVideoAnnotations';
+import { SimpleAnnotationCreator } from '@/components/SimpleAnnotationCreator';
 import { AnnotationCommentModal } from '@/components/AnnotationCommentModal';
 import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
 import { CommentsSidebar } from '@/components/CommentsSidebar';
@@ -72,27 +71,15 @@ export default function AudiovisualApproval() {
   const [currentAnnotationId, setCurrentAnnotationId] = useState<string | null>(null);
   const [showAnnotationOverlay, setShowAnnotationOverlay] = useState(false);
 
+  const [showAnnotationCreator, setShowAnnotationCreator] = useState(false);
+  const [creatorTimestamp, setCreatorTimestamp] = useState(0);
+
   // Annotation system
   const {
     annotations,
-    currentTool,
-    setCurrentTool,
-    brushColor,
-    setBrushColor,
-    brushWidth,
-    setBrushWidth,
-    isDrawingMode,
-    setIsDrawingMode,
     loadAnnotations,
     saveAnnotation,
-    loadAnnotationToCanvas,
     deleteAnnotation,
-    clearCanvas,
-    undo,
-    redo,
-    setCanvas,
-    canUndo,
-    canRedo,
   } = useVideoAnnotations(project?.id);
 
   // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
@@ -193,32 +180,6 @@ export default function AudiovisualApproval() {
       loadAnnotations();
     }
   }, [project?.id, loadAnnotations]);
-
-  // Auto-load annotations during playback
-  useEffect(() => {
-    if (!isDrawingMode && annotations.length > 0 && duration > 0 && isPlaying) {
-      // Find annotation at current time (within 500ms window)
-      const currentAnnotation = annotations.find(ann => {
-        const annTime = ann.timestamp_ms / 1000;
-        return Math.abs(currentTime - annTime) < 0.5;
-      });
-
-      if (currentAnnotation && currentAnnotation.id !== currentAnnotationId) {
-        setCurrentAnnotationId(currentAnnotation.id);
-        loadAnnotationToCanvas(currentAnnotation);
-        setShowAnnotationOverlay(true);
-        
-        // Hide overlay after 3 seconds
-        const timer = setTimeout(() => {
-          setShowAnnotationOverlay(false);
-        }, 3000);
-        
-        return () => clearTimeout(timer);
-      } else if (!currentAnnotation && showAnnotationOverlay) {
-        setShowAnnotationOverlay(false);
-      }
-    }
-  }, [currentTime, annotations, isDrawingMode, isPlaying, currentAnnotationId, loadAnnotationToCanvas, duration, showAnnotationOverlay]);
 
   const handleAddKeyframe = () => {
     // Check for existing keyframe within 0.5 seconds (reduced from 1 second)
@@ -443,27 +404,23 @@ export default function AudiovisualApproval() {
     setShowCommentModal(true);
   };
 
-  const handleSaveAnnotationWithComment = async (comment: string) => {
+  const handleSaveAnnotationWithComment = async (comment: string, imageBlob: Blob) => {
     try {
-      const screenshot = await captureVideoScreenshot();
-      
       console.log('Salvando anotação com comentário:', {
-        time: pendingAnnotationTime,
-        timeFormatted: formatTime(pendingAnnotationTime / 1000),
-        comment: comment,
-        hasScreenshot: !!screenshot
+        time: creatorTimestamp,
+        timeFormatted: formatTime(creatorTimestamp / 1000),
+        comment: comment
       });
       
-      // Save annotation with the exact timestamp captured when user clicked "Salvar"
-      await saveAnnotation(pendingAnnotationTime, comment);
-      clearCanvas();
+      // Save annotation with the exact timestamp and image
+      await saveAnnotation(creatorTimestamp, imageBlob, comment);
       
-      // Turn off drawing mode after saving
-      setIsDrawingMode(false);
+      // Close creator
+      setShowAnnotationCreator(false);
       
       toast({
         title: "Anotação salva!",
-        description: `Marcação visual salva em ${formatTime(pendingAnnotationTime / 1000)}`,
+        description: `Marcação visual salva em ${formatTime(creatorTimestamp / 1000)}`,
       });
     } catch (error) {
       console.error("Erro ao salvar anotação:", error);
@@ -481,9 +438,7 @@ export default function AudiovisualApproval() {
       const timeInSeconds = annotation.timestamp_ms / 1000;
       seekTo(timeInSeconds);
       setIsPlaying(false);
-      loadAnnotationToCanvas(annotation);
       setCurrentAnnotationId(annotationId);
-      setShowAnnotationOverlay(true);
     }
   };
 
@@ -507,7 +462,7 @@ export default function AudiovisualApproval() {
   };
 
   const togglePlayPause = () => {
-    if (!videoRef.current || isDrawingMode) return;
+    if (!videoRef.current || showAnnotationCreator) return;
     
     if (isPlaying) {
       videoRef.current.pause();
@@ -860,7 +815,7 @@ export default function AudiovisualApproval() {
                     }}
                     isPlaying={isPlaying}
                     onPlayPauseChange={setIsPlaying}
-                    isDrawingMode={isDrawingMode}
+                    isDrawingMode={false}
                     onAnnotationClick={handleAnnotationClick}
                     onKeyframeClick={(keyframeId) => {
                       const keyframe = keyframes.find(k => k.id === keyframeId);
@@ -869,84 +824,34 @@ export default function AudiovisualApproval() {
                       }
                     }}
                   />
-                  
-                  {/* Drawing Canvas Overlay - Positioned absolutely over the video */}
-                  {(isDrawingMode || showAnnotationOverlay) && (
-                    <div 
-                      className="absolute top-0 left-0 w-full h-full pointer-events-none" 
-                      style={{ zIndex: isDrawingMode ? 50 : 5 }}
-                    >
-              <VideoAnnotationCanvas
-                videoRef={videoRef}
-                isDrawingMode={isDrawingMode}
-                currentTool={currentTool}
-                brushColor={brushColor}
-                brushWidth={brushWidth}
-                onCanvasReady={setCanvas}
-              />
-                    </div>
-                  )}
                 </div>
               </div>
-              
-              {/* Drawing Toolbar - Below Video */}
-              {isDrawingMode && (
-                <div className="mt-2">
-                  <DrawingToolbar
-                    currentTool={currentTool}
-                    onToolChange={setCurrentTool}
-                    brushColor={brushColor}
-                    onColorChange={setBrushColor}
-                    brushWidth={brushWidth}
-                    onBrushWidthChange={setBrushWidth}
-                    onUndo={undo}
-                    onRedo={redo}
-                    onClear={clearCanvas}
-                    onSave={handleSaveAnnotation}
-                    canUndo={canUndo}
-                    canRedo={canRedo}
-                  />
-                </div>
-              )}
-
-              {/* Annotation Comment Modal */}
-              <AnnotationCommentModal
-                isOpen={showCommentModal}
-                onClose={() => setShowCommentModal(false)}
-                onSave={handleSaveAnnotationWithComment}
-                timestamp={pendingAnnotationTime}
-              />
               
               {/* Drawing and Comment Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
                 <Button
                   onClick={() => {
-                    const newMode = !isDrawingMode;
-                    
-                    if (newMode) {
-                      // CRITICAL: Force BOTH videos to pause before drawing mode
-                      setIsPlaying(false);
-                      if (videoRef.current) {
-                        videoRef.current.pause();
-                      }
+                    // Pause video and open annotation creator
+                    setIsPlaying(false);
+                    if (videoRef.current) {
+                      videoRef.current.pause();
                     }
                     
-                    // Set drawing mode immediately (no setTimeout)
-                    setIsDrawingMode(newMode);
+                    const currentTimeMs = Math.floor(currentTime * 1000);
+                    setCreatorTimestamp(currentTimeMs);
+                    setShowAnnotationCreator(true);
                     
-                    if (newMode) {
-                      toast({
-                        title: "Modo Desenho Ativado",
-                        description: "Vídeo pausado. Desenhe suas anotações e clique em Salvar.",
-                      });
-                    }
+                    toast({
+                      title: "Criar Anotação",
+                      description: "Desenhe no vídeo e adicione um comentário.",
+                    });
                   }}
-                  variant={isDrawingMode ? "default" : "outline"}
+                  variant="outline"
                   size={isMobile ? "default" : "sm"}
                   className={isMobile ? "touch-manipulation min-h-[44px] px-6 flex-1" : ""}
                 >
                   <Pencil className="w-4 h-4 mr-2" />
-                  {isDrawingMode ? 'Desativar Desenho' : 'Modo Desenho'}
+                  Criar Anotação Visual
                 </Button>
                 
                 <Button
@@ -960,6 +865,16 @@ export default function AudiovisualApproval() {
               </div>
             </Card>
           </div>
+
+          {/* Simple Annotation Creator Modal */}
+          {showAnnotationCreator && videoRef.current && (
+            <SimpleAnnotationCreator
+              videoElement={videoRef.current}
+              timestampMs={creatorTimestamp}
+              onSave={handleSaveAnnotationWithComment}
+              onCancel={() => setShowAnnotationCreator(false)}
+            />
+          )}
 
           {/* Coluna Direita: Sidebar Unificado (40% - 2/5 columns) */}
           <div className={`${isMobile ? '' : 'lg:col-span-2 sticky top-6'}`}>
@@ -1102,9 +1017,8 @@ export default function AudiovisualApproval() {
                   onLoadAnnotation={(annotationId) => {
                     const annotation = annotations.find(a => a.id === annotationId);
                     if (annotation) {
-                      loadAnnotationToCanvas(annotation);
+                      seekTo(annotation.timestamp_ms / 1000);
                       setCurrentAnnotationId(annotationId);
-                      setShowAnnotationOverlay(true);
                     }
                   }}
                   onUpdateKeyframe={handleKeyframeCommentChange}
