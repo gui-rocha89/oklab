@@ -762,9 +762,9 @@ export default function AudiovisualApproval() {
         </Card>
 
         {/* Grid Layout - 60/40 Proportion (Padronizado com ClientReturn) */}
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-5 gap-6'}`}>
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-5 gap-6 items-start'}`}>
           {/* Coluna Esquerda: Vídeo (60% - 3/5 columns) */}
-          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-3 space-y-0'}`}>
+          <div className={`flex flex-col ${isMobile ? 'space-y-4' : 'lg:col-span-3 space-y-4'}`}>
             {/* Card do Player de Vídeo */}
             <Card className={`bg-card border-primary/20 shadow-xl ${isMobile ? 'p-3' : 'p-6'}`}>
               {/* Container adaptativo que respeita a proporção do vídeo */}
@@ -936,8 +936,8 @@ export default function AudiovisualApproval() {
           </div>
 
           {/* Coluna Direita: Sidebar Unificado (40% - 2/5 columns) */}
-          <div className={`${isMobile ? '' : 'lg:col-span-2'}`}>
-            <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-4' : 'p-0'}`} style={{ height: isMobile ? 'auto' : 'fit-content' }}>
+          <div className={`${isMobile ? '' : 'lg:col-span-2 sticky top-6'}`}>
+            <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-4' : 'p-0'}`}>
               {/* Seção de Ações - Estilo Frame.io Premium */}
               <div className={`border-b border-border/50 bg-primary/5 ${isMobile ? 'pb-4 mb-4 px-4 pt-4' : 'p-5 pb-5'}`}>
                 <div className="flex items-center gap-2 mb-4">
