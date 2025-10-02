@@ -42,6 +42,22 @@ interface VideoAnnotation {
   created_at: string;
 }
 
+interface SimpleComment {
+  id: string;
+  keyframe_id: string;
+  comment: string;
+  created_at: string;
+}
+
+interface UnifiedFeedback {
+  id: string;
+  timestamp_ms: number;
+  comment: string;
+  type: 'drawing' | 'simple';
+  canvas_data?: any;
+  created_at: string;
+}
+
 const ClientReturn = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -49,6 +65,7 @@ const ClientReturn = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [review, setReview] = useState<PlatformReview | null>(null);
   const [annotations, setAnnotations] = useState<VideoAnnotation[]>([]);
+  const [allFeedback, setAllFeedback] = useState<UnifiedFeedback[]>([]);
 
   useEffect(() => {
     fetchProjectReturn();
@@ -87,6 +104,53 @@ const ClientReturn = () => {
         .order("timestamp_ms", { ascending: true });
 
       setAnnotations(annotationsData || []);
+
+      // Buscar comentários simples (sem desenho) dos keyframes
+      const { data: keyframesData } = await supabase
+        .from("project_keyframes")
+        .select(`
+          id,
+          project_feedback (
+            id,
+            comment,
+            created_at
+          )
+        `)
+        .eq("project_id", projectId);
+
+      // Unificar todos os feedbacks
+      const unified: UnifiedFeedback[] = [];
+
+      // Adicionar anotações visuais
+      (annotationsData || []).forEach(ann => {
+        unified.push({
+          id: ann.id,
+          timestamp_ms: ann.timestamp_ms,
+          comment: ann.comment || '',
+          type: 'drawing',
+          canvas_data: ann.canvas_data,
+          created_at: ann.created_at
+        });
+      });
+
+      // Adicionar comentários simples
+      (keyframesData || []).forEach(kf => {
+        if (kf.project_feedback && Array.isArray(kf.project_feedback)) {
+          kf.project_feedback.forEach((feedback: any) => {
+            unified.push({
+              id: feedback.id,
+              timestamp_ms: 0, // Comentários simples não têm timestamp
+              comment: feedback.comment,
+              type: 'simple',
+              created_at: feedback.created_at
+            });
+          });
+        }
+      });
+
+      // Ordenar por data de criação
+      unified.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      setAllFeedback(unified);
     } catch (error: any) {
       console.error("Erro ao buscar retorno do cliente:", error);
       toast.error("Erro ao carregar retorno do cliente");
@@ -245,9 +309,9 @@ const ClientReturn = () => {
                     <MessageSquare className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{annotations.length}</p>
+                    <p className="text-2xl font-bold">{allFeedback.length}</p>
                     <p className="text-sm text-muted-foreground">
-                      Anotações Visuais
+                      Total de Comentários
                     </p>
                   </div>
                 </div>
@@ -374,19 +438,19 @@ const ClientReturn = () => {
                       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <span className="text-sm">Anotações com Comentário</span>
                         <Badge variant="secondary" className="font-bold">
-                          {annotations.filter(a => a.comment && a.comment.trim()).length}
+                          {allFeedback.filter(f => f.comment && f.comment.trim()).length}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="text-sm">Anotações com Desenhos</span>
+                        <span className="text-sm">Com Desenhos</span>
                         <Badge variant="secondary" className="font-bold">
-                          {annotations.filter(a => a.canvas_data?.objects?.length > 0).length}
+                          {allFeedback.filter(f => f.type === 'drawing').length}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="text-sm">Total de Desenhos</span>
+                        <span className="text-sm">Apenas Texto</span>
                         <Badge variant="secondary" className="font-bold">
-                          {annotations.reduce((sum, a) => sum + (a.canvas_data?.objects?.length || 0), 0)}
+                          {allFeedback.filter(f => f.type === 'simple').length}
                         </Badge>
                       </div>
                     </div>
@@ -414,37 +478,43 @@ const ClientReturn = () => {
                 {/* Coluna Direita - Comentários Consolidados */}
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Comentários do Cliente</h4>
+                    <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Todos os Comentários</h4>
                     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                      {annotations
-                        .filter(a => a.comment && a.comment.trim())
-                        .map((annotation, index) => (
+                      {allFeedback
+                        .filter(f => f.comment && f.comment.trim())
+                        .map((feedback, index) => (
                           <div 
-                            key={annotation.id}
+                            key={feedback.id}
                             className="p-3 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/50 transition-colors"
                           >
                             <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline" className="text-xs">
-                                {formatTimestamp(annotation.timestamp_ms)}
-                              </Badge>
-                              {annotation.canvas_data?.objects?.length > 0 && (
+                              {feedback.type === 'drawing' && (
+                                <Badge variant="outline" className="text-xs">
+                                  {formatTimestamp(feedback.timestamp_ms)}
+                                </Badge>
+                              )}
+                              {feedback.type === 'drawing' ? (
                                 <Badge variant="secondary" className="text-xs">
                                   <Pencil className="w-3 h-3 mr-1" />
-                                  {annotation.canvas_data.objects.length} desenho(s)
+                                  Com desenho
+                                </Badge>
+                              ) : (
+                                <Badge variant="default" className="text-xs">
+                                  <MessageSquare className="w-3 h-3 mr-1" />
+                                  Texto
                                 </Badge>
                               )}
                             </div>
                             <p className="text-sm leading-relaxed">
-                              {annotation.comment}
+                              {feedback.comment}
                             </p>
                           </div>
                         ))
                       }
-                      {annotations.filter(a => a.comment && a.comment.trim()).length === 0 && (
+                      {allFeedback.filter(f => f.comment && f.comment.trim()).length === 0 && (
                         <div className="text-center py-8 text-muted-foreground">
                           <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                          <p className="text-sm">Nenhum comentário de texto registrado.</p>
-                          <p className="text-xs mt-1">O cliente utilizou apenas desenhos e marcações visuais.</p>
+                          <p className="text-sm">Nenhum comentário registrado.</p>
                         </div>
                       )}
                     </div>

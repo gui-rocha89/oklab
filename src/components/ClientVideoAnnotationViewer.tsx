@@ -183,40 +183,75 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       );
 
       console.log(`🔄 ${convertedObjects.length} objetos convertidos`);
+      console.log('Converted data sample:', JSON.stringify(convertedObjects[0], null, 2).substring(0, 300));
 
-      const objects = await util.enlivenObjects(convertedObjects);
-
-      console.log(`✨ ${objects.length} objetos criados pelo Fabric.js`);
-
+      // Adicionar objetos diretamente sem usar enlivenObjects (mais compatível com v6)
       let addedCount = 0;
-      objects.forEach((obj: any, index: number) => {
-        if (obj) {
-          console.log(`🎨 Objeto ${index}:`, {
-            type: obj.type,
-            left: obj.left?.toFixed(1),
-            top: obj.top?.toFixed(1),
-            scaleX: obj.scaleX?.toFixed(2),
-            scaleY: obj.scaleY?.toFixed(2),
-            width: obj.width,
-            height: obj.height
-          });
-          
-          obj.set({
-            selectable: false,
-            evented: false,
-            stroke: '#FF0000',
-            strokeWidth: 5,
-            fill: obj.type === 'path' ? undefined : (obj.fill || 'rgba(255, 0, 0, 0.3)')
-          });
-          obj.setCoords();
-          canvas.add(obj);
-          addedCount++;
-        } else {
-          console.warn(`⚠️ Objeto ${index} é null/undefined`);
-        }
-      });
+      for (let i = 0; i < convertedObjects.length; i++) {
+        const objData = convertedObjects[i];
+        console.log(`🎨 Processando objeto ${i}:`, {
+          type: objData.type,
+          left: objData.left,
+          top: objData.top,
+          width: objData.width,
+          height: objData.height
+        });
 
-      console.log(`✅ ${addedCount}/${objects.length} objetos adicionados ao canvas`);
+        try {
+          let obj;
+          
+          if (objData.type === 'path') {
+            // Para caminhos (desenho livre)
+            const { Path } = await import('fabric');
+            obj = new Path(objData.path, {
+              ...objData,
+              stroke: objData.stroke || '#FF0000',
+              strokeWidth: objData.strokeWidth || 3,
+              fill: undefined,
+              selectable: false,
+              evented: false
+            });
+          } else if (objData.type === 'circle') {
+            const { Circle } = await import('fabric');
+            obj = new Circle({
+              ...objData,
+              stroke: objData.stroke || '#FF0000',
+              strokeWidth: objData.strokeWidth || 3,
+              fill: objData.fill || 'rgba(255, 0, 0, 0.1)',
+              selectable: false,
+              evented: false
+            });
+          } else if (objData.type === 'rect') {
+            const { Rect } = await import('fabric');
+            obj = new Rect({
+              ...objData,
+              stroke: objData.stroke || '#FF0000',
+              strokeWidth: objData.strokeWidth || 3,
+              fill: objData.fill || 'rgba(255, 0, 0, 0.1)',
+              selectable: false,
+              evented: false
+            });
+          } else if (objData.type === 'textbox' || objData.type === 'text') {
+            const { Textbox } = await import('fabric');
+            obj = new Textbox(objData.text || '', {
+              ...objData,
+              fill: objData.fill || '#FF0000',
+              selectable: false,
+              evented: false
+            });
+          }
+
+          if (obj) {
+            canvas.add(obj);
+            addedCount++;
+            console.log(`✅ Objeto ${i} adicionado com sucesso`);
+          }
+        } catch (error) {
+          console.error(`❌ Erro ao criar objeto ${i}:`, error);
+        }
+      }
+
+      console.log(`✅ ${addedCount}/${convertedObjects.length} objetos adicionados ao canvas`);
 
       canvas.renderAll();
       
