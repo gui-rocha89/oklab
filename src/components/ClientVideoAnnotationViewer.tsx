@@ -423,18 +423,18 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                     key={annotation.id}
                     onClick={() => seekToAnnotation(annotation, index)}
                     className={cn(
-                      "w-full text-left p-3 rounded-lg border transition-all duration-200",
-                      "hover:shadow-md",
+                      "w-full text-left p-4 rounded-lg border transition-all duration-200",
+                      "hover:shadow-md hover:border-primary/50",
                       isCurrentAnnotation 
-                        ? "bg-primary/10 border-primary ring-1 ring-primary/30" 
-                        : "bg-card hover:bg-muted/50 border-border"
+                        ? "bg-primary/10 border-primary shadow-sm" 
+                        : "bg-card hover:bg-accent/50 border-border"
                     )}
                   >
-                    <div className="space-y-2.5">
-                      {/* Linha 1: Número e Timestamp */}
-                      <div className="flex items-center gap-2.5">
+                    <div className="flex flex-col gap-3">
+                      {/* Header: Número + Timestamp */}
+                      <div className="flex items-center gap-3">
                         <div className={cn(
-                          "flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm shrink-0",
+                          "flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm shrink-0",
                           isCurrentAnnotation
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-muted-foreground"
@@ -442,29 +442,26 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                           {index + 1}
                         </div>
                         
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
                           <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="font-mono font-bold text-sm">
+                          <span className="font-mono text-sm font-medium">
                             {formatTimestamp(annotation.timestamp_ms)}
                           </span>
                         </div>
+                        
+                        {hasDrawing && (
+                          <Badge variant="secondary" className="text-xs shrink-0">
+                            <Pencil className="w-3 h-3 mr-1" />
+                            {drawingCount}
+                          </Badge>
+                        )}
                       </div>
                       
-                      {/* Linha 2: Comentário (se existir) */}
+                      {/* Comentário */}
                       {annotation.comment && (
-                        <p className="text-xs leading-relaxed text-foreground pl-0">
+                        <p className="text-sm leading-relaxed text-muted-foreground">
                           {annotation.comment}
                         </p>
-                      )}
-                      
-                      {/* Linha 3: Badge (se existir) */}
-                      {hasDrawing && (
-                        <div className="flex gap-2">
-                          <Badge variant="secondary" className="text-xs h-5 px-2">
-                            <Pencil className="w-3 h-3 mr-1" />
-                            {drawingCount} {drawingCount === 1 ? 'desenho' : 'desenhos'}
-                          </Badge>
-                        </div>
                       )}
                     </div>
                   </button>
