@@ -136,32 +136,34 @@ export function CommentsSidebar({
                         }
                       `}
                     >
-                      <div className="flex items-start gap-2.5">
-                        {/* Icon or Thumbnail */}
-                        {isKeyframe ? (
-                          <div className={`p-1.5 rounded-md shrink-0 ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
-                            <MessageSquare className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                          </div>
-                        ) : (
-                          'screenshot_url' in item && item.screenshot_url && (
-                            <div className="w-12 h-9 shrink-0 rounded overflow-hidden bg-muted">
-                              <img 
-                                src={item.screenshot_url} 
-                                alt="Thumbnail"
-                                className="w-full h-full object-cover"
-                              />
+                      <div className="flex items-start gap-3">
+                        {/* Icon or Thumbnail - Fixed Width Container */}
+                        <div className="w-12 h-9 shrink-0 flex items-center justify-center">
+                          {isKeyframe ? (
+                            <div className={`p-2 rounded-md ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
+                              <MessageSquare className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                             </div>
-                          )
-                        )}
+                          ) : (
+                            'screenshot_url' in item && item.screenshot_url && (
+                              <div className="w-12 h-9 rounded overflow-hidden bg-muted">
+                                <img 
+                                  src={item.screenshot_url} 
+                                  alt="Thumbnail"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )
+                          )}
+                        </div>
                         
-                        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                        <div className="flex-1 min-w-0 flex flex-col gap-2">
                           {/* Time and Status */}
-                          <div className="flex items-center gap-1.5 min-h-[20px]">
-                            <span className={`text-xs font-mono font-semibold leading-none ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                          <div className="flex items-center gap-2 min-h-[22px]">
+                            <span className={`text-xs font-mono font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>
                               {formatTime(item.time)}
                             </span>
                             {isActive && (
-                              <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium leading-none">
+                              <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-medium">
                                 ATUAL
                               </span>
                             )}
@@ -169,7 +171,7 @@ export function CommentsSidebar({
                           
                           {/* Comment - Editable */}
                           {isEditing ? (
-                            <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                            <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
                               <Textarea
                                 value={editingText}
                                 onChange={(e) => setEditingText(e.target.value)}
@@ -182,7 +184,7 @@ export function CommentsSidebar({
                                   }
                                 }}
                               />
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-2">
                                 <Button
                                   size="sm"
                                   variant="default"
@@ -217,11 +219,11 @@ export function CommentsSidebar({
                               </p>
                               
                               {/* Action Buttons */}
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-2">
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-6 px-2 text-xs hover:bg-primary/10"
+                                  className="h-7 px-2.5 text-xs hover:bg-primary/10"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     startEditing(
@@ -237,7 +239,7 @@ export function CommentsSidebar({
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                                  className="h-7 px-2.5 text-xs hover:bg-destructive/10 hover:text-destructive"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (confirm('Deseja realmente excluir este feedback?')) {
