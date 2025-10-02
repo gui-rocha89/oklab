@@ -197,77 +197,84 @@ export const VideoOverlayDrawing = ({
   const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFFFFF', '#000000'];
 
   return (
-    <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center">
-      {/* Canvas Overlay */}
+    <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4 gap-3">
+      {/* Toolbar ACIMA do vídeo */}
+      <div className="w-full max-w-5xl bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-3 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Ferramenta:</span>
+          <Button
+            size="sm"
+            variant={activeTool === 'pen' ? 'default' : 'outline'}
+            onClick={() => setActiveTool('pen')}
+          >
+            <Pencil className="h-4 w-4 mr-1" />
+            Desenhar
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Cor:</span>
+          <div className="flex gap-1">
+            {colors.map((color) => (
+              <button
+                key={color}
+                className="w-7 h-7 rounded-full border-2 hover:scale-110 transition-transform"
+                style={{ 
+                  backgroundColor: color,
+                  borderColor: brushColor === color ? 'hsl(var(--primary))' : 'transparent'
+                }}
+                onClick={() => setBrushColor(color)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-1">
+          <Button size="sm" variant="outline" onClick={handleUndo} disabled={historyStep <= 0}>
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleRedo} disabled={historyStep >= history.length - 1}>
+            <Redo2 className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleClear}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Container do vídeo com canvas - SEM controles internos */}
       <div 
-        className="relative" 
+        className="relative bg-black rounded-lg overflow-hidden" 
         style={{ 
           width: dimensions.width, 
           height: dimensions.height,
           maxWidth: '100%',
-          maxHeight: '100%'
+          maxHeight: '60vh'
         }}
       >
         <canvas 
           ref={canvasRef} 
           className="absolute inset-0 cursor-crosshair"
-          style={{ zIndex: 100 }}
         />
+      </div>
 
-        {/* Floating Toolbar */}
-        <div className="absolute top-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-3 flex flex-col gap-2 z-[101]">
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant={activeTool === 'pen' ? 'default' : 'outline'}
-              onClick={() => setActiveTool('pen')}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex flex-wrap gap-1 max-w-[200px]">
-            {colors.map((color) => (
-              <button
-                key={color}
-                className="w-6 h-6 rounded border-2 border-border hover:scale-110 transition-transform"
-                style={{ backgroundColor: color }}
-                onClick={() => setBrushColor(color)}
-              />
-            ))}
-          </div>
-
-          <div className="flex gap-1">
-            <Button size="sm" variant="outline" onClick={handleUndo} disabled={historyStep <= 0}>
-              <Undo2 className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleRedo} disabled={historyStep >= history.length - 1}>
-              <Redo2 className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleClear}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Comment and Action Buttons */}
-        <div className="absolute bottom-4 left-4 right-4 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-4 z-[101]">
-          <textarea
-            className="w-full p-2 border rounded-md bg-background text-foreground resize-none mb-3"
-            placeholder="Adicione um comentário sobre esta anotação..."
-            rows={3}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
-          
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onCancel}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave}>
-              Salvar Anotação
-            </Button>
-          </div>
+      {/* Painel de comentário ABAIXO do vídeo */}
+      <div className="w-full max-w-5xl bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-4">
+        <textarea
+          className="w-full p-3 border rounded-md bg-background text-foreground resize-none mb-3"
+          placeholder="Adicione um comentário sobre esta anotação..."
+          rows={2}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+        
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave}>
+            Salvar Anotação
+          </Button>
         </div>
       </div>
     </div>
