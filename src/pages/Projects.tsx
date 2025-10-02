@@ -177,8 +177,8 @@ export default function Projects() {
                     <SelectItem value="pending">Em Produção ({getFilterCount("pending", "status")})</SelectItem>
                     <SelectItem value="feedback-sent">Feedback Enviado ({getFilterCount("feedback-sent", "status")})</SelectItem>
                     <SelectItem value="feedback-resent">Feedback Reenviado ({getFilterCount("feedback-resent", "status")})</SelectItem>
-                    <SelectItem value="feedback-received">Feedback Recebido ({getFilterCount("feedback-received", "status")})</SelectItem>
                     <SelectItem value="in-revision">Em Revisão ({getFilterCount("in-revision", "status")})</SelectItem>
+                    <SelectItem value="feedback-resent">Feedback Reenviado ({getFilterCount("feedback-resent", "status")})</SelectItem>
                     <SelectItem value="approved">Aprovado ({getFilterCount("approved", "status")})</SelectItem>
                     <SelectItem value="completed">Concluído ({getFilterCount("completed", "status")})</SelectItem>
                   </SelectContent>

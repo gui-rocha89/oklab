@@ -221,8 +221,13 @@ export type Database = {
           created_at: string
           id: string
           keyframe_id: string
+          resolved: boolean | null
+          resolved_at: string | null
           response: string | null
           status: string
+          team_attachments: Json | null
+          team_response: string | null
+          team_user_id: string | null
           updated_at: string
           user_id: string
           x_position: number
@@ -234,8 +239,13 @@ export type Database = {
           created_at?: string
           id?: string
           keyframe_id: string
+          resolved?: boolean | null
+          resolved_at?: string | null
           response?: string | null
           status?: string
+          team_attachments?: Json | null
+          team_response?: string | null
+          team_user_id?: string | null
           updated_at?: string
           user_id: string
           x_position: number
@@ -247,8 +257,13 @@ export type Database = {
           created_at?: string
           id?: string
           keyframe_id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
           response?: string | null
           status?: string
+          team_attachments?: Json | null
+          team_response?: string | null
+          team_user_id?: string | null
           updated_at?: string
           user_id?: string
           x_position?: number

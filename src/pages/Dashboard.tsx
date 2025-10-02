@@ -51,10 +51,15 @@ const ProjectCard = ({ project, index }: any) => {
       icon: AlertTriangle,
       text: 'Feedback Enviado'
     },
-    'in-progress': {
-      color: 'bg-blue-100 text-blue-800',
+    'in-revision': {
+      color: 'bg-yellow-100 text-yellow-800',
       icon: Zap,
-      text: 'Em Progresso'
+      text: 'Em Revisão'
+    },
+    'feedback-resent': {
+      color: 'bg-purple-100 text-purple-800',
+      icon: AlertTriangle,
+      text: 'Feedback Reenviado'
     },
     'archived': {
       color: 'bg-muted text-muted-foreground',
