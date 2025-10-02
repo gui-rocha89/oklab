@@ -10,7 +10,7 @@ import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail,
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { KeyframeTimeline } from "@/components/KeyframeTimeline";
+
 
 
 interface Project {
@@ -62,7 +62,6 @@ const ClientReturn = () => {
   const [review, setReview] = useState<PlatformReview | null>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [videoDuration, setVideoDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -306,27 +305,39 @@ const ClientReturn = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* Video Player */}
-                <div className="space-y-2">
+                {/* Video Player with Keyframe Markers */}
+                <div className="relative">
                   <video 
                     ref={videoRef}
                     controls 
                     className="w-full rounded-lg aspect-video"
                     src={project.video_url}
                     onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
-                    onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
                   >
                     Seu navegador não suporta a reprodução de vídeos.
                   </video>
-
-                  {/* Professional Keyframe Timeline */}
+                  
+                  {/* Keyframe markers on video timeline */}
                   {hasKeyframes && videoDuration > 0 && (
-                    <KeyframeTimeline
-                      keyframes={keyframes}
-                      videoDuration={videoDuration}
-                      currentTime={currentTime}
-                      onSeek={seekToTime}
-                    />
+                    <div className="absolute bottom-12 left-0 right-0 h-1 pointer-events-none px-3">
+                      {keyframes.map((keyframe) => {
+                        const timePosition = (keyframe.attachments[0]?.time / videoDuration) * 100;
+                        const commentsCount = keyframe.project_feedback?.length || 0;
+                        
+                        return (
+                          <div
+                            key={keyframe.id}
+                            className="absolute top-0 w-1 h-4 rounded-full shadow-lg pointer-events-auto cursor-pointer hover:h-6 transition-all"
+                            style={{ 
+                              left: `${timePosition}%`,
+                              backgroundColor: commentsCount > 0 ? 'hsl(var(--warning))' : 'hsl(var(--primary))',
+                            }}
+                            onClick={() => seekToTime(keyframe.attachments[0]?.time || 0)}
+                            title={`${keyframe.title} - ${formatTime(keyframe.attachments[0]?.time || 0)}${commentsCount > 0 ? ` (${commentsCount} comentário${commentsCount !== 1 ? 's' : ''})` : ''}`}
+                          />
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 
