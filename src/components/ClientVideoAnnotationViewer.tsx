@@ -412,7 +412,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
             </div>
 
             {/* Lista scrollável */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 -mr-2">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
               {annotations.map((annotation, index) => {
                 const hasDrawing = annotation.canvas_data?.objects?.length > 0;
                 const drawingCount = annotation.canvas_data?.objects?.length || 0;
@@ -423,48 +423,48 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                     key={annotation.id}
                     onClick={() => seekToAnnotation(annotation, index)}
                     className={cn(
-                      "w-full text-left p-4 rounded-lg border transition-all duration-200",
-                      "hover:shadow-md hover:scale-[1.01]",
+                      "w-full text-left p-3 rounded-lg border transition-all duration-200",
+                      "hover:shadow-md",
                       isCurrentAnnotation 
-                        ? "bg-primary/10 border-primary shadow-sm ring-2 ring-primary/20" 
-                        : "bg-background hover:bg-muted/50 border-border"
+                        ? "bg-primary/10 border-primary ring-1 ring-primary/30" 
+                        : "bg-card hover:bg-muted/50 border-border"
                     )}
                   >
-                    {/* Header: Número + Timestamp */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={cn(
-                        "flex items-center justify-center w-10 h-10 rounded-full font-bold text-base shrink-0 transition-colors",
-                        isCurrentAnnotation
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {index + 1}
+                    <div className="space-y-2.5">
+                      {/* Linha 1: Número e Timestamp */}
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn(
+                          "flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm shrink-0",
+                          isCurrentAnnotation
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {index + 1}
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="font-mono font-bold text-sm">
+                            {formatTimestamp(annotation.timestamp_ms)}
+                          </span>
+                        </div>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="font-mono font-bold text-base">
-                          {formatTimestamp(annotation.timestamp_ms)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Comentário */}
-                    {annotation.comment && (
-                      <div className="mb-3 pl-13">
-                        <p className="text-sm leading-relaxed text-foreground line-clamp-3">
+                      {/* Linha 2: Comentário (se existir) */}
+                      {annotation.comment && (
+                        <p className="text-xs leading-relaxed text-foreground pl-0">
                           {annotation.comment}
                         </p>
-                      </div>
-                    )}
-                    
-                    {/* Badges no final */}
-                    <div className="flex gap-2 pl-13">
+                      )}
+                      
+                      {/* Linha 3: Badge (se existir) */}
                       {hasDrawing && (
-                        <Badge variant="secondary" className="text-xs h-6">
-                          <Pencil className="w-3 h-3 mr-1.5" />
-                          {drawingCount} {drawingCount === 1 ? 'desenho' : 'desenhos'}
-                        </Badge>
+                        <div className="flex gap-2">
+                          <Badge variant="secondary" className="text-xs h-5 px-2">
+                            <Pencil className="w-3 h-3 mr-1" />
+                            {drawingCount} {drawingCount === 1 ? 'desenho' : 'desenhos'}
+                          </Badge>
+                        </div>
                       )}
                     </div>
                   </button>
