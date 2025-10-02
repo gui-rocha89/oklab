@@ -70,8 +70,8 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
       console.log('📁 Nome do arquivo:', fileName);
       
       const { error: uploadError } = await supabase.storage
-        .from('audiovisual-projects')
-        .upload(`annotations/${fileName}`, imageBlob, {
+        .from('video-annotations')
+        .upload(`${fileName}`, imageBlob, {
           contentType: 'image/webp',
           upsert: false
         });
@@ -85,8 +85,8 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('audiovisual-projects')
-        .getPublicUrl(`annotations/${fileName}`);
+        .from('video-annotations')
+        .getPublicUrl(`${fileName}`);
       
       console.log('🔗 URL pública:', publicUrl);
 
@@ -128,8 +128,8 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
         
         // Delete from storage
         await supabase.storage
-          .from('audiovisual-projects')
-          .remove([`annotations/${fileName}`]);
+          .from('video-annotations')
+          .remove([`${fileName}`]);
       }
 
       // Delete from database
