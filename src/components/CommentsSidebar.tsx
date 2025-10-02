@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, Pencil, Clock } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { MessageSquare, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Keyframe {
   id: string;
@@ -26,6 +25,10 @@ interface CommentsSidebarProps {
   currentTime: number;
   onSeekToTime: (time: number) => void;
   onLoadAnnotation: (annotationId: string) => void;
+  onUpdateKeyframe: (id: string, comment: string) => void;
+  onDeleteKeyframe: (id: string) => void;
+  onUpdateAnnotation: (id: string, comment: string) => void;
+  onDeleteAnnotation: (id: string) => void;
   formatTime: (seconds: number) => string;
 }
 
@@ -35,9 +38,41 @@ export function CommentsSidebar({
   currentTime,
   onSeekToTime,
   onLoadAnnotation,
+  onUpdateKeyframe,
+  onDeleteKeyframe,
+  onUpdateAnnotation,
+  onDeleteAnnotation,
   formatTime
 }: CommentsSidebarProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const [editingType, setEditingType] = useState<'keyframe' | 'annotation' | null>(null);
+  
   const totalComments = keyframes.filter(k => k.comment.trim()).length + annotations.length;
+
+  const startEditing = (id: string, currentText: string, type: 'keyframe' | 'annotation') => {
+    setEditingId(id);
+    setEditingText(currentText);
+    setEditingType(type);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingText('');
+    setEditingType(null);
+  };
+
+  const saveEditing = () => {
+    if (!editingId || !editingType) return;
+    
+    if (editingType === 'keyframe') {
+      onUpdateKeyframe(editingId, editingText);
+    } else {
+      onUpdateAnnotation(editingId, editingText);
+    }
+    
+    cancelEditing();
+  };
 
   return (
     <>
@@ -45,7 +80,7 @@ export function CommentsSidebar({
       <div className="px-3 pt-3 pb-2.5 border-b border-border bg-muted/10">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-primary" />
-          Timeline
+          Feedback
           {totalComments > 0 && (
             <span className="ml-auto text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
               {totalComments}
@@ -57,117 +92,147 @@ export function CommentsSidebar({
       {/* Timeline Items - Scrollable */}
       <ScrollArea className="flex-1">
         <div className="p-2.5 space-y-2">
-          {/* Text Comments Timeline */}
-          {keyframes.filter(k => k.comment.trim()).length > 0 && (
+          {/* All Feedback Items - Unified */}
+          {totalComments > 0 && (
             <div className="space-y-1.5">
-              <h4 className="text-xs font-medium text-muted-foreground px-1 mb-1 flex items-center gap-1.5">
-                <div className="h-0.5 w-3 bg-primary rounded-full"></div>
-                Comentários
-              </h4>
-              
-              {keyframes
-                .filter(k => k.comment.trim())
+              {/* Merge keyframes and annotations, sort by time */}
+              {[
+                ...keyframes.filter(k => k.comment.trim()).map(k => ({ ...k, type: 'keyframe' as const })),
+                ...annotations.map(a => ({ ...a, type: 'annotation' as const, time: a.timestamp_ms / 1000 }))
+              ]
                 .sort((a, b) => a.time - b.time)
-                .map((keyframe) => {
-                  const isActive = Math.abs(currentTime - keyframe.time) < 0.5;
+                .map((item) => {
+                  const isActive = Math.abs(currentTime - item.time) < 0.5;
+                  const isEditing = editingId === item.id;
+                  const isKeyframe = item.type === 'keyframe';
                   
                   return (
                     <motion.div
-                      key={keyframe.id}
+                      key={item.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      whileHover={{ scale: 1.01 }}
-                      onClick={() => onSeekToTime(keyframe.time)}
                       className={`
-                        p-2 rounded-md border cursor-pointer transition-all duration-200
+                        p-2 rounded-md border transition-all duration-200
                         ${isActive 
                           ? 'bg-primary/10 border-primary/50 shadow-sm' 
-                          : 'bg-card border-border/50 hover:bg-muted/30 hover:border-primary/30'
+                          : 'bg-card border-border/50 hover:bg-muted/30'
                         }
                       `}
                     >
                       <div className="flex items-start gap-2">
-                        <div className={`p-1 rounded-md shrink-0 ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
-                          <MessageSquare className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-xs font-mono font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>
-                              {formatTime(keyframe.time)}
-                            </span>
-                            {isActive && (
-                              <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium">
-                                ATUAL
-                              </span>
-                            )}
+                        {/* Icon or Thumbnail */}
+                        {isKeyframe ? (
+                          <div className={`p-1 rounded-md shrink-0 ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
+                            <MessageSquare className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                           </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                            {keyframe.comment}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-            </div>
-          )}
-
-          {/* Visual Annotations Timeline */}
-          {annotations.length > 0 && (
-            <div className="space-y-1.5 mt-3">
-              <h4 className="text-xs font-medium text-muted-foreground px-1 mb-1 flex items-center gap-1.5">
-                <div className="h-0.5 w-3 bg-primary rounded-full"></div>
-                Anotações Visuais
-              </h4>
-              
-              {annotations
-                .sort((a, b) => a.timestamp_ms - b.timestamp_ms)
-                .map((annotation, index) => {
-                  const isActive = Math.abs(currentTime - annotation.timestamp_ms / 1000) < 0.5;
-                  
-                  return (
-                    <motion.div
-                      key={annotation.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      whileHover={{ scale: 1.01 }}
-                      onClick={() => {
-                        onSeekToTime(annotation.timestamp_ms / 1000);
-                        onLoadAnnotation(annotation.id);
-                      }}
-                      className={`
-                        p-2 rounded-md border cursor-pointer transition-all duration-200
-                        ${isActive 
-                          ? 'bg-primary/10 border-primary/50 shadow-sm' 
-                          : 'bg-card border-border/50 hover:bg-muted/30 hover:border-primary/30'
-                        }
-                      `}
-                    >
-                      <div className="flex items-start gap-2">
-                        {annotation.screenshot_url && (
-                          <div className="w-12 h-9 shrink-0 rounded overflow-hidden bg-muted">
-                            <img 
-                              src={annotation.screenshot_url} 
-                              alt="Thumbnail"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+                        ) : (
+                          'screenshot_url' in item && item.screenshot_url && (
+                            <div className="w-12 h-9 shrink-0 rounded overflow-hidden bg-muted">
+                              <img 
+                                src={item.screenshot_url} 
+                                alt="Thumbnail"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )
                         )}
+                        
                         <div className="flex-1 min-w-0">
+                          {/* Time and Status */}
                           <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-xs font-mono font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>
-                              {formatTime(annotation.timestamp_ms / 1000)}
-                            </span>
+                            <button
+                              onClick={() => {
+                                onSeekToTime(item.time);
+                                if (!isKeyframe) {
+                                  onLoadAnnotation(item.id);
+                                }
+                              }}
+                              className={`text-xs font-mono font-semibold hover:underline ${isActive ? 'text-primary' : 'text-foreground'}`}
+                            >
+                              {formatTime(item.time)}
+                            </button>
                             {isActive && (
                               <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium">
                                 ATUAL
                               </span>
                             )}
                           </div>
-                          {annotation.comment && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                              {annotation.comment}
-                            </p>
+                          
+                          {/* Comment - Editable */}
+                          {isEditing ? (
+                            <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                              <Textarea
+                                value={editingText}
+                                onChange={(e) => setEditingText(e.target.value)}
+                                className="min-h-[60px] text-xs"
+                                placeholder="Adicione seu comentário..."
+                                autoFocus
+                              />
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="h-7 text-xs"
+                                  onClick={saveEditing}
+                                >
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Salvar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs"
+                                  onClick={cancelEditing}
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-xs text-muted-foreground leading-relaxed mb-1.5">
+                                {isKeyframe ? item.comment : ('comment' in item ? item.comment : 'Anotação visual')}
+                              </p>
+                              
+                              {/* Action Buttons */}
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs hover:bg-primary/10"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditing(
+                                      item.id, 
+                                      isKeyframe ? item.comment : ('comment' in item ? item.comment || '' : ''),
+                                      item.type
+                                    );
+                                  }}
+                                >
+                                  <Pencil className="h-3 w-3 mr-1" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs hover:bg-destructive/10 hover:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm('Deseja realmente excluir este feedback?')) {
+                                      if (isKeyframe) {
+                                        onDeleteKeyframe(item.id);
+                                      } else {
+                                        onDeleteAnnotation(item.id);
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  Excluir
+                                </Button>
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
@@ -182,10 +247,10 @@ export function CommentsSidebar({
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <MessageSquare className="h-8 w-8 text-muted-foreground/20 mb-1.5" />
               <p className="text-xs text-muted-foreground">
-                Nenhum comentário
+                Nenhum feedback adicionado
               </p>
               <p className="text-xs text-muted-foreground/60 mt-0.5">
-                Adicione comentários ou anotações
+                Use o botão + ou desenhe no vídeo
               </p>
             </div>
           )}

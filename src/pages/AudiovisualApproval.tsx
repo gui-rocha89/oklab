@@ -71,8 +71,6 @@ export default function AudiovisualApproval() {
   const [pendingAnnotationTimestamp, setPendingAnnotationTimestamp] = useState<number | null>(null);
   const [currentAnnotationId, setCurrentAnnotationId] = useState<string | null>(null);
   const [showAnnotationOverlay, setShowAnnotationOverlay] = useState(false);
-  const [newlyAddedKeyframeId, setNewlyAddedKeyframeId] = useState<string | null>(null);
-  const keyframesEditSectionRef = useRef<HTMLDivElement>(null);
 
   // Annotation system
   const {
@@ -244,24 +242,10 @@ export default function AudiovisualApproval() {
     
     setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
     setIsPlaying(false);
-    setNewlyAddedKeyframeId(newKeyframe.id);
-    
-    // Scroll to the edit section after a short delay
-    setTimeout(() => {
-      keyframesEditSectionRef.current?.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'nearest' 
-      });
-    }, 100);
-    
-    // Clear the highlight after 3 seconds
-    setTimeout(() => {
-      setNewlyAddedKeyframeId(null);
-    }, 3000);
     
     toast({
       title: "✅ Comentário adicionado",
-      description: `Comentário criado em ${formatTime(currentTime)}. Edite o texto abaixo.`,
+      description: `Comentário criado em ${formatTime(currentTime)}. Edite na timeline à direita.`,
       duration: 3000,
     });
   };
@@ -272,6 +256,54 @@ export default function AudiovisualApproval() {
   
   const handleRemoveKeyframe = (id: string) => {
     setKeyframes(keyframes.filter(k => k.id !== id));
+    toast({
+      title: "Comentário removido",
+      description: "O feedback foi excluído com sucesso.",
+    });
+  };
+
+  const handleUpdateAnnotation = async (id: string, comment: string) => {
+    try {
+      // Update annotation comment in database
+      const { error } = await supabase
+        .from('video_annotations')
+        .update({ comment })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Reload annotations to reflect changes
+      await loadAnnotations();
+      
+      toast({
+        title: "Anotação atualizada",
+        description: "O comentário foi salvo com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar anotação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a anotação.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAnnotation = async (id: string) => {
+    try {
+      await deleteAnnotation(id);
+      toast({
+        title: "Anotação removida",
+        description: "O feedback visual foi excluído com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao deletar anotação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a anotação.",
+        variant: "destructive",
+      });
+    }
   };
 
   const seekTo = (time: number) => {
@@ -919,72 +951,6 @@ export default function AudiovisualApproval() {
                 </Button>
               </div>
             </Card>
-
-            {/* Keyframes Editing Section - Below Video */}
-            {keyframes.length > 0 && (
-              <Card 
-                ref={keyframesEditSectionRef}
-                className={`bg-white border-gray-200 shadow-sm mt-4 ${isMobile ? 'p-4' : 'p-6'}`}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className={`font-semibold text-gray-900 ${isMobile ? 'text-base' : 'text-lg'}`}>
-                    📝 Editar Comentários
-                  </h3>
-                  <span className="text-sm text-muted-foreground bg-primary/10 px-2 py-1 rounded-full">
-                    {keyframes.length} {keyframes.length === 1 ? 'comentário' : 'comentários'}
-                  </span>
-                </div>
-                <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
-                  {keyframes.map(keyframe => (
-                    <motion.div
-                      key={keyframe.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ 
-                        opacity: 1, 
-                        y: 0,
-                        scale: newlyAddedKeyframeId === keyframe.id ? [1, 1.02, 1] : 1
-                      }}
-                      transition={{ 
-                        duration: 0.3,
-                        scale: { duration: 0.6, times: [0, 0.5, 1] }
-                      }}
-                      className={`border rounded-lg p-4 transition-all ${
-                        newlyAddedKeyframeId === keyframe.id 
-                          ? 'border-primary bg-primary/5 shadow-md' 
-                          : 'border-gray-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4 text-primary" />
-                          <button
-                            onClick={() => seekTo(keyframe.time)}
-                            className={`text-primary hover:text-primary/80 font-medium touch-manipulation ${isMobile ? 'min-h-[44px] text-base' : ''}`}
-                          >
-                            {formatTime(keyframe.time)}
-                          </button>
-                        </div>
-                        <Button
-                          onClick={() => handleRemoveKeyframe(keyframe.id)}
-                          variant="ghost"
-                          size={isMobile ? "default" : "sm"}
-                          className={`hover:bg-destructive/10 hover:text-destructive ${isMobile ? "touch-manipulation min-h-[44px]" : ""}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <Textarea
-                        value={keyframe.comment}
-                        onChange={(e) => handleKeyframeCommentChange(keyframe.id, e.target.value)}
-                        placeholder="Adicione seu comentário aqui..."
-                        className={`w-full ${isMobile ? 'min-h-[100px] text-base' : ''}`}
-                        autoFocus={newlyAddedKeyframeId === keyframe.id}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </Card>
-            )}
           </div>
 
           {/* Coluna Direita: Sidebar Unificado (40% - 2/5 columns) */}
@@ -1133,6 +1099,10 @@ export default function AudiovisualApproval() {
                       setShowAnnotationOverlay(true);
                     }
                   }}
+                  onUpdateKeyframe={handleKeyframeCommentChange}
+                  onDeleteKeyframe={handleRemoveKeyframe}
+                  onUpdateAnnotation={handleUpdateAnnotation}
+                  onDeleteAnnotation={handleDeleteAnnotation}
                   formatTime={formatTime}
                 />
               </div>
