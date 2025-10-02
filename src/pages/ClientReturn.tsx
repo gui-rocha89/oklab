@@ -92,6 +92,24 @@ const ClientReturn = () => {
     fetchProjectReturn();
   }, [projectId]);
 
+  // Separar feedbacks históricos de atuais - APÓS loading/null checks
+  const historicalKeyframes = project ? keyframes.filter(kf => 
+    kf.project_feedback.length > 0 && 
+    kf.project_feedback.every(f => f.resolved === true && f.team_response)
+  ) : [];
+
+  const currentKeyframes = project ? keyframes.filter(kf => 
+    kf.project_feedback.some(f => f.resolved === false)
+  ) : [];
+
+  const totalComments = currentKeyframes.reduce((sum, kf) => sum + kf.project_feedback.length, 0);
+  const resolvedComments = currentKeyframes.reduce(
+    (sum, kf) => sum + kf.project_feedback.filter(f => f.resolved).length, 
+    0
+  );
+
+  const isInNewRound = project?.status === 'in-revision' && historicalKeyframes.length > 0;
+
   const fetchProjectReturn = async () => {
     try {
       setLoading(true);
@@ -264,23 +282,6 @@ const ClientReturn = () => {
     }
   };
 
-  // Separar feedbacks históricos de atuais
-  const historicalKeyframes = keyframes.filter(kf => 
-    kf.project_feedback.length > 0 && 
-    kf.project_feedback.every(f => f.resolved === true && f.team_response)
-  );
-
-  const currentKeyframes = keyframes.filter(kf => 
-    kf.project_feedback.some(f => f.resolved === false)
-  );
-
-  const totalComments = currentKeyframes.reduce((sum, kf) => sum + kf.project_feedback.length, 0);
-  const resolvedComments = currentKeyframes.reduce(
-    (sum, kf) => sum + kf.project_feedback.filter(f => f.resolved).length, 
-    0
-  );
-
-  const isInNewRound = project.status === 'in-revision' && historicalKeyframes.length > 0;
 
   if (loading) {
     return (
