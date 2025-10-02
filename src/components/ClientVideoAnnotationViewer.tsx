@@ -7,6 +7,7 @@ import { Play, Pause, SkipBack, SkipForward, Maximize, MessageSquare, Pencil, Cl
 import { cn } from "@/lib/utils";
 import { convertFromReferenceResolution, REFERENCE_WIDTH, REFERENCE_HEIGHT } from "@/lib/annotationUtils";
 import { useVideoAspectRatio } from "@/hooks/useVideoAspectRatio";
+import { toast } from "sonner";
 
 interface VideoAnnotation {
   id: string;
@@ -122,15 +123,30 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   }, [currentTime, annotations]);
 
   const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
-    if (!fabricCanvasRef.current || !videoRef.current) return;
+    if (!fabricCanvasRef.current || !videoRef.current) {
+      console.error('❌ Canvas ou vídeo não disponível');
+      return;
+    }
 
     const canvas = fabricCanvasRef.current;
     const video = videoRef.current;
     
     try {
+      console.group('🎯 CARREGANDO ANOTAÇÃO');
+      console.log('Annotation ID:', annotation.id);
+      console.log('Timestamp:', annotation.timestamp_ms, 'ms');
+      
       clearCanvas();
       
-      if (!annotation.canvas_data?.objects || annotation.canvas_data.objects.length === 0) {
+      if (!annotation.canvas_data) {
+        console.warn('⚠️ Sem canvas_data na anotação');
+        console.groupEnd();
+        return;
+      }
+
+      if (!annotation.canvas_data.objects || annotation.canvas_data.objects.length === 0) {
+        console.warn('⚠️ Sem objetos no canvas_data');
+        console.groupEnd();
         return;
       }
 
@@ -139,10 +155,25 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       const currentWidth = Math.floor(rect.width);
       const currentHeight = Math.floor(rect.height);
 
+      if (currentWidth === 0 || currentHeight === 0) {
+        console.error('❌ Dimensões do vídeo inválidas:', { currentWidth, currentHeight });
+        console.groupEnd();
+        return;
+      }
+
+      console.log('📐 Dimensões:');
+      console.log('  - Referência:', `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`);
+      console.log('  - Player atual:', `${currentWidth}x${currentHeight}`);
+      console.log('  - Escala X:', (currentWidth / REFERENCE_WIDTH).toFixed(3));
+      console.log('  - Escala Y:', (currentHeight / REFERENCE_HEIGHT).toFixed(3));
+
       canvas.setDimensions({
         width: currentWidth,
         height: currentHeight
       });
+
+      // Log dos dados originais antes da conversão
+      console.log('📦 Dados originais:', JSON.stringify(annotation.canvas_data.objects[0], null, 2).substring(0, 200));
 
       // Converter objetos da resolução de referência para o tamanho ATUAL do player
       const convertedObjects = convertFromReferenceResolution(
@@ -151,19 +182,24 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         currentHeight
       );
 
-      console.log('🎯 Carregando anotação:', {
-        reference: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
-        currentPlayer: `${currentWidth}x${currentHeight}`,
-        scaleX: (currentWidth / REFERENCE_WIDTH).toFixed(3),
-        scaleY: (currentHeight / REFERENCE_HEIGHT).toFixed(3),
-        objectCount: convertedObjects.length
-      });
+      console.log(`🔄 ${convertedObjects.length} objetos convertidos`);
 
       const objects = await util.enlivenObjects(convertedObjects);
 
+      console.log(`✨ ${objects.length} objetos criados pelo Fabric.js`);
+
+      let addedCount = 0;
       objects.forEach((obj: any, index: number) => {
         if (obj) {
-          console.log(`🎨 Objeto ${index} (${obj.type}): pos=(${obj.left?.toFixed(1)}, ${obj.top?.toFixed(1)}) scale=(${obj.scaleX?.toFixed(2)}, ${obj.scaleY?.toFixed(2)})`);
+          console.log(`🎨 Objeto ${index}:`, {
+            type: obj.type,
+            left: obj.left?.toFixed(1),
+            top: obj.top?.toFixed(1),
+            scaleX: obj.scaleX?.toFixed(2),
+            scaleY: obj.scaleY?.toFixed(2),
+            width: obj.width,
+            height: obj.height
+          });
           
           obj.set({
             selectable: false,
@@ -174,14 +210,30 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
           });
           obj.setCoords();
           canvas.add(obj);
+          addedCount++;
+        } else {
+          console.warn(`⚠️ Objeto ${index} é null/undefined`);
         }
       });
 
-      console.log(`✅ ${objects.length} objetos adicionados ao canvas`);
+      console.log(`✅ ${addedCount}/${objects.length} objetos adicionados ao canvas`);
 
       canvas.renderAll();
+      
+      // Verificação final
+      const finalObjectCount = canvas.getObjects().length;
+      console.log(`🎯 Canvas final contém ${finalObjectCount} objetos`);
+      
+      if (finalObjectCount === 0) {
+        console.error('❌ PROBLEMA: Canvas está vazio após carregar anotação!');
+      }
+      
+      console.groupEnd();
     } catch (error) {
-      console.error('Erro ao carregar anotação:', error);
+      console.error('❌ ERRO ao carregar anotação:', error);
+      console.error('Stack:', error instanceof Error ? error.stack : 'N/A');
+      console.groupEnd();
+      toast.error('Erro ao carregar desenho da anotação');
     }
   };
 

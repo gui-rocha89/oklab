@@ -17,18 +17,38 @@ export const convertToReferenceResolution = (
   currentWidth: number,
   currentHeight: number
 ): any[] => {
+  if (currentWidth === 0 || currentHeight === 0) {
+    console.error('❌ Dimensões inválidas para conversão:', { currentWidth, currentHeight });
+    return objects;
+  }
+
   const scaleX = REFERENCE_WIDTH / currentWidth;
   const scaleY = REFERENCE_HEIGHT / currentHeight;
 
-  return objects.map(obj => ({
-    ...obj,
-    left: (obj.left || 0) * scaleX,
-    top: (obj.top || 0) * scaleY,
-    scaleX: (obj.scaleX || 1) * scaleX,
-    scaleY: (obj.scaleY || 1) * scaleY,
-    width: obj.width,
-    height: obj.height,
-  }));
+  console.log('🔄 Convertendo para resolução de referência:', {
+    from: `${currentWidth}x${currentHeight}`,
+    to: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
+    scaleX: scaleX.toFixed(3),
+    scaleY: scaleY.toFixed(3)
+  });
+
+  return objects.map((obj, index) => {
+    const converted = {
+      ...obj,
+      left: (obj.left || 0) * scaleX,
+      top: (obj.top || 0) * scaleY,
+      scaleX: (obj.scaleX || 1) * scaleX,
+      scaleY: (obj.scaleY || 1) * scaleY,
+      width: obj.width,
+      height: obj.height,
+    };
+    
+    if (index === 0) {
+      console.log(`  Objeto 0: (${obj.left?.toFixed(1)}, ${obj.top?.toFixed(1)}) → (${converted.left.toFixed(1)}, ${converted.top.toFixed(1)})`);
+    }
+    
+    return converted;
+  });
 };
 
 /**
@@ -39,18 +59,38 @@ export const convertFromReferenceResolution = (
   currentWidth: number,
   currentHeight: number
 ): any[] => {
+  if (currentWidth === 0 || currentHeight === 0) {
+    console.error('❌ Dimensões inválidas para conversão:', { currentWidth, currentHeight });
+    return objects;
+  }
+
   const scaleX = currentWidth / REFERENCE_WIDTH;
   const scaleY = currentHeight / REFERENCE_HEIGHT;
 
-  return objects.map(obj => ({
-    ...obj,
-    left: (obj.left || 0) * scaleX,
-    top: (obj.top || 0) * scaleY,
-    scaleX: (obj.scaleX || 1) * scaleX,
-    scaleY: (obj.scaleY || 1) * scaleY,
-    width: obj.width,
-    height: obj.height,
-  }));
+  console.log('🔄 Convertendo da resolução de referência:', {
+    from: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
+    to: `${currentWidth}x${currentHeight}`,
+    scaleX: scaleX.toFixed(3),
+    scaleY: scaleY.toFixed(3)
+  });
+
+  return objects.map((obj, index) => {
+    const converted = {
+      ...obj,
+      left: (obj.left || 0) * scaleX,
+      top: (obj.top || 0) * scaleY,
+      scaleX: (obj.scaleX || 1) * scaleX,
+      scaleY: (obj.scaleY || 1) * scaleY,
+      width: obj.width,
+      height: obj.height,
+    };
+    
+    if (index === 0) {
+      console.log(`  Objeto 0: (${obj.left?.toFixed(1)}, ${obj.top?.toFixed(1)}) → (${converted.left.toFixed(1)}, ${converted.top.toFixed(1)})`);
+    }
+    
+    return converted;
+  });
 };
 
 /**

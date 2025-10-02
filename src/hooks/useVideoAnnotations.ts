@@ -42,11 +42,25 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
   }, [projectId]);
 
   const saveAnnotation = useCallback(async (timestampMs: number, comment?: string) => {
-    if (!projectId || !fabricCanvasRef.current) return;
+    if (!projectId || !fabricCanvasRef.current) {
+      console.error('❌ Não é possível salvar: projectId ou canvas não disponível');
+      return;
+    }
 
     try {
       const canvas = fabricCanvasRef.current;
       const canvasData = canvas.toJSON();
+      
+      console.group('💾 SALVANDO ANOTAÇÃO');
+      console.log('Project ID:', projectId);
+      console.log('Timestamp:', timestampMs, 'ms');
+      console.log('Comentário:', comment || '(sem comentário)');
+      console.log('Dimensões do canvas:', `${canvas.width}x${canvas.height}`);
+      console.log('Objetos no canvas:', canvasData.objects?.length || 0);
+      
+      if (canvasData.objects && canvasData.objects.length > 0) {
+        console.log('Primeiro objeto (antes de normalizar):', JSON.stringify(canvasData.objects[0], null, 2).substring(0, 300));
+      }
       
       // Normalizar coordenadas para a resolução de referência (1280x720)
       const normalizedData = normalizeCanvasData(
@@ -55,11 +69,17 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
         canvas.height || 0
       );
       
-      console.log('💾 Salvando anotação normalizada:', {
+      console.log('📐 Normalização:', {
         originalDimensions: `${canvas.width}x${canvas.height}`,
         referenceDimensions: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
-        objects: normalizedData.objects?.length || 0
+        scaleX: (REFERENCE_WIDTH / (canvas.width || 1)).toFixed(3),
+        scaleY: (REFERENCE_HEIGHT / (canvas.height || 1)).toFixed(3),
+        objectsNormalized: normalizedData.objects?.length || 0
       });
+      
+      if (normalizedData.objects && normalizedData.objects.length > 0) {
+        console.log('Primeiro objeto (depois de normalizar):', JSON.stringify(normalizedData.objects[0], null, 2).substring(0, 300));
+      }
       
       const { data, error } = await supabase
         .from('video_annotations')
@@ -72,14 +92,22 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro do Supabase:', error);
+        throw error;
+      }
+
+      console.log('✅ Anotação salva no banco:', data.id);
+      console.groupEnd();
 
       setAnnotations(prev => [...prev, data].sort((a, b) => a.timestamp_ms - b.timestamp_ms));
       toast.success('Anotação salva com sucesso!');
       
       return data;
     } catch (error) {
-      console.error('Error saving annotation:', error);
+      console.error('❌ ERRO ao salvar anotação:', error);
+      console.error('Stack:', error instanceof Error ? error.stack : 'N/A');
+      console.groupEnd();
       toast.error('Erro ao salvar anotação');
     }
   }, [projectId]);
