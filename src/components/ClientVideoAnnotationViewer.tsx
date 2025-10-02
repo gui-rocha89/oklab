@@ -382,31 +382,35 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       {/* Video Player (60%) - Adaptativo */}
       <div className="lg:col-span-3">
         <Card className="overflow-hidden border-0 shadow-lg">
-          {/* Player nativo com canvas sobreposto - FUNCIONA! */}
+          {/* Player nativo com canvas sobreposto - POSICIONAMENTO CORRETO */}
           <div 
             ref={containerRef} 
             className="relative w-full bg-black rounded-lg overflow-hidden"
+            style={{ maxHeight: '70vh' }}
           >
             <video
               ref={videoRef}
               src={videoUrl}
-              className="w-full h-full"
-              style={{ maxHeight: '70vh' }}
+              className="w-full h-full block"
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             />
             
-            {/* Canvas - posicionado DIRETAMENTE sobre o vídeo */}
+            {/* Canvas - ABSOLUTAMENTE posicionado sobre o vídeo */}
             <canvas
               ref={canvasRef}
-              className="absolute pointer-events-none"
-              style={{ zIndex: 30 }}
+              className="absolute top-0 left-0 pointer-events-none"
+              style={{ 
+                zIndex: 10,
+                width: '100%',
+                height: '100%'
+              }}
             />
 
-            {/* Controles do vídeo */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 space-y-3">
+            {/* Controles do vídeo - z-index ACIMA do canvas */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 space-y-3" style={{ zIndex: 20 }}>
               {/* Progress Bar */}
               <div className="relative">
                 <div 
