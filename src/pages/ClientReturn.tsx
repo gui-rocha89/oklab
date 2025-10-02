@@ -33,6 +33,7 @@ interface Project {
   approval_date: string | null;
   video_url: string | null;
   share_id: string;
+  current_feedback_round?: number;
 }
 
 interface PlatformReview {
@@ -55,6 +56,7 @@ interface Feedback {
   resolved_at: string | null;
   team_response: string | null;
   team_attachments: any[];
+  feedback_round: number;
 }
 
 interface Keyframe {
@@ -92,15 +94,28 @@ const ClientReturn = () => {
     fetchProjectReturn();
   }, [projectId]);
 
-  // Separar feedbacks históricos de atuais - APÓS loading/null checks
-  const historicalKeyframes = project ? keyframes.filter(kf => 
-    kf.project_feedback.length > 0 && 
-    kf.project_feedback.every(f => f.resolved === true && f.team_response)
-  ) : [];
+  // Separar feedbacks históricos de atuais baseado em feedback_round
+  const currentRound = project?.current_feedback_round || 1;
+  
+  // Histórico: feedbacks de rodadas ANTERIORES que foram resolvidos
+  const historicalKeyframes = project ? keyframes
+    .filter(kf => 
+      kf.project_feedback.some(f => f.feedback_round < currentRound && f.resolved)
+    )
+    .map(kf => ({
+      ...kf,
+      project_feedback: kf.project_feedback.filter(f => f.feedback_round < currentRound && f.resolved)
+    })) : [];
 
-  const currentKeyframes = project ? keyframes.filter(kf => 
-    kf.project_feedback.some(f => f.resolved === false)
-  ) : [];
+  // Atual: feedbacks da rodada ATUAL
+  const currentKeyframes = project ? keyframes
+    .filter(kf => 
+      kf.project_feedback.some(f => f.feedback_round === currentRound)
+    )
+    .map(kf => ({
+      ...kf,
+      project_feedback: kf.project_feedback.filter(f => f.feedback_round === currentRound)
+    })) : [];
 
   const totalComments = currentKeyframes.reduce((sum, kf) => sum + kf.project_feedback.length, 0);
   const resolvedComments = currentKeyframes.reduce(

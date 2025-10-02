@@ -70,7 +70,10 @@ serve(async (req) => {
     // Generate new share_id for each resend to invalidate old links
     const newShareId = `av-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
     
-    // Update project with new video, new share_id, status and resent_at timestamp
+    const currentRound = project.current_feedback_round || 1;
+    const nextRound = currentRound + 1;
+    
+    // Update project with new video, new share_id, status, resent_at and increment feedback round
     const { error: updateError } = await supabase
       .from('projects')
       .update({
@@ -78,6 +81,7 @@ serve(async (req) => {
         share_id: newShareId,
         status: 'in-revision',
         completed_at: null,
+        current_feedback_round: nextRound,
         resent_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -88,7 +92,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    console.log('✅ Projeto atualizado com sucesso');
+    console.log('✅ Projeto atualizado - Rodada:', nextRound);
 
     // Get all keyframes for this project
     const { data: keyframes } = await supabase
@@ -96,8 +100,8 @@ serve(async (req) => {
       .select('id')
       .eq('project_id', projectId);
 
-    // Mark feedbacks with team responses as resolved (they become part of history)
-    // Only feedbacks with team_response are marked as resolved - these will show in history
+    // Mark ALL feedbacks from the PREVIOUS round as resolved
+    // This includes both feedbacks with team responses AND implicit approvals
     if (keyframes && keyframes.length > 0) {
       const keyframeIds = keyframes.map(k => k.id);
       
@@ -108,12 +112,23 @@ serve(async (req) => {
           resolved_at: new Date().toISOString() 
         })
         .in('keyframe_id', keyframeIds)
-        .not('team_response', 'is', null); // Only feedbacks with team responses
+        .eq('feedback_round', currentRound); // Only feedbacks from the PREVIOUS round
 
       if (resolveError) {
         console.error('❌ Erro ao marcar feedbacks como resolvidos:', resolveError);
       } else {
-        console.log('✅ Feedbacks anteriores marcados como resolvidos (histórico)');
+        console.log(`✅ Feedbacks da rodada ${currentRound} marcados como resolvidos`);
+      }
+
+      // Also update creative_approvals from the previous round
+      const { error: approvalsError } = await supabase
+        .from('creative_approvals')
+        .update({ updated_at: new Date().toISOString() })
+        .in('keyframe_id', keyframeIds)
+        .eq('feedback_round', currentRound);
+
+      if (approvalsError) {
+        console.error('❌ Erro ao atualizar aprovações:', approvalsError);
       }
     }
 

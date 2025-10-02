@@ -73,9 +73,25 @@ export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
         feedback: feedback.trim() || null
       };
 
+      // Get project and current feedback round
+      const { data: project } = await supabase
+        .from('projects')
+        .select('current_feedback_round')
+        .eq('id', (await supabase
+          .from('project_keyframes')
+          .select('project_id')
+          .eq('id', keyframeId)
+          .single()).data?.project_id)
+        .single();
+
+      const currentRound = project?.current_feedback_round || 1;
+
       const { data, error } = await supabase
         .from('creative_approvals')
-        .upsert(approvalData, { 
+        .upsert({
+          ...approvalData,
+          feedback_round: currentRound
+        }, { 
           onConflict: 'keyframe_id,attachment_index'
         })
         .select()

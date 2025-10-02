@@ -20,6 +20,7 @@ export type Database = {
           caption: string | null
           created_at: string
           feedback: string | null
+          feedback_round: number | null
           id: string
           keyframe_id: string
           publish_date: string | null
@@ -31,6 +32,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           feedback?: string | null
+          feedback_round?: number | null
           id?: string
           keyframe_id: string
           publish_date?: string | null
@@ -42,6 +44,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           feedback?: string | null
+          feedback_round?: number | null
           id?: string
           keyframe_id?: string
           publish_date?: string | null
@@ -219,6 +222,7 @@ export type Database = {
           attachments: Json | null
           comment: string
           created_at: string
+          feedback_round: number | null
           id: string
           keyframe_id: string
           resolved: boolean | null
@@ -237,6 +241,7 @@ export type Database = {
           attachments?: Json | null
           comment: string
           created_at?: string
+          feedback_round?: number | null
           id?: string
           keyframe_id: string
           resolved?: boolean | null
@@ -255,6 +260,7 @@ export type Database = {
           attachments?: Json | null
           comment?: string
           created_at?: string
+          feedback_round?: number | null
           id?: string
           keyframe_id?: string
           resolved?: boolean | null
@@ -333,6 +339,7 @@ export type Database = {
           client: string
           completed_at: string | null
           created_at: string
+          current_feedback_round: number | null
           description: string | null
           id: string
           resent_at: string | null
@@ -349,6 +356,7 @@ export type Database = {
           client: string
           completed_at?: string | null
           created_at?: string
+          current_feedback_round?: number | null
           description?: string | null
           id?: string
           resent_at?: string | null
@@ -365,6 +373,7 @@ export type Database = {
           client?: string
           completed_at?: string | null
           created_at?: string
+          current_feedback_round?: number | null
           description?: string | null
           id?: string
           resent_at?: string | null
