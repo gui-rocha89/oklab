@@ -870,7 +870,7 @@ export default function AudiovisualApproval() {
                     }}
                     isPlaying={isPlaying}
                     onPlayPauseChange={setIsPlaying}
-                    isDrawingMode={false}
+                    isDrawingMode={showAnnotationCreator}
                     onAnnotationClick={handleAnnotationClick}
                     onKeyframeClick={(keyframeId) => {
                       const keyframe = keyframes.find(k => k.id === keyframeId);
@@ -894,7 +894,8 @@ export default function AudiovisualApproval() {
                   <SimpleAnnotationCreator
                     capturedFrameUrl={capturedFrameUrl}
                     timestampMs={creatorTimestamp}
-                    videoAspectRatio={aspectRatio}
+                    containerWidth={videoContainerRef.current?.offsetWidth || 800}
+                    containerHeight={videoContainerRef.current?.offsetHeight || 450}
                     onSave={handleSaveAnnotationWithComment}
                     onCancel={() => {
                       setShowAnnotationCreator(false);

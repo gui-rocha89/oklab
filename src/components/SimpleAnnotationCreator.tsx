@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 interface SimpleAnnotationCreatorProps {
   capturedFrameUrl: string;
   timestampMs: number;
-  videoAspectRatio: number;
+  containerWidth: number;
+  containerHeight: number;
   onSave: (comment: string, imageBlob: Blob) => void;
   onCancel: () => void;
 }
@@ -17,7 +18,8 @@ interface SimpleAnnotationCreatorProps {
 export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = ({
   capturedFrameUrl,
   timestampMs,
-  videoAspectRatio,
+  containerWidth,
+  containerHeight,
   onSave,
   onCancel,
 }) => {
@@ -28,22 +30,16 @@ export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = (
   const [brushColor, setBrushColor] = useState('#ef4444');
   const [history, setHistory] = useState<string[]>([]);
   const [historyStep, setHistoryStep] = useState(0);
-  const [canvasWidth, setCanvasWidth] = useState(800);
-  const [canvasHeight, setCanvasHeight] = useState(450);
 
-  useEffect(() => {
-    const calculatedWidth = Math.min(window.innerWidth - 64, 1200);
-    const calculatedHeight = calculatedWidth / videoAspectRatio;
-    setCanvasWidth(calculatedWidth);
-    setCanvasHeight(calculatedHeight);
-  }, [videoAspectRatio]);
-
+  // Initialize canvas with exact dimensions from video container
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    console.log('🎨 Inicializando canvas com dimensões:', { containerWidth, containerHeight });
+
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: canvasWidth,
-      height: canvasHeight,
+      width: containerWidth,
+      height: containerHeight,
       backgroundColor: 'transparent',
     });
 
@@ -60,19 +56,35 @@ export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = (
     setHistory([initialState]);
     setHistoryStep(0);
 
-    // Track object additions for history
-    canvas.on('object:added', () => {
-      const json = JSON.stringify(canvas.toJSON());
-      const newHistory = history.slice(0, historyStep + 1);
-      newHistory.push(json);
-      setHistory(newHistory);
-      setHistoryStep(newHistory.length - 1);
-    });
+    console.log('✅ Canvas inicializado, modo desenho:', activeTool === 'pen');
 
     return () => {
       canvas.dispose();
     };
-  }, [canvasWidth, canvasHeight]);
+  }, [containerWidth, containerHeight]);
+
+  // Separate effect for tracking history to avoid stale closures
+  useEffect(() => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const handleObjectAdded = () => {
+      const json = JSON.stringify(canvas.toJSON());
+      setHistory(prev => {
+        const newHistory = prev.slice(0, historyStep + 1);
+        newHistory.push(json);
+        return newHistory;
+      });
+      setHistoryStep(prev => prev + 1);
+    };
+
+    canvas.on('object:added', handleObjectAdded);
+
+    return () => {
+      canvas.off('object:added', handleObjectAdded);
+    };
+  }, [historyStep]);
 
   useEffect(() => {
     if (!fabricCanvasRef.current) return;
@@ -300,14 +312,14 @@ export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = (
       </div>
 
       {/* Canvas Area with Captured Frame */}
-      <div className="flex items-center justify-center p-4 bg-muted/10">
-        <div className="relative mx-auto" style={{ width: canvasWidth, height: canvasHeight }}>
+      <div className="flex items-center justify-center p-4 bg-muted/10 max-h-[60vh] overflow-auto">
+        <div className="relative mx-auto" style={{ width: containerWidth, height: containerHeight }}>
           <img
             src={capturedFrameUrl}
             alt="Frame capturado"
-            className="absolute inset-0 w-full h-full object-contain"
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
           />
-          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full cursor-crosshair" />
         </div>
       </div>
 
