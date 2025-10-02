@@ -11,7 +11,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil, Play, Upload, Send, CheckCircle, AlertCircle, Copy, Loader2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil, Play, Upload, Send, CheckCircle, AlertCircle, Copy, Loader2, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -421,103 +423,97 @@ const ClientReturn = () => {
           </Card>
         )}
 
-        {/* Histórico de Correções (Read-only) */}
-        {historicalKeyframes.length > 0 && (
-          <FeedbackHistorySection
-            keyframes={historicalKeyframes}
-            roundNumber={1}
-            formatTime={formatTime}
-          />
-        )}
-
-        {/* Progresso de Ajustes - Apenas para feedbacks atuais */}
-        {currentKeyframes.length > 0 && totalComments > 0 && (
-          <Card className="border-primary/30 bg-primary/5">
-            <CardHeader>
-              <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                  Progresso dos Ajustes
-                </CardTitle>
-                {isInNewRound && (
-                  <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-400">
-                    Rodada {currentRound}
-                  </Badge>
-                )}
-              </div>
-              <CardDescription>
-                {resolvedComments} de {totalComments} ajustes marcados como resolvidos
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 bg-muted rounded-full h-3 overflow-hidden">
-                  <div 
-                    className="bg-primary h-full transition-all duration-500"
-                    style={{ width: `${totalComments > 0 ? (resolvedComments / totalComments) * 100 : 0}%` }}
+        {/* Layout em Grid - Vídeo em destaque + Gestão ao lado */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* COLUNA ESQUERDA - Vídeo (2/3 da largura) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Vídeo do Projeto */}
+            {project.video_url && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Video className="w-5 h-5 text-primary" />
+                      Vídeo do Projeto
+                    </CardTitle>
+                    {isApprovedWithoutChanges && (
+                      <Badge variant="success" className="flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Aprovado na íntegra
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription>
+                    {isApprovedWithoutChanges 
+                      ? "Vídeo aprovado sem comentários ou modificações" 
+                      : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <VideoPlayerWithKeyframes
+                    ref={videoPlayerRef}
+                    src={project.video_url!}
+                    keyframes={keyframes}
+                    onDurationChange={setVideoDuration}
                   />
-                </div>
-                <span className="text-sm font-semibold text-primary">
-                  {totalComments > 0 ? Math.round((resolvedComments / totalComments) * 100) : 0}%
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          
+          {/* COLUNA DIREITA - Gestão e Comentários (1/3 da largura) */}
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* Progresso dos Ajustes - Sticky */}
+            {currentKeyframes.length > 0 && totalComments > 0 && (
+              <Card className="border-primary/30 bg-primary/5 sticky top-4">
+                <CardHeader>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <CheckCircle className="w-4 h-4 text-primary" />
+                      Progresso
+                    </CardTitle>
+                    {isInNewRound && (
+                      <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-400">
+                        Rodada {currentRound}
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription className="text-xs">
+                    {resolvedComments} de {totalComments} ajustes resolvidos
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="bg-primary h-full transition-all duration-500"
+                        style={{ width: `${totalComments > 0 ? (resolvedComments / totalComments) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-primary">
+                      {totalComments > 0 ? Math.round((resolvedComments / totalComments) * 100) : 0}%
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Aguardando Novos Feedbacks após Reenvio */}
-        {isInNewRound && currentKeyframes.length === 0 && (
-          <Card className="border-warning/50 bg-warning/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-warning" />
-                Aguardando Novos Feedbacks do Cliente
-              </CardTitle>
-              <CardDescription>
-                O vídeo foi reenviado com as correções. Assim que o cliente enviar novos comentários, eles aparecerão aqui para gestão.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
-
-        {/* Vídeo com keyframes e comentários */}
-        {project.video_url && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Video className="w-5 h-5 text-primary" />
-                  Vídeo do Projeto
-                </CardTitle>
-                {isApprovedWithoutChanges && (
-                  <Badge variant="success" className="flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Aprovado na íntegra
-                  </Badge>
-                )}
-              </div>
-              <CardDescription>
-                {isApprovedWithoutChanges 
-                  ? "Vídeo aprovado sem comentários ou modificações" 
-                  : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <VideoPlayerWithKeyframes
-                  ref={videoPlayerRef}
-                  src={project.video_url!}
-                  keyframes={keyframes}
-                  onDurationChange={setVideoDuration}
-                />
-
-                {/* Gestão de Ajustes - Apenas Feedbacks Atuais */}
-                {currentKeyframes.length > 0 ? (
-                  <div className="space-y-4 pt-4 border-t">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Pencil className="w-4 h-4" />
-                      Gestão de Ajustes {isInNewRound ? `- Rodada ${currentRound}` : ''}
-                    </h3>
+            {/* Gestão de Ajustes - Com Scroll */}
+            {currentKeyframes.length > 0 ? (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Pencil className="w-4 h-4" />
+                    Gestão de Ajustes {isInNewRound ? `- Rodada ${currentRound}` : ''}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Gerencie os comentários da rodada atual
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[500px] px-6 pb-6">
                     <div className="space-y-3">
                       {currentKeyframes.map((keyframe) => {
                         const timeInSeconds = keyframe.attachments[0]?.time || 0;
@@ -531,55 +527,55 @@ const ClientReturn = () => {
                             <CardHeader className="pb-3">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
-                                  <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+                                  <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
                                     <Badge 
                                       variant="outline" 
-                                      className="font-mono flex items-center gap-1 cursor-pointer hover:bg-accent"
+                                      className="font-mono flex items-center gap-1 cursor-pointer hover:bg-accent text-xs"
                                       onClick={() => seekToTime(timeInSeconds)}
                                     >
                                       <Play className="w-3 h-3" />
                                       {formatTime(timeInSeconds)}
                                     </Badge>
-                                    <span>{keyframe.title}</span>
+                                    <span className="text-xs">{keyframe.title}</span>
                                   </CardTitle>
                                 </div>
                               </div>
                             </CardHeader>
                             {commentsCount > 0 && (
-                              <CardContent className="pt-0 space-y-4">
+                              <CardContent className="pt-0 space-y-3">
                                 {keyframe.project_feedback.map((feedback) => (
                                   <div 
                                     key={feedback.id} 
-                                    className={`rounded-lg p-4 border-2 transition-all ${
+                                    className={`rounded-lg p-3 border-2 transition-all ${
                                       feedback.resolved 
                                         ? 'bg-green-50 border-green-200 dark:bg-green-950/20' 
                                         : 'bg-muted/30 border-border'
                                     }`}
                                   >
                                     {/* Checkbox e Comentário do Cliente */}
-                                    <div className="flex items-start gap-3 mb-3">
+                                    <div className="flex items-start gap-2 mb-2">
                                       <Checkbox
                                         checked={feedback.resolved}
                                         onCheckedChange={() => handleResolveToggle(feedback.id, feedback.resolved)}
                                         disabled={isUpdating}
-                                        className="mt-1"
+                                        className="mt-0.5"
                                       />
                                       <div className="flex-1">
                                         <div className="flex items-start gap-2">
-                                          <MessageSquare className="w-4 h-4 text-muted-foreground mt-1 flex-shrink-0" />
+                                          <MessageSquare className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
                                           <div className="flex-1">
-                                            <p className="text-sm font-medium mb-1">Comentário do Cliente:</p>
-                                            <p className="text-sm">{feedback.comment}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">
+                                            <p className="text-xs font-medium mb-1">Comentário:</p>
+                                            <p className="text-xs">{feedback.comment}</p>
+                                            <p className="text-[10px] text-muted-foreground mt-1">
                                               {format(new Date(feedback.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                                             </p>
                                           </div>
                                         </div>
 
                                         {feedback.resolved && feedback.resolved_at && (
-                                          <div className="ml-6 mt-2 flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
-                                            <CheckCircle className="w-3 h-3" />
-                                            Resolvido em {format(new Date(feedback.resolved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                          <div className="ml-5 mt-1 flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
+                                            <CheckCircle className="w-2.5 h-2.5" />
+                                            Resolvido em {format(new Date(feedback.resolved_at), "dd/MM/yyyy", { locale: ptBR })}
                                           </div>
                                         )}
                                       </div>
@@ -587,8 +583,8 @@ const ClientReturn = () => {
 
                                     {/* Anexos do Cliente */}
                                     {feedback.attachments && feedback.attachments.length > 0 && (
-                                      <div className="ml-9 mb-3">
-                                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                                      <div className="ml-7 mb-2">
+                                        <p className="text-[10px] font-medium text-muted-foreground mb-1">
                                           Anexos ({feedback.attachments.length})
                                         </p>
                                         <AttachmentList
@@ -598,30 +594,30 @@ const ClientReturn = () => {
                                       </div>
                                     )}
 
-                                    <Separator className="my-3" />
+                                    <Separator className="my-2" />
 
                                     {/* Resposta da Equipe */}
-                                    <div className="ml-9 space-y-2">
-                                      <Label className="text-sm font-medium">Resposta da Equipe:</Label>
+                                    <div className="ml-7 space-y-1">
+                                      <Label className="text-xs font-medium">Resposta da Equipe:</Label>
                                       
-                                      <div className="space-y-2">
+                                      <div className="space-y-1">
                                         <Textarea
-                                          placeholder="Descreva o que foi ajustado ou responda ao comentário..."
+                                          placeholder="Descreva o que foi ajustado..."
                                           value={teamResponses[feedback.id] || feedback.team_response || ''}
                                           onChange={(e) => handleTeamResponseChange(feedback.id, e.target.value)}
-                                          className="min-h-[80px]"
+                                          className="min-h-[60px] text-xs"
                                         />
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                           {savingFeedback[feedback.id] && (
                                             <>
-                                              <Loader2 className="w-3 h-3 animate-spin" />
+                                              <Loader2 className="w-2.5 h-2.5 animate-spin" />
                                               <span>Salvando...</span>
                                             </>
                                           )}
                                           {savedFeedback[feedback.id] && (
                                             <>
-                                              <CheckCircle className="w-3 h-3 text-green-600" />
-                                              <span className="text-green-600">Salvo automaticamente</span>
+                                              <CheckCircle className="w-2.5 h-2.5 text-green-600" />
+                                              <span className="text-green-600">Salvo</span>
                                             </>
                                           )}
                                         </div>
@@ -635,34 +631,65 @@ const ClientReturn = () => {
                         );
                       })}
                     </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="py-8">
+                  <div className="text-center space-y-2">
+                    <MessageSquare className="w-10 h-10 text-muted-foreground mx-auto opacity-50" />
+                    <h3 className="font-semibold text-sm">
+                      {isInNewRound 
+                        ? `Aguardando novos feedbacks - Rodada ${currentRound}`
+                        : 'Nenhum ajuste pendente'
+                      }
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {isInNewRound
+                        ? 'Assim que o cliente enviar novos comentários, eles aparecerão aqui.'
+                        : 'Todos os ajustes foram concluídos ou ainda não há feedbacks.'
+                      }
+                    </p>
                   </div>
-                ) : (
-                  <div className="pt-4 border-t">
-                    <Card className="border-dashed">
-                      <CardContent className="py-8">
-                        <div className="text-center space-y-2">
-                          <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto opacity-50" />
-                          <h3 className="font-semibold text-lg">
-                            {isInNewRound 
-                              ? `Aguardando novos feedbacks do cliente - Rodada ${currentRound}`
-                              : 'Nenhum ajuste pendente no momento'
-                            }
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {isInNewRound
-                              ? 'O vídeo foi reenviado. Assim que o cliente enviar novos comentários, eles aparecerão aqui.'
-                              : 'Todos os ajustes foram concluídos ou ainda não há feedbacks.'
-                            }
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Histórico - Colapsável */}
+            {historicalKeyframes.length > 0 && (
+              <Collapsible defaultOpen={false}>
+                <Card>
+                  <CollapsibleTrigger className="w-full">
+                    <CardHeader className="pb-3 hover:bg-accent/50 transition-colors rounded-t-lg">
+                      <CardTitle className="text-base flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Histórico de Correções
+                        </span>
+                        <ChevronDown className="w-4 h-4 transition-transform duration-200" />
+                      </CardTitle>
+                      <CardDescription className="text-xs text-left">
+                        {historicalKeyframes.length} momento{historicalKeyframes.length !== 1 ? 's' : ''} de rodadas anteriores
+                      </CardDescription>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="p-0">
+                      <ScrollArea className="h-[300px] px-6 pb-6">
+                        <FeedbackHistorySection
+                          keyframes={historicalKeyframes}
+                          roundNumber={1}
+                          formatTime={formatTime}
+                        />
+                      </ScrollArea>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            )}
+          </div>
+        </div>
 
         {/* Seção de Reenvio de Vídeo Corrigido */}
         {project && (
