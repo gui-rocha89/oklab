@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
-import { Canvas as FabricCanvas } from 'fabric';
+import { Canvas as FabricCanvas, util } from 'fabric';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { normalizeCanvasData, REFERENCE_WIDTH, REFERENCE_HEIGHT } from '@/lib/annotationUtils';
+import { normalizeCanvasData, convertFromReferenceResolution, REFERENCE_WIDTH, REFERENCE_HEIGHT } from '@/lib/annotationUtils';
 
 interface Annotation {
   id: string;
@@ -91,7 +91,40 @@ export const useVideoAnnotations = (projectId: string | undefined) => {
       const canvas = fabricCanvasRef.current;
       canvas.clear();
       
-      await canvas.loadFromJSON(annotation.canvas_data);
+      const currentWidth = canvas.width || REFERENCE_WIDTH;
+      const currentHeight = canvas.height || REFERENCE_HEIGHT;
+      
+      console.log('🎨 Carregando anotação no canvas:', {
+        annotationId: annotation.id,
+        currentDimensions: `${currentWidth}x${currentHeight}`,
+        referenceDimensions: `${REFERENCE_WIDTH}x${REFERENCE_HEIGHT}`,
+        scaleX: (currentWidth / REFERENCE_WIDTH).toFixed(3),
+        scaleY: (currentHeight / REFERENCE_HEIGHT).toFixed(3)
+      });
+      
+      if (annotation.canvas_data?.objects && annotation.canvas_data.objects.length > 0) {
+        const convertedObjects = convertFromReferenceResolution(
+          annotation.canvas_data.objects,
+          currentWidth,
+          currentHeight
+        );
+        
+        const objects = await util.enlivenObjects(convertedObjects);
+        
+        objects.forEach((obj: any) => {
+          if (obj) {
+            obj.set({
+              selectable: false,
+              evented: false,
+            });
+            obj.setCoords();
+            canvas.add(obj);
+          }
+        });
+        
+        console.log(`✅ ${objects.length} objetos adicionados ao canvas`);
+      }
+      
       canvas.renderAll();
     } catch (error) {
       console.error('Error loading annotation to canvas:', error);
