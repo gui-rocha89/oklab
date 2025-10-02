@@ -1,5 +1,8 @@
 project_id = "yhahrnadvnwpztpiuoed"
 
+[functions.ai-chat]
+verify_jwt = false
+
 [api]
 enabled = true
 port = 54321
