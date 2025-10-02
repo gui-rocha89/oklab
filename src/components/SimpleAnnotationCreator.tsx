@@ -2,99 +2,88 @@ import { useState, useRef, useEffect } from 'react';
 import { Canvas as FabricCanvas, PencilBrush, Circle, Rect, Textbox } from 'fabric';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Pencil, Circle as CircleIcon, Square, Type, Eraser, Undo, Redo } from 'lucide-react';
+import { Separator } from './ui/separator';
+import { Pencil, Circle as CircleIcon, Square, Type, Undo, Redo, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SimpleAnnotationCreatorProps {
-  videoElement: HTMLVideoElement;
+  capturedFrameUrl: string;
   timestampMs: number;
+  videoAspectRatio: number;
   onSave: (comment: string, imageBlob: Blob) => void;
   onCancel: () => void;
-  videoContainerRef: React.RefObject<HTMLDivElement>;
 }
 
-export const SimpleAnnotationCreator = ({
-  videoElement,
+export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = ({
+  capturedFrameUrl,
   timestampMs,
+  videoAspectRatio,
   onSave,
   onCancel,
-  videoContainerRef
-}: SimpleAnnotationCreatorProps) => {
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const [comment, setComment] = useState('');
-  const [currentTool, setCurrentTool] = useState<'pen' | 'circle' | 'rectangle' | 'text'>('pen');
-  const [brushColor, setBrushColor] = useState('#FF0000');
+  const [activeTool, setActiveTool] = useState<'pen' | 'circle' | 'rectangle' | 'text'>('pen');
+  const [brushColor, setBrushColor] = useState('#ef4444');
   const [history, setHistory] = useState<string[]>([]);
-  const [historyStep, setHistoryStep] = useState(-1);
-  const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
+  const [historyStep, setHistoryStep] = useState(0);
+  const [canvasWidth, setCanvasWidth] = useState(800);
+  const [canvasHeight, setCanvasHeight] = useState(450);
 
-  // Get video container dimensions and position canvas overlay
   useEffect(() => {
-    if (!videoContainerRef.current || !videoElement) return;
+    const calculatedWidth = Math.min(window.innerWidth - 64, 1200);
+    const calculatedHeight = calculatedWidth / videoAspectRatio;
+    setCanvasWidth(calculatedWidth);
+    setCanvasHeight(calculatedHeight);
+  }, [videoAspectRatio]);
 
-    const updateCanvasSize = () => {
-      const container = videoContainerRef.current;
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-      setCanvasDimensions({
-        width: rect.width,
-        height: rect.height
-      });
-    };
-
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    
-    return () => window.removeEventListener('resize', updateCanvasSize);
-  }, [videoContainerRef, videoElement]);
-
-  // Initialize Fabric canvas
   useEffect(() => {
-    if (!canvasRef.current || !videoElement || canvasDimensions.width === 0) return;
-    
-    const fabricCanvas = new FabricCanvas(canvasRef.current, {
-      width: canvasDimensions.width,
-      height: canvasDimensions.height,
-      backgroundColor: 'transparent'
+    if (!canvasRef.current) return;
+
+    const canvas = new FabricCanvas(canvasRef.current, {
+      width: canvasWidth,
+      height: canvasHeight,
+      backgroundColor: 'transparent',
     });
 
-    const brush = new PencilBrush(fabricCanvas);
+    const brush = new PencilBrush(canvas);
     brush.color = brushColor;
     brush.width = 3;
-    fabricCanvas.freeDrawingBrush = brush;
-    fabricCanvas.isDrawingMode = currentTool === 'pen';
+    canvas.freeDrawingBrush = brush;
+    canvas.isDrawingMode = activeTool === 'pen';
 
-    fabricCanvasRef.current = fabricCanvas;
+    fabricCanvasRef.current = canvas;
 
     // Save initial state
-    saveHistory();
+    const initialState = JSON.stringify(canvas.toJSON());
+    setHistory([initialState]);
+    setHistoryStep(0);
+
+    // Track object additions for history
+    canvas.on('object:added', () => {
+      const json = JSON.stringify(canvas.toJSON());
+      const newHistory = history.slice(0, historyStep + 1);
+      newHistory.push(json);
+      setHistory(newHistory);
+      setHistoryStep(newHistory.length - 1);
+    });
 
     return () => {
-      fabricCanvas.dispose();
+      canvas.dispose();
     };
-  }, [canvasDimensions]);
+  }, [canvasWidth, canvasHeight]);
 
   useEffect(() => {
     if (!fabricCanvasRef.current) return;
-    
+
     const canvas = fabricCanvasRef.current;
-    canvas.isDrawingMode = currentTool === 'pen';
-    
+    canvas.isDrawingMode = activeTool === 'pen';
+
     if (canvas.freeDrawingBrush) {
       canvas.freeDrawingBrush.color = brushColor;
     }
-  }, [currentTool, brushColor]);
-
-  const saveHistory = () => {
-    if (!fabricCanvasRef.current) return;
-    const json = JSON.stringify(fabricCanvasRef.current.toJSON());
-    const newHistory = history.slice(0, historyStep + 1);
-    newHistory.push(json);
-    setHistory(newHistory);
-    setHistoryStep(newHistory.length - 1);
-  };
+  }, [activeTool, brushColor]);
 
   const undo = () => {
     if (historyStep > 0 && fabricCanvasRef.current) {
@@ -116,13 +105,23 @@ export const SimpleAnnotationCreator = ({
     }
   };
 
+  const clearCanvas = () => {
+    if (!fabricCanvasRef.current) return;
+    fabricCanvasRef.current.clear();
+    const json = JSON.stringify(fabricCanvasRef.current.toJSON());
+    const newHistory = history.slice(0, historyStep + 1);
+    newHistory.push(json);
+    setHistory(newHistory);
+    setHistoryStep(newHistory.length - 1);
+  };
+
   const addShape = (pointer: { x: number; y: number }) => {
     if (!fabricCanvasRef.current) return;
-    
+
     let shape;
     const canvas = fabricCanvasRef.current;
 
-    switch (currentTool) {
+    switch (activeTool) {
       case 'circle':
         shape = new Circle({
           left: pointer.x - 30,
@@ -145,7 +144,7 @@ export const SimpleAnnotationCreator = ({
         });
         break;
       case 'text':
-        shape = new Textbox('Text', {
+        shape = new Textbox('Texto', {
           left: pointer.x,
           top: pointer.y,
           fill: brushColor,
@@ -159,12 +158,11 @@ export const SimpleAnnotationCreator = ({
       canvas.add(shape);
       canvas.setActiveObject(shape);
       canvas.renderAll();
-      saveHistory();
     }
   };
 
   useEffect(() => {
-    if (!fabricCanvasRef.current || currentTool === 'pen') return;
+    if (!fabricCanvasRef.current || activeTool === 'pen') return;
 
     const canvas = fabricCanvasRef.current;
     const handleClick = (e: any) => {
@@ -176,174 +174,161 @@ export const SimpleAnnotationCreator = ({
     return () => {
       canvas.off('mouse:down', handleClick);
     };
-  }, [currentTool, brushColor]);
-
-  useEffect(() => {
-    if (!fabricCanvasRef.current) return;
-
-    const canvas = fabricCanvasRef.current;
-    const handleObjectAdded = () => saveHistory();
-
-    canvas.on('object:added', handleObjectAdded);
-    return () => {
-      canvas.off('object:added', handleObjectAdded);
-    };
-  }, [history, historyStep]);
+  }, [activeTool, brushColor]);
 
   const handleSave = async () => {
-    if (!fabricCanvasRef.current || !videoElement) return;
+    if (!fabricCanvasRef.current) {
+      toast.error("Canvas não está pronto");
+      return;
+    }
 
     try {
-      // Create final canvas with video frame + annotations
-      const finalCanvas = document.createElement('canvas');
-      finalCanvas.width = videoElement.videoWidth;
-      finalCanvas.height = videoElement.videoHeight;
-      
-      const ctx = finalCanvas.getContext('2d')!;
-      
-      // Draw video frame
-      ctx.drawImage(videoElement, 0, 0);
-      
-      // Draw annotations on top (scale from display size to video size)
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = capturedFrameUrl;
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        toast.error("Erro ao criar contexto do canvas");
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0);
+
       const fabricCanvas = fabricCanvasRef.current;
-      const scaleX = videoElement.videoWidth / fabricCanvas.getWidth();
-      const scaleY = videoElement.videoHeight / fabricCanvas.getHeight();
-      
-      fabricCanvas.getObjects().forEach(obj => {
+      const scaleX = canvas.width / fabricCanvas.getWidth();
+      const scaleY = canvas.height / fabricCanvas.getHeight();
+
+      const objects = fabricCanvas.getObjects();
+      for (const obj of objects) {
         ctx.save();
         ctx.scale(scaleX, scaleY);
         obj.render(ctx);
         ctx.restore();
-      });
-      
-      // Convert to blob
-      finalCanvas.toBlob((blob) => {
-        if (blob) {
-          onSave(comment, blob);
-        } else {
-          toast.error('Failed to create annotation image');
-        }
-      }, 'image/webp', 0.9);
+      }
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            onSave(comment, blob);
+          } else {
+            toast.error("Erro ao gerar imagem");
+          }
+        },
+        "image/webp",
+        0.9
+      );
     } catch (error) {
-      console.error('Error saving annotation:', error);
-      toast.error('Failed to save annotation');
+      console.error("Erro ao salvar anotação:", error);
+      toast.error("Erro ao salvar anotação");
     }
   };
 
   return (
-    <>
-      {/* Transparent canvas overlay directly over the video */}
-      <div 
-        className="absolute inset-0 z-40"
-        style={{ 
-          pointerEvents: 'auto',
-          cursor: 'crosshair'
-        }}
-      >
-        <canvas 
-          ref={canvasRef}
-          className="w-full h-full"
-          style={{ 
-            position: 'absolute',
-            top: 0,
-            left: 0,
-          }}
-        />
-      </div>
-
-      {/* Floating toolbar at the top */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-3">
-        <div className="flex items-center gap-2 flex-wrap justify-center">
+    <div className="w-full border border-border bg-background rounded-lg overflow-hidden shadow-lg">
+      {/* Toolbar */}
+      <div className="p-4 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
-            variant={currentTool === 'pen' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setCurrentTool('pen')}
+            variant={activeTool === "pen" ? "default" : "outline"}
+            onClick={() => setActiveTool("pen")}
           >
             <Pencil className="w-4 h-4" />
           </Button>
           <Button
-            variant={currentTool === 'circle' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setCurrentTool('circle')}
+            variant={activeTool === "circle" ? "default" : "outline"}
+            onClick={() => setActiveTool("circle")}
           >
             <CircleIcon className="w-4 h-4" />
           </Button>
           <Button
-            variant={currentTool === 'rectangle' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setCurrentTool('rectangle')}
+            variant={activeTool === "rectangle" ? "default" : "outline"}
+            onClick={() => setActiveTool("rectangle")}
           >
             <Square className="w-4 h-4" />
           </Button>
           <Button
-            variant={currentTool === 'text' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setCurrentTool('text')}
+            variant={activeTool === "text" ? "default" : "outline"}
+            onClick={() => setActiveTool("text")}
           >
             <Type className="w-4 h-4" />
           </Button>
-          
-          <div className="w-px h-6 bg-border mx-1" />
-          
-          {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#FFFFFF'].map(color => (
+
+          <Separator orientation="vertical" className="h-8 mx-2" />
+
+          {["#ef4444", "#22c55e", "#3b82f6", "#eab308", "#ffffff"].map((color) => (
             <button
               key={color}
-              className="w-7 h-7 rounded border-2 transition-transform hover:scale-110"
-              style={{ 
-                backgroundColor: color,
-                borderColor: brushColor === color ? '#000' : '#666'
-              }}
+              className={`w-8 h-8 rounded-full border-2 transition-all ${
+                brushColor === color ? "border-primary scale-110" : "border-border"
+              }`}
+              style={{ backgroundColor: color }}
               onClick={() => setBrushColor(color)}
             />
           ))}
-          
-          <div className="w-px h-6 bg-border mx-1" />
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={undo}
-            disabled={historyStep <= 0}
-          >
+
+          <Separator orientation="vertical" className="h-8 mx-2" />
+
+          <Button size="sm" variant="outline" onClick={undo} disabled={historyStep <= 0}>
             <Undo className="w-4 h-4" />
           </Button>
           <Button
-            variant="outline"
             size="sm"
+            variant="outline"
             onClick={redo}
             disabled={historyStep >= history.length - 1}
           >
             <Redo className="w-4 h-4" />
           </Button>
+          <Button size="sm" variant="outline" onClick={clearCanvas}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Floating comment and actions panel at the bottom */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-4 w-[90%] max-w-md">
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Comentário (opcional)
-            </label>
-            <Textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Adicione um comentário sobre esta anotação..."
-              rows={3}
-              className="resize-none"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onCancel} className="flex-1">
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} className="flex-1">
-              Salvar Anotação
-            </Button>
-          </div>
+      {/* Canvas Area with Captured Frame */}
+      <div className="flex items-center justify-center p-4 bg-muted/10">
+        <div className="relative mx-auto" style={{ width: canvasWidth, height: canvasHeight }}>
+          <img
+            src={capturedFrameUrl}
+            alt="Frame capturado"
+            className="absolute inset-0 w-full h-full object-contain"
+          />
+          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
         </div>
       </div>
-    </>
+
+      {/* Comment and Actions */}
+      <div className="p-4 border-t border-border bg-muted/30 space-y-3">
+        <Textarea
+          placeholder="Adicione um comentário sobre esta anotação..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="resize-none"
+          rows={2}
+        />
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave}>
+            Salvar Anotação
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };

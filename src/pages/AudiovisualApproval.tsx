@@ -74,6 +74,7 @@ export default function AudiovisualApproval() {
 
   const [showAnnotationCreator, setShowAnnotationCreator] = useState(false);
   const [creatorTimestamp, setCreatorTimestamp] = useState(0);
+  const [capturedFrameUrl, setCapturedFrameUrl] = useState<string>("");
 
   // Annotation system
   const {
@@ -181,6 +182,28 @@ export default function AudiovisualApproval() {
       loadAnnotations();
     }
   }, [project?.id, loadAnnotations]);
+
+  // Forçar pausa do vídeo quando modo de anotação estiver ativo
+  useEffect(() => {
+    if (showAnnotationCreator && videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      
+      const preventPlay = (e: Event) => {
+        e.preventDefault();
+        if (videoRef.current) {
+          videoRef.current.pause();
+        }
+      };
+      
+      const video = videoRef.current;
+      video.addEventListener('play', preventPlay);
+      
+      return () => {
+        video.removeEventListener('play', preventPlay);
+      };
+    }
+  }, [showAnnotationCreator]);
 
   const handleAddKeyframe = () => {
     // Check for existing keyframe within 0.5 seconds (reduced from 1 second)
@@ -416,8 +439,9 @@ export default function AudiovisualApproval() {
       // Save annotation with the exact timestamp and image
       await saveAnnotation(creatorTimestamp, imageBlob, comment);
       
-      // Close creator
+      // Close creator and clear frame
       setShowAnnotationCreator(false);
+      setCapturedFrameUrl("");
       
       toast({
         title: "Anotação salva!",
@@ -472,6 +496,35 @@ export default function AudiovisualApproval() {
       videoRef.current.play();
       setIsPlaying(true);
     }
+  };
+
+  const handleCreateAnnotation = async () => {
+    if (!videoRef.current) return;
+    
+    // Pausar o vídeo imediatamente
+    videoRef.current.pause();
+    setIsPlaying(false);
+    
+    // Capturar frame atual
+    const frameDataUrl = await captureVideoScreenshot();
+    
+    if (!frameDataUrl) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível capturar o frame do vídeo",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setCapturedFrameUrl(frameDataUrl);
+    setCreatorTimestamp(Math.floor(currentTime * 1000));
+    setShowAnnotationCreator(true);
+    
+    toast({
+      title: "Criar Anotação",
+      description: "Desenhe no frame e adicione um comentário.",
+    });
   };
 
   // Only count keyframes with actual comments for feedback validation
@@ -826,39 +879,35 @@ export default function AudiovisualApproval() {
                       }
                     }}
                   />
-                  
-                  {/* Annotation Creator Overlay - renders directly over the video */}
-                  {showAnnotationCreator && videoRef.current && videoContainerRef.current && (
-                    <SimpleAnnotationCreator
-                      videoElement={videoRef.current}
-                      timestampMs={creatorTimestamp}
-                      onSave={handleSaveAnnotationWithComment}
-                      onCancel={() => setShowAnnotationCreator(false)}
-                      videoContainerRef={videoContainerRef}
-                    />
-                  )}
                 </div>
               </div>
+
+              {/* Annotation Creator Panel - Below Video */}
+              {showAnnotationCreator && capturedFrameUrl && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-4"
+                >
+                  <SimpleAnnotationCreator
+                    capturedFrameUrl={capturedFrameUrl}
+                    timestampMs={creatorTimestamp}
+                    videoAspectRatio={aspectRatio}
+                    onSave={handleSaveAnnotationWithComment}
+                    onCancel={() => {
+                      setShowAnnotationCreator(false);
+                      setCapturedFrameUrl("");
+                    }}
+                  />
+                </motion.div>
+              )}
               
               {/* Drawing and Comment Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
                 <Button
-                  onClick={() => {
-                    // Pause video and open annotation creator
-                    setIsPlaying(false);
-                    if (videoRef.current) {
-                      videoRef.current.pause();
-                    }
-                    
-                    const currentTimeMs = Math.floor(currentTime * 1000);
-                    setCreatorTimestamp(currentTimeMs);
-                    setShowAnnotationCreator(true);
-                    
-                    toast({
-                      title: "Criar Anotação",
-                      description: "Desenhe no vídeo e adicione um comentário.",
-                    });
-                  }}
+                  onClick={handleCreateAnnotation}
                   variant="outline"
                   size={isMobile ? "default" : "sm"}
                   className={isMobile ? "touch-manipulation min-h-[44px] px-6 flex-1" : ""}
