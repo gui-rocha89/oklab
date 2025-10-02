@@ -174,11 +174,9 @@ export default function Projects() {
                   </SelectTrigger>
                   <SelectContent className="bg-popover border shadow-lg z-50">
                     <SelectItem value="all">Todos ({getFilterCount("all", "status")})</SelectItem>
-                    <SelectItem value="pending">Em Produção ({getFilterCount("pending", "status")})</SelectItem>
                     <SelectItem value="feedback-sent">Feedback Enviado ({getFilterCount("feedback-sent", "status")})</SelectItem>
                     <SelectItem value="feedback-resent">Feedback Reenviado ({getFilterCount("feedback-resent", "status")})</SelectItem>
                     <SelectItem value="in-revision">Em Revisão ({getFilterCount("in-revision", "status")})</SelectItem>
-                    <SelectItem value="feedback-resent">Feedback Reenviado ({getFilterCount("feedback-resent", "status")})</SelectItem>
                     <SelectItem value="approved">Aprovado ({getFilterCount("approved", "status")})</SelectItem>
                     <SelectItem value="completed">Concluído ({getFilterCount("completed", "status")})</SelectItem>
                   </SelectContent>

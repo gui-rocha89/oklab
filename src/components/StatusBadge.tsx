@@ -111,7 +111,9 @@ export const StatusBadge = ({ currentStatus, onChange, disabled = false }: Statu
         className="w-52 !bg-white dark:!bg-gray-800 border shadow-lg z-[100]"
         onClick={(e) => e.stopPropagation()}
       >
-        {Object.entries(statusConfig).map(([status, config]) => (
+        {Object.entries(statusConfig)
+          .filter(([status]) => status !== 'pending')
+          .map(([status, config]) => (
           <DropdownMenuItem
             key={status}
             onClick={(e) => {
