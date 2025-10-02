@@ -187,11 +187,11 @@ export const PlatformRating: React.FC<PlatformRatingProps> = ({
           {/* Comment */}
           <div className="space-y-2">
             <Label htmlFor="rating-comment" className="text-sm">
-              Comentário (opcional)
+              Deixe seu depoimento (opcional)
             </Label>
             <Textarea
               id="rating-comment"
-              placeholder="Conte-nos sobre sua experiência com nossa plataforma..."
+              placeholder="Conte sobre sua experiência usando a plataforma de aprovação..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}

@@ -665,7 +665,7 @@ export default function AudiovisualApproval() {
             {/* Título Centralizado */}
             <div className="flex-1 text-center">
               <h1 className={`font-bold text-white tracking-tight ${isMobile ? 'text-lg' : 'text-2xl'}`}>
-                APROVE SEU CONTEÚDO
+                APROVE SEU VÍDEO
               </h1>
             </div>
             
@@ -689,10 +689,10 @@ export default function AudiovisualApproval() {
                 <FileText className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-medium`}>
+                <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-bold`}>
                   Projeto
                 </p>
-                <h2 className={`font-bold text-foreground leading-snug ${isMobile ? 'text-base' : 'text-2xl'}`}>
+                <h2 className={`font-normal text-foreground leading-snug ${isMobile ? 'text-base' : 'text-2xl'}`}>
                   {project.title}
                 </h2>
               </div>
@@ -705,10 +705,10 @@ export default function AudiovisualApproval() {
                 <User className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <p className={`text-primary/70 mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-medium`}>
+                <p className={`text-primary/70 mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-bold`}>
                   Cliente
                 </p>
-                <h3 className={`font-semibold text-primary ${isMobile ? 'text-sm' : 'text-lg'}`}>
+                <h3 className={`font-normal text-primary ${isMobile ? 'text-sm' : 'text-lg'}`}>
                   {project.client}
                 </h3>
               </div>
@@ -722,7 +722,7 @@ export default function AudiovisualApproval() {
                   <Info className={isMobile ? 'w-5 h-5 text-primary' : 'w-5 h-5 text-primary'} />
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-medium`}>
+                  <p className={`text-muted-foreground mb-1.5 uppercase tracking-wider ${isMobile ? 'text-[9px]' : 'text-[10px]'} font-bold`}>
                     Descrição
                   </p>
                   <p className={`text-foreground leading-snug line-clamp-2 ${isMobile ? 'text-xs' : 'text-base'}`}>
@@ -741,8 +741,8 @@ export default function AudiovisualApproval() {
               <Info className={isMobile ? 'h-4 w-4 text-primary' : 'h-4 w-4 text-primary'} />
             </div>
             <div className="flex-1">
-              <p className={`text-foreground/90 leading-relaxed ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                <span className="font-semibold text-primary">Como revisar:</span> Assista ao vídeo, adicione comentários nos momentos específicos ou desenhe diretamente no vídeo para marcar correções. Depois, aprove ou envie feedback.
+                <p className={`text-foreground/90 leading-relaxed ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                <span className="font-bold text-primary">Como revisar:</span> Assista ao vídeo, adicione comentários nos momentos específicos ou desenhe diretamente no vídeo para marcar correções. Depois, aprove ou envie feedback.
               </p>
             </div>
           </div>
@@ -954,9 +954,9 @@ export default function AudiovisualApproval() {
                   </div>
                 ) : (
                   <div className="space-y-2 mb-3">
-                    <div>
+                  <div>
                       <label className={`block font-medium mb-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                        Avalie sua experiência
+                        Avalie sua experiência com a plataforma
                       </label>
                       <div className="flex justify-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((star) => (
