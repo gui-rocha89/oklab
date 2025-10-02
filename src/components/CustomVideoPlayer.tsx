@@ -261,6 +261,17 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
     }
   }, [isDrawingMode, onPlayPauseChange]);
 
+  // Sync video playback with isPlaying prop - ensures video pauses when adding comments
+  useEffect(() => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      videoRef.current.play().catch(console.error);
+    } else {
+      videoRef.current.pause();
+    }
+  }, [isPlaying]);
+
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
