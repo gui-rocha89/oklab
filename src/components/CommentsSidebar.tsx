@@ -136,10 +136,10 @@ export function CommentsSidebar({
                         }
                       `}
                     >
-                      <div className="flex items-start gap-2">
+                      <div className="flex items-start gap-2.5">
                         {/* Icon or Thumbnail */}
                         {isKeyframe ? (
-                          <div className={`p-1 rounded-md shrink-0 ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
+                          <div className={`p-1.5 rounded-md shrink-0 ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
                             <MessageSquare className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                           </div>
                         ) : (
@@ -154,14 +154,14 @@ export function CommentsSidebar({
                           )
                         )}
                         
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                           {/* Time and Status */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-xs font-mono font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                          <div className="flex items-center gap-1.5 min-h-[20px]">
+                            <span className={`text-xs font-mono font-semibold leading-none ${isActive ? 'text-primary' : 'text-foreground'}`}>
                               {formatTime(item.time)}
                             </span>
                             {isActive && (
-                              <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium">
+                              <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium leading-none">
                                 ATUAL
                               </span>
                             )}
@@ -182,7 +182,7 @@ export function CommentsSidebar({
                                   }
                                 }}
                               />
-                              <div className="flex gap-1">
+                              <div className="flex items-center gap-1.5">
                                 <Button
                                   size="sm"
                                   variant="default"
@@ -205,7 +205,7 @@ export function CommentsSidebar({
                             </div>
                           ) : (
                             <>
-                              <p className={`text-xs leading-relaxed mb-1.5 ${
+                              <p className={`text-xs leading-relaxed ${
                                 isKeyframe && !item.comment.trim() 
                                   ? 'text-muted-foreground/50 italic' 
                                   : 'text-muted-foreground'
@@ -217,7 +217,7 @@ export function CommentsSidebar({
                               </p>
                               
                               {/* Action Buttons */}
-                              <div className="flex gap-1">
+                              <div className="flex items-center gap-1.5">
                                 <Button
                                   size="sm"
                                   variant="ghost"
