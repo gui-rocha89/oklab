@@ -18,6 +18,7 @@ interface Keyframe {
     x_position: number;
     y_position: number;
     created_at: string;
+    feedback_round?: number;
   }>;
 }
 
@@ -25,6 +26,7 @@ interface VideoPlayerWithKeyframesProps {
   src: string;
   keyframes: Keyframe[];
   onDurationChange?: (duration: number) => void;
+  currentFeedbackRound?: number;
 }
 
 export interface VideoPlayerRef {
@@ -34,7 +36,8 @@ export interface VideoPlayerRef {
 export const VideoPlayerWithKeyframes = forwardRef<VideoPlayerRef, VideoPlayerWithKeyframesProps>(({ 
   src, 
   keyframes,
-  onDurationChange 
+  onDurationChange,
+  currentFeedbackRound
 }, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -160,7 +163,11 @@ export const VideoPlayerWithKeyframes = forwardRef<VideoPlayerRef, VideoPlayerWi
             {/* Keyframe Markers - INTEGRATED in the timeline */}
             {keyframes.map((keyframe) => {
               const timePosition = (keyframe.attachments[0]?.time / duration) * 100;
-              const commentsCount = keyframe.project_feedback?.length || 0;
+              // Filter comments by current feedback round
+              const filteredFeedback = currentFeedbackRound 
+                ? (keyframe.project_feedback || []).filter(f => f.feedback_round === currentFeedbackRound)
+                : (keyframe.project_feedback || []);
+              const commentsCount = filteredFeedback.length;
               const isHovered = hoveredKeyframe === keyframe.id;
 
               return (

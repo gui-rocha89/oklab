@@ -456,6 +456,7 @@ const ClientReturn = () => {
                     src={project.video_url!}
                     keyframes={keyframes}
                     onDurationChange={setVideoDuration}
+                    currentFeedbackRound={currentRound}
                   />
                 </CardContent>
               </Card>
@@ -512,9 +513,9 @@ const ClientReturn = () => {
                     Gerencie os comentários da rodada atual
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <ScrollArea className="h-[500px] px-6 pb-6">
-                    <div className="space-y-3">
+                  <CardContent className="p-0">
+                    <ScrollArea className="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] px-6 pb-6">
+                      <div className="space-y-2.5">
                       {currentKeyframes.map((keyframe) => {
                         const timeInSeconds = keyframe.attachments[0]?.time || 0;
                         const commentsCount = keyframe.project_feedback?.length || 0;
@@ -522,9 +523,9 @@ const ClientReturn = () => {
                         return (
                           <Card 
                             key={keyframe.id} 
-                            className="border-l-4 border-l-primary"
+                            className="border-l-4 border-l-primary bg-card"
                           >
-                            <CardHeader className="pb-3">
+                            <CardHeader className="pb-2 px-4 py-3">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
                                   <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
@@ -542,11 +543,11 @@ const ClientReturn = () => {
                               </div>
                             </CardHeader>
                             {commentsCount > 0 && (
-                              <CardContent className="pt-0 space-y-3">
+                              <CardContent className="pt-0 px-4 pb-3 space-y-2">
                                 {keyframe.project_feedback.map((feedback) => (
                                   <div 
                                     key={feedback.id} 
-                                    className={`rounded-lg p-3 border-2 transition-all ${
+                                    className={`rounded-md p-2 border transition-all ${
                                       feedback.resolved 
                                         ? 'bg-green-50 border-green-200 dark:bg-green-950/20' 
                                         : 'bg-muted/30 border-border'
