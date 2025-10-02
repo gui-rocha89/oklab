@@ -435,7 +435,7 @@ const ClientReturn = () => {
                 Lista completa de todas as {annotations.length} anotações visuais e comentários do cliente
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               {annotations.map((annotation, index) => {
                 const hasDrawing = annotation.canvas_data?.objects?.length > 0;
                 const drawingCount = annotation.canvas_data?.objects?.length || 0;
@@ -443,17 +443,19 @@ const ClientReturn = () => {
                 return (
                   <div
                     key={annotation.id}
-                    className="p-4 border rounded-lg hover:bg-muted/30 transition-colors space-y-3"
+                    className="p-5 border rounded-lg hover:bg-muted/30 transition-all duration-200 space-y-4"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-bold">
+                    {/* Header com número e badges */}
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Lado esquerdo: Número e Timestamp */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-lg shrink-0">
                           {index + 1}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-mono font-bold text-base">
+                            <span className="font-mono font-bold text-lg">
                               {formatTimestamp(annotation.timestamp_ms)}
                             </span>
                           </div>
@@ -462,36 +464,49 @@ const ClientReturn = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+
+                      {/* Lado direito: Badges */}
+                      <div className="flex items-center gap-2 shrink-0">
                         {hasDrawing && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Pencil className="w-3 h-3 mr-1" />
-                            {drawingCount} desenho{drawingCount > 1 ? 's' : ''}
+                          <Badge variant="secondary" className="text-xs h-7">
+                            <Pencil className="w-3 h-3 mr-1.5" />
+                            {drawingCount} {drawingCount === 1 ? 'desenho' : 'desenhos'}
                           </Badge>
                         )}
                         {annotation.comment && (
-                          <Badge variant="outline" className="text-xs">
-                            <MessageSquare className="w-3 h-3 mr-1" />
+                          <Badge variant="secondary" className="text-xs h-7">
+                            <MessageSquare className="w-3 h-3 mr-1.5" />
                             Comentário
                           </Badge>
                         )}
                       </div>
                     </div>
 
+                    {/* Comentário */}
                     {annotation.comment && (
-                      <div className="ml-13 pl-4 border-l-2 border-primary/20">
-                        <p className="text-sm leading-relaxed">
+                      <div className="bg-muted/50 p-4 rounded-lg border border-border/50">
+                        <p className="text-sm font-semibold mb-2 text-foreground">Comentário:</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                           {annotation.comment}
                         </p>
                       </div>
                     )}
 
+                    {/* Info sobre desenhos */}
                     {hasDrawing && (
-                      <div className="ml-13 pl-4 border-l-2 border-blue-500/20">
+                      <div className="bg-blue-500/5 p-3 rounded-lg border border-blue-500/20">
                         <p className="text-xs text-muted-foreground flex items-center gap-2">
-                          <Pencil className="w-3 h-3" />
-                          Cliente desenhou {drawingCount} elemento{drawingCount > 1 ? 's' : ''} na tela para indicar o feedback visual
+                          <Pencil className="w-3.5 h-3.5 text-blue-500" />
+                          Cliente desenhou {drawingCount} {drawingCount === 1 ? 'elemento' : 'elementos'} na tela para indicar o feedback visual
                         </p>
+                      </div>
+                    )}
+
+                    {/* Mensagem quando não há comentário nem desenho */}
+                    {!annotation.comment && !hasDrawing && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground italic py-2">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Marcação temporal sem comentário ou desenho</span>
                       </div>
                     )}
                   </div>
