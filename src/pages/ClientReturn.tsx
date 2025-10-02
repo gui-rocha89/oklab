@@ -350,20 +350,19 @@ const ClientReturn = () => {
                         const commentsCount = keyframe.project_feedback?.length || 0;
                         
                         return (
-                          <Card key={keyframe.id} className="border-l-4 border-l-primary hover:bg-accent/50 transition-colors">
+                          <Card 
+                            key={keyframe.id} 
+                            className="border-l-4 border-l-primary hover:bg-accent/50 transition-colors cursor-pointer"
+                            onClick={() => seekToTime(timeInSeconds)}
+                          >
                             <CardHeader className="pb-3">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
                                   <CardTitle className="text-base flex items-center gap-2 flex-wrap">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => seekToTime(timeInSeconds)}
-                                      className="font-mono h-7 px-2"
-                                    >
-                                      <Play className="w-3 h-3 mr-1" />
+                                    <Badge variant="outline" className="font-mono flex items-center gap-1">
+                                      <Play className="w-3 h-3" />
                                       {formatTime(timeInSeconds)}
-                                    </Button>
+                                    </Badge>
                                     <span>{keyframe.title}</span>
                                   </CardTitle>
                                   <CardDescription className="mt-1">
