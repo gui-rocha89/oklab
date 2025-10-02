@@ -412,9 +412,10 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
             </div>
 
             {/* Lista scrollável */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 -mr-2">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 -mr-2">
               {annotations.map((annotation, index) => {
                 const hasDrawing = annotation.canvas_data?.objects?.length > 0;
+                const drawingCount = annotation.canvas_data?.objects?.length || 0;
                 const isCurrentAnnotation = currentAnnotationIndex === index;
                 
                 return (
@@ -422,16 +423,17 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                     key={annotation.id}
                     onClick={() => seekToAnnotation(annotation, index)}
                     className={cn(
-                      "w-full text-left p-3 rounded-lg border transition-all",
-                      "hover:shadow-md hover:scale-[1.02]",
+                      "w-full text-left p-4 rounded-lg border transition-all duration-200",
+                      "hover:shadow-md hover:scale-[1.01]",
                       isCurrentAnnotation 
-                        ? "bg-primary/10 border-primary shadow-sm" 
+                        ? "bg-primary/10 border-primary shadow-sm ring-2 ring-primary/20" 
                         : "bg-background hover:bg-muted/50 border-border"
                     )}
                   >
-                    <div className="flex items-start gap-3">
+                    {/* Header: Número + Timestamp */}
+                    <div className="flex items-center gap-3 mb-3">
                       <div className={cn(
-                        "flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm flex-shrink-0",
+                        "flex items-center justify-center w-10 h-10 rounded-full font-bold text-base shrink-0 transition-colors",
                         isCurrentAnnotation
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"
@@ -439,27 +441,31 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                         {index + 1}
                       </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                          <span className="font-mono font-semibold text-sm">
-                            {formatTimestamp(annotation.timestamp_ms)}
-                          </span>
-                        </div>
-                        
-                        {annotation.comment && (
-                          <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2 mb-2">
-                            {annotation.comment}
-                          </p>
-                        )}
-                        
-                        {hasDrawing && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Pencil className="w-3 h-3 mr-1" />
-                            {annotation.canvas_data.objects.length}
-                          </Badge>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="font-mono font-bold text-base">
+                          {formatTimestamp(annotation.timestamp_ms)}
+                        </span>
                       </div>
+                    </div>
+                    
+                    {/* Comentário */}
+                    {annotation.comment && (
+                      <div className="mb-3 pl-13">
+                        <p className="text-sm leading-relaxed text-foreground line-clamp-3">
+                          {annotation.comment}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Badges no final */}
+                    <div className="flex gap-2 pl-13">
+                      {hasDrawing && (
+                        <Badge variant="secondary" className="text-xs h-6">
+                          <Pencil className="w-3 h-3 mr-1.5" />
+                          {drawingCount} {drawingCount === 1 ? 'desenho' : 'desenhos'}
+                        </Badge>
+                      )}
                     </div>
                   </button>
                 );
