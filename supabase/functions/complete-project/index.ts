@@ -156,15 +156,25 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString()
     
-    console.log('[complete-project] Updating project:', { id: project.id, status, completed_at: now })
+    // Determine automatic status based on feedback presence
+    const hasKeyframesWithFeedback = keyframes && keyframes.length > 0 && keyframes.some(k => k.comment.trim() !== '')
+    const automaticStatus = hasKeyframesWithFeedback ? 'feedback-sent' : 'approved'
+    
+    console.log('[complete-project] Updating project:', { 
+      id: project.id, 
+      originalStatus: status, 
+      automaticStatus,
+      hasKeyframesWithFeedback,
+      completed_at: now 
+    })
 
-    // Update project with completed_at and status
+    // Update project with completed_at and automatic status
     const { data: updatedProject, error: updateError } = await supabase
       .from('projects')
       .update({
         completed_at: now,
-        status: status,
-        approval_date: status === 'approved' ? now : null
+        status: automaticStatus,
+        approval_date: automaticStatus === 'approved' ? now : null
       })
       .eq('id', project.id)
       .select()
