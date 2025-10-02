@@ -553,15 +553,6 @@ const ClientReturn = () => {
                                             </p>
                                           </div>
                                         </div>
-                                        
-                                        {feedback.attachments && feedback.attachments.length > 0 && (
-                                          <div className="ml-6 mt-2">
-                                            <AttachmentList
-                                              attachments={feedback.attachments}
-                                              editable={false}
-                                            />
-                                          </div>
-                                        )}
 
                                         {feedback.resolved && feedback.resolved_at && (
                                           <div className="ml-6 mt-2 flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
@@ -571,6 +562,19 @@ const ClientReturn = () => {
                                         )}
                                       </div>
                                     </div>
+
+                                    {/* Anexos do Cliente */}
+                                    {feedback.attachments && feedback.attachments.length > 0 && (
+                                      <div className="ml-9 mb-3">
+                                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                                          Anexos ({feedback.attachments.length})
+                                        </p>
+                                        <AttachmentList
+                                          attachments={feedback.attachments}
+                                          editable={false}
+                                        />
+                                      </div>
+                                    )}
 
                                     <Separator className="my-3" />
 
