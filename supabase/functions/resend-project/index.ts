@@ -130,7 +130,7 @@ serve(async (req) => {
 
     // Generate share URL
     const baseUrl = 'https://817d038c-18c1-4aa7-95dd-26a14d1a02ea.lovableproject.com';
-    const shareUrl = `${baseUrl}/aprovacao-audiovisual/${project.share_id}`;
+    const shareUrl = `${baseUrl}/projeto/${project.share_id}`;
 
     console.log('🎉 Reenvio concluído com sucesso:', { shareUrl });
 
