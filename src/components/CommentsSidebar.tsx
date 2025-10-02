@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { AttachmentUploader } from '@/components/AttachmentUploader';
 import { AttachmentList } from '@/components/AttachmentList';
 import { Attachment } from '@/lib/attachmentUtils';
+import { Separator } from '@/components/ui/separator';
+import { FeedbackHistoryItem } from '@/components/FeedbackHistoryItem';
 
 interface Keyframe {
   id: string;
@@ -24,9 +26,18 @@ interface Annotation {
   screenshot_url?: string;
 }
 
+interface FeedbackHistory {
+  id: string;
+  comment: string;
+  team_response: string | null;
+  keyframe_title: string;
+  created_at: string;
+}
+
 interface CommentsSidebarProps {
   keyframes: Keyframe[];
   annotations: Annotation[];
+  feedbackHistory?: FeedbackHistory[];
   currentTime: number;
   onSeekToTime: (time: number) => void;
   onLoadAnnotation: (annotationId: string) => void;
@@ -40,6 +51,7 @@ interface CommentsSidebarProps {
 export function CommentsSidebar({
   keyframes,
   annotations,
+  feedbackHistory = [],
   currentTime,
   onSeekToTime,
   onLoadAnnotation,
@@ -111,6 +123,46 @@ export function CommentsSidebar({
       {/* Timeline Items - Scrollable */}
       <ScrollArea className="flex-1">
         <div className="p-2.5 space-y-2">
+          {/* Histórico de Correções Anteriores (Imutável) */}
+          {feedbackHistory.length > 0 && (
+            <div className="mb-4">
+              <div className="px-2 py-2 bg-muted/30 border-b border-border rounded-t-md">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  📋 Correções Anteriores
+                </h4>
+              </div>
+              <div className="space-y-2 pt-2">
+                {feedbackHistory.map(feedback => (
+                  <FeedbackHistoryItem 
+                    key={feedback.id}
+                    feedback={feedback}
+                    formatTime={(timestamp) => {
+                      const date = new Date(timestamp);
+                      return date.toLocaleDateString('pt-BR', { 
+                        day: '2-digit', 
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Separador entre histórico e novos feedbacks */}
+          {feedbackHistory.length > 0 && totalComments > 0 && (
+            <div className="py-2">
+              <Separator className="my-2" />
+              <div className="px-2 py-2 bg-primary/5 border-b border-primary/20 rounded-t-md">
+                <h4 className="text-xs font-semibold text-primary uppercase tracking-wide">
+                  🆕 Novos Feedbacks
+                </h4>
+              </div>
+            </div>
+          )}
+
           {/* All Feedback Items - Unified */}
           {totalComments > 0 && (
             <div className="space-y-1.5">

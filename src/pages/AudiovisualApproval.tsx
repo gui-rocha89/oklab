@@ -34,6 +34,14 @@ interface Keyframe {
   created_at?: string;
 }
 
+interface FeedbackHistory {
+  id: string;
+  comment: string;
+  team_response: string | null;
+  keyframe_title: string;
+  created_at: string;
+}
+
 interface Project {
   id: string;
   title: string;
@@ -57,6 +65,7 @@ export default function AudiovisualApproval() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
+  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackHistory[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -133,6 +142,35 @@ export default function AudiovisualApproval() {
             created_at: kf.created_at
           }));
           setKeyframes(formattedKeyframes);
+        }
+
+        // Fetch resolved feedback history (previous round corrections)
+        const { data: previousFeedbacks, error: feedbackError } = await supabase
+          .from('project_feedback')
+          .select(`
+            id,
+            comment,
+            team_response,
+            created_at,
+            keyframe_id,
+            project_keyframes!inner(title)
+          `)
+          .eq('project_keyframes.project_id', projectData.id)
+          .eq('resolved', true)
+          .order('created_at', { ascending: true });
+
+        if (feedbackError) {
+          console.error('Error fetching feedback history:', feedbackError);
+        } else if (previousFeedbacks && previousFeedbacks.length > 0) {
+          const formattedHistory: FeedbackHistory[] = previousFeedbacks.map(fb => ({
+            id: fb.id,
+            comment: fb.comment,
+            team_response: fb.team_response,
+            keyframe_title: (fb.project_keyframes as any)?.title || 'Sem título',
+            created_at: fb.created_at
+          }));
+          setFeedbackHistory(formattedHistory);
+          console.log('📋 Histórico de feedbacks carregado:', formattedHistory.length, 'itens');
         }
 
         // Check if user already submitted a rating
@@ -831,6 +869,7 @@ export default function AudiovisualApproval() {
                 <CommentsSidebar
                   keyframes={keyframes}
                   annotations={[]}
+                  feedbackHistory={feedbackHistory}
                   currentTime={currentTime}
                   onSeekToTime={seekTo}
                   onLoadAnnotation={() => {}}

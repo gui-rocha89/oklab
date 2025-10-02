@@ -95,19 +95,24 @@ serve(async (req) => {
       .select('id')
       .eq('project_id', projectId);
 
-    // Reset all feedback resolved status
+    // Mark feedbacks with team responses as resolved (they become part of history)
+    // Only feedbacks with team_response are marked as resolved - these will show in history
     if (keyframes && keyframes.length > 0) {
       const keyframeIds = keyframes.map(k => k.id);
       
-      const { error: feedbackResetError } = await supabase
+      const { error: resolveError } = await supabase
         .from('project_feedback')
-        .update({ resolved: false, resolved_at: null })
-        .in('keyframe_id', keyframeIds);
+        .update({ 
+          resolved: true, 
+          resolved_at: new Date().toISOString() 
+        })
+        .in('keyframe_id', keyframeIds)
+        .not('team_response', 'is', null); // Only feedbacks with team responses
 
-      if (feedbackResetError) {
-        console.error('❌ Erro ao resetar feedback:', feedbackResetError);
+      if (resolveError) {
+        console.error('❌ Erro ao marcar feedbacks como resolvidos:', resolveError);
       } else {
-        console.log('✅ Feedbacks resetados');
+        console.log('✅ Feedbacks anteriores marcados como resolvidos (histórico)');
       }
     }
 
