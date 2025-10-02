@@ -397,7 +397,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
       {/* Painel Lateral - Lista de Anotações (40%) */}
       <div className="lg:col-span-2">
-        <Card className="sticky top-4 max-h-[70vh] flex flex-col overflow-hidden">
+        <Card className="sticky top-4 flex flex-col overflow-hidden" style={{ maxHeight: '70vh' }}>
           <CardContent className="p-4 flex flex-col h-full min-h-0">
             <div className="flex items-center justify-between mb-4 pb-3 border-b shrink-0">
               <div>
