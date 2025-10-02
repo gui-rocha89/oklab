@@ -53,6 +53,7 @@ interface Project {
   type: string;
   created_at: string;
   completed_at?: string | null;
+  current_feedback_round?: number;
 }
 
 export default function AudiovisualApproval() {
@@ -297,7 +298,8 @@ export default function AudiovisualApproval() {
           ratingComment: ratingComment || undefined,
           clientName: project.client,
           clientEmail: 'client@example.com',
-          keyframes: keyframesToSave.length > 0 ? keyframesToSave : undefined
+          keyframes: keyframesToSave.length > 0 ? keyframesToSave : undefined,
+          feedbackRound: project.current_feedback_round || 1 // Include current feedback round
         }
       });
 

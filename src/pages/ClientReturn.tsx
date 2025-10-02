@@ -505,13 +505,26 @@ const ClientReturn = () => {
             {currentKeyframes.length > 0 ? (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Pencil className="w-4 h-4" />
-                    Gestão de Ajustes {isInNewRound ? `- Rodada ${currentRound}` : ''}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Gerencie os comentários da rodada atual
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Pencil className="w-4 h-4" />
+                        Gestão de Ajustes {isInNewRound ? `- Rodada ${currentRound}` : ''}
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Gerencie os comentários da rodada atual
+                      </CardDescription>
+                    </div>
+                    <div className="text-xs font-medium">
+                      <span className="text-orange-600 dark:text-orange-400">
+                        {currentKeyframes.reduce((acc, kf) => acc + (kf.project_feedback?.filter(f => !f.resolved).length || 0), 0)} pendentes
+                      </span>
+                      {' | '}
+                      <span className="text-green-600 dark:text-green-400">
+                        {currentKeyframes.reduce((acc, kf) => acc + (kf.project_feedback?.filter(f => f.resolved).length || 0), 0)} resolvidos
+                      </span>
+                    </div>
+                  </div>
                 </CardHeader>
                   <CardContent className="p-0">
                     <ScrollArea className="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] px-6 pb-6">
@@ -543,88 +556,103 @@ const ClientReturn = () => {
                               </div>
                             </CardHeader>
                             {commentsCount > 0 && (
-                              <CardContent className="pt-0 px-4 pb-3 space-y-2">
+                              <CardContent className="pt-0 px-4 pb-3 space-y-1.5">
                                 {keyframe.project_feedback.map((feedback) => (
-                                  <div 
-                                    key={feedback.id} 
-                                    className={`rounded-md p-2 border transition-all ${
-                                      feedback.resolved 
-                                        ? 'bg-green-50 border-green-200 dark:bg-green-950/20' 
-                                        : 'bg-muted/30 border-border'
-                                    }`}
+                                  <Collapsible 
+                                    key={feedback.id}
+                                    defaultOpen={!feedback.resolved}
                                   >
-                                    {/* Checkbox e Comentário do Cliente */}
-                                    <div className="flex items-start gap-2 mb-2">
-                                      <Checkbox
-                                        checked={feedback.resolved}
-                                        onCheckedChange={() => handleResolveToggle(feedback.id, feedback.resolved)}
-                                        disabled={isUpdating}
-                                        className="mt-0.5"
-                                      />
-                                      <div className="flex-1">
-                                        <div className="flex items-start gap-2">
-                                          <MessageSquare className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                          <div className="flex-1">
-                                            <p className="text-xs font-medium mb-1">Comentário:</p>
-                                            <p className="text-xs">{feedback.comment}</p>
-                                            <p className="text-[10px] text-muted-foreground mt-1">
-                                              {format(new Date(feedback.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                                            </p>
+                                    <div 
+                                      className={`rounded-md border transition-all ${
+                                        feedback.resolved 
+                                          ? 'bg-green-50 border-green-200 dark:bg-green-950/20' 
+                                          : 'bg-muted/30 border-border'
+                                      }`}
+                                    >
+                                      {/* Header colapsável */}
+                                      <CollapsibleTrigger asChild>
+                                        <div className="p-2 cursor-pointer hover:bg-muted/20 transition-colors">
+                                          <div className="flex items-center gap-2">
+                                            <Checkbox
+                                              checked={feedback.resolved}
+                                              onCheckedChange={() => handleResolveToggle(feedback.id, feedback.resolved)}
+                                              disabled={isUpdating}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="flex-shrink-0"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-xs line-clamp-1">{feedback.comment}</p>
+                                            </div>
+                                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform ui-open:rotate-180 flex-shrink-0" />
                                           </div>
                                         </div>
-
-                                        {feedback.resolved && feedback.resolved_at && (
-                                          <div className="ml-5 mt-1 flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
-                                            <CheckCircle className="w-2.5 h-2.5" />
-                                            Resolvido em {format(new Date(feedback.resolved_at), "dd/MM/yyyy", { locale: ptBR })}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Anexos do Cliente */}
-                                    {feedback.attachments && feedback.attachments.length > 0 && (
-                                      <div className="ml-7 mb-2">
-                                        <p className="text-[10px] font-medium text-muted-foreground mb-1">
-                                          Anexos ({feedback.attachments.length})
-                                        </p>
-                                        <AttachmentList
-                                          attachments={feedback.attachments}
-                                          editable={false}
-                                        />
-                                      </div>
-                                    )}
-
-                                    <Separator className="my-2" />
-
-                                    {/* Resposta da Equipe */}
-                                    <div className="ml-7 space-y-1">
-                                      <Label className="text-xs font-medium">Resposta da Equipe:</Label>
+                                      </CollapsibleTrigger>
                                       
-                                      <div className="space-y-1">
-                                        <Textarea
-                                          placeholder="Descreva o que foi ajustado..."
-                                          value={teamResponses[feedback.id] || feedback.team_response || ''}
-                                          onChange={(e) => handleTeamResponseChange(feedback.id, e.target.value)}
-                                          className="min-h-[60px] text-xs"
-                                        />
-                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                          {savingFeedback[feedback.id] && (
-                                            <>
-                                              <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                                              <span>Salvando...</span>
-                                            </>
+                                      {/* Conteúdo colapsável */}
+                                      <CollapsibleContent>
+                                        <div className="px-2 pb-2 space-y-2 border-t pt-2">
+                                          {/* Comentário completo com data */}
+                                          <div className="flex items-start gap-2">
+                                            <MessageSquare className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-[10px] font-medium mb-0.5">Comentário:</p>
+                                              <p className="text-xs whitespace-pre-wrap">{feedback.comment}</p>
+                                              <p className="text-[10px] text-muted-foreground mt-1">
+                                                {format(new Date(feedback.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {feedback.resolved && feedback.resolved_at && (
+                                            <div className="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
+                                              <CheckCircle className="w-2.5 h-2.5" />
+                                              Resolvido em {format(new Date(feedback.resolved_at), "dd/MM/yyyy", { locale: ptBR })}
+                                            </div>
                                           )}
-                                          {savedFeedback[feedback.id] && (
-                                            <>
-                                              <CheckCircle className="w-2.5 h-2.5 text-green-600" />
-                                              <span className="text-green-600">Salvo</span>
-                                            </>
+
+                                          {/* Anexos do Cliente */}
+                                          {feedback.attachments && feedback.attachments.length > 0 && (
+                                            <div>
+                                              <p className="text-[10px] font-medium text-muted-foreground mb-1">
+                                                Anexos ({feedback.attachments.length})
+                                              </p>
+                                              <AttachmentList
+                                                attachments={feedback.attachments}
+                                                editable={false}
+                                              />
+                                            </div>
                                           )}
+
+                                          <Separator className="my-1.5" />
+
+                                          {/* Resposta da Equipe */}
+                                          <div className="space-y-1">
+                                            <Label className="text-xs font-medium">Resposta da Equipe:</Label>
+                                            <Textarea
+                                              placeholder="Descreva o que foi ajustado..."
+                                              value={teamResponses[feedback.id] || feedback.team_response || ''}
+                                              onChange={(e) => handleTeamResponseChange(feedback.id, e.target.value)}
+                                              className="min-h-[50px] text-xs"
+                                            />
+                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                              {savingFeedback[feedback.id] && (
+                                                <>
+                                                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                                  <span>Salvando...</span>
+                                                </>
+                                              )}
+                                              {savedFeedback[feedback.id] && (
+                                                <>
+                                                  <CheckCircle className="w-2.5 h-2.5 text-green-600" />
+                                                  <span className="text-green-600">Salvo</span>
+                                                </>
+                                              )}
+                                            </div>
+                                          </div>
                                         </div>
-                                      </div>
+                                      </CollapsibleContent>
                                     </div>
-                                  </div>
+                                  </Collapsible>
                                 ))}
                               </CardContent>
                             )}

@@ -28,7 +28,9 @@ interface RequestBody {
   rating?: number
   clientName?: string
   clientEmail?: string
+  ratingComment?: string
   keyframes?: KeyframeComment[]
+  feedbackRound?: number
 }
 
 Deno.serve(async (req) => {
@@ -38,9 +40,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { shareId, status, rating, clientName, clientEmail, keyframes }: RequestBody = await req.json()
+    const { shareId, status, rating, ratingComment, clientName, clientEmail, keyframes, feedbackRound }: RequestBody = await req.json()
 
-    console.log('[complete-project] Received request:', { shareId, status, rating, clientName, clientEmail, keyframesCount: keyframes?.length })
+    console.log('[complete-project] Received request:', { shareId, status, rating, clientName, clientEmail, keyframesCount: keyframes?.length, feedbackRound })
 
     // Validate input
     if (!shareId || !status) {
@@ -141,7 +143,8 @@ Deno.serve(async (req) => {
             x_position: 0,
             y_position: 0,
             status: 'pending',
-            attachments: feedbackAttachments
+            attachments: feedbackAttachments,
+            feedback_round: feedbackRound || 1
           })
         
         if (feedbackError) {
@@ -199,6 +202,7 @@ Deno.serve(async (req) => {
         .insert({
           project_id: project.id,
           rating: rating,
+          comment: ratingComment,
           client_name: clientName,
           client_email: clientEmail
         })
