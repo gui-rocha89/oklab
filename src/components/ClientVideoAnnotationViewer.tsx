@@ -39,7 +39,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
 
   // Inicializar canvas e configurar dimensões baseadas no player renderizado
   useEffect(() => {
-    if (!canvasRef.current || !videoRef.current || !containerRef.current) return;
+    if (!canvasRef.current || !containerRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
       selection: false,
@@ -50,20 +50,27 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     fabricCanvasRef.current = canvas;
 
     const updateCanvasSize = () => {
-      if (!videoRef.current || !canvas || !containerRef.current || !canvasRef.current) return;
+      if (!canvas || !containerRef.current || !canvasRef.current) return;
       
-      const video = videoRef.current;
       const container = containerRef.current;
       const canvasElement = canvasRef.current;
       
-      // Obter dimensões RENDERIZADAS e calcular offset exato
-      const videoRect = video.getBoundingClientRect();
+      // Buscar o elemento de vídeo REAL dentro do CustomVideoPlayer
+      const videoElement = container.querySelector('video:not(.hidden)') as HTMLVideoElement;
+      
+      if (!videoElement) {
+        console.warn('⚠️ Vídeo não encontrado no CustomVideoPlayer');
+        return;
+      }
+      
+      // Obter dimensões RENDERIZADAS do vídeo real
+      const videoRect = videoElement.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
       
       const offsetLeft = videoRect.left - containerRect.left;
       const offsetTop = videoRect.top - containerRect.top;
       
-      // Posicionar canvas EXATAMENTE sobre o vídeo
+      // Posicionar canvas EXATAMENTE sobre o vídeo renderizado
       canvasElement.style.left = `${offsetLeft}px`;
       canvasElement.style.top = `${offsetTop}px`;
       canvasElement.style.width = `${videoRect.width}px`;
@@ -90,17 +97,12 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       });
     };
 
-    // Aguardar carregamento do vídeo antes de dimensionar
-    const video = videoRef.current;
-    video.addEventListener('loadedmetadata', updateCanvasSize);
-    video.addEventListener('canplay', updateCanvasSize);
-    
-    updateCanvasSize();
+    // Aguardar renderização do CustomVideoPlayer
+    const timer = setTimeout(updateCanvasSize, 100);
     window.addEventListener('resize', updateCanvasSize);
 
     return () => {
-      video.removeEventListener('loadedmetadata', updateCanvasSize);
-      video.removeEventListener('canplay', updateCanvasSize);
+      clearTimeout(timer);
       window.removeEventListener('resize', updateCanvasSize);
       canvas.dispose();
     };
@@ -110,13 +112,17 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   useEffect(() => {
     const handleFullscreenChange = () => {
       setTimeout(() => {
-        if (videoRef.current && fabricCanvasRef.current && containerRef.current && canvasRef.current) {
+        if (fabricCanvasRef.current && containerRef.current && canvasRef.current) {
           const canvas = fabricCanvasRef.current;
-          const video = videoRef.current;
           const container = containerRef.current;
           const canvasElement = canvasRef.current;
           
-          const videoRect = video.getBoundingClientRect();
+          // Buscar o vídeo real renderizado
+          const videoElement = container.querySelector('video:not(.hidden)') as HTMLVideoElement;
+          
+          if (!videoElement) return;
+          
+          const videoRect = videoElement.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
           
           const offsetLeft = videoRect.left - containerRect.left;
@@ -179,13 +185,21 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   }, [currentTime, annotations]);
 
   const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
-    if (!fabricCanvasRef.current || !videoRef.current) {
-      console.error('❌ Canvas ou vídeo não disponível');
+    if (!fabricCanvasRef.current || !containerRef.current) {
+      console.error('❌ Canvas ou container não disponível');
       return;
     }
 
     const canvas = fabricCanvasRef.current;
-    const video = videoRef.current;
+    const container = containerRef.current;
+    
+    // Buscar o vídeo real renderizado pelo CustomVideoPlayer
+    const videoElement = container.querySelector('video:not(.hidden)') as HTMLVideoElement;
+    
+    if (!videoElement) {
+      console.error('❌ Vídeo não encontrado no CustomVideoPlayer');
+      return;
+    }
     
     try {
       console.group('🎯 CARREGANDO ANOTAÇÃO');
@@ -206,8 +220,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         return;
       }
 
-      // Usar dimensões RENDERIZADAS do vídeo (player atual)
-      const rect = video.getBoundingClientRect();
+      // Usar dimensões RENDERIZADAS do vídeo real
+      const rect = videoElement.getBoundingClientRect();
       const currentWidth = Math.floor(rect.width);
       const currentHeight = Math.floor(rect.height);
 
