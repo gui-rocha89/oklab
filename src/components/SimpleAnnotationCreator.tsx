@@ -35,11 +35,15 @@ export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = (
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    console.log('🎨 Inicializando canvas com dimensões:', { containerWidth, containerHeight });
+    // Validar dimensões com fallback
+    const width = containerWidth || 800;
+    const height = containerHeight || 450;
+
+    console.log('🎨 Inicializando canvas com dimensões:', { width, height });
 
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: containerWidth,
-      height: containerHeight,
+      width,
+      height,
       backgroundColor: 'transparent',
     });
 
@@ -47,8 +51,7 @@ export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = (
     brush.color = brushColor;
     brush.width = 3;
     canvas.freeDrawingBrush = brush;
-    canvas.isDrawingMode = activeTool === 'pen';
-
+    
     fabricCanvasRef.current = canvas;
 
     // Save initial state
@@ -56,12 +59,18 @@ export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = (
     setHistory([initialState]);
     setHistoryStep(0);
 
-    console.log('✅ Canvas inicializado, modo desenho:', activeTool === 'pen');
+    // FORÇAR modo de desenho após inicialização
+    setTimeout(() => {
+      canvas.isDrawingMode = true;
+      console.log('✅ Modo desenho FORÇADO:', canvas.isDrawingMode);
+    }, 100);
+
+    console.log('✅ Canvas inicializado');
 
     return () => {
       canvas.dispose();
     };
-  }, [containerWidth, containerHeight]);
+  }, [containerWidth, containerHeight, brushColor]);
 
   // Separate effect for tracking history to avoid stale closures
   useEffect(() => {
@@ -313,13 +322,18 @@ export const SimpleAnnotationCreator: React.FC<SimpleAnnotationCreatorProps> = (
 
       {/* Canvas Area with Captured Frame */}
       <div className="flex items-center justify-center p-4 bg-muted/10 max-h-[60vh] overflow-auto">
-        <div className="relative mx-auto" style={{ width: containerWidth, height: containerHeight }}>
+        <div className="relative mx-auto pointer-events-auto" style={{ width: containerWidth, height: containerHeight }}>
           <img
             src={capturedFrameUrl}
             alt="Frame capturado"
             className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+            style={{ zIndex: 1 }}
           />
-          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full cursor-crosshair" />
+          <canvas 
+            ref={canvasRef} 
+            className="absolute inset-0 w-full h-full cursor-crosshair pointer-events-auto" 
+            style={{ zIndex: 10 }}
+          />
         </div>
       </div>
 

@@ -889,7 +889,7 @@ export default function AudiovisualApproval() {
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="mt-4"
+                  className="mt-4 pointer-events-auto"
                 >
                   <SimpleAnnotationCreator
                     capturedFrameUrl={capturedFrameUrl}
