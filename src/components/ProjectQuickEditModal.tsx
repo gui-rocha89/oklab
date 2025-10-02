@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge, WorkflowStatus } from "@/components/StatusBadge";
 import { Loader2 } from "lucide-react";
 
@@ -24,16 +23,7 @@ interface ProjectQuickEditModalProps {
   onSave: (projectId: string, updates: Partial<Project>) => Promise<void>;
 }
 
-const projectTypes = [
-  "Audiovisual",
-  "Design Gráfico",
-  "Social Media",
-  "Branding",
-  "Website",
-  "Outro"
-];
-
-export const ProjectQuickEditModal = ({ 
+export const ProjectQuickEditModal = ({
   isOpen, 
   onClose, 
   project,
@@ -43,7 +33,6 @@ export const ProjectQuickEditModal = ({
     title: "",
     client: "",
     description: "",
-    type: "",
     status: "pending" as WorkflowStatus
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -54,7 +43,6 @@ export const ProjectQuickEditModal = ({
         title: project.title || "",
         client: project.client || "",
         description: project.description || "",
-        type: project.type || "",
         status: (project.status || "pending") as WorkflowStatus
       });
     }
@@ -118,25 +106,6 @@ export const ProjectQuickEditModal = ({
               placeholder="Descrição do projeto"
               rows={3}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="type">Tipo de Projeto</Label>
-            <Select 
-              value={formData.type} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent className="!bg-white dark:!bg-gray-800">
-                {projectTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
