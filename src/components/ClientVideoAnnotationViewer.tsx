@@ -412,7 +412,7 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
             </div>
 
             {/* Lista scrollável */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {annotations.map((annotation, index) => {
                 const hasDrawing = annotation.canvas_data?.objects?.length > 0;
                 const drawingCount = annotation.canvas_data?.objects?.length || 0;
@@ -423,18 +423,19 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                     key={annotation.id}
                     onClick={() => seekToAnnotation(annotation, index)}
                     className={cn(
-                      "w-full text-left p-4 rounded-lg border transition-all duration-200",
+                      "w-full text-left p-3 rounded-lg border transition-all duration-200",
                       "hover:shadow-md hover:border-primary/50",
+                      "overflow-hidden", // Previne overflow
                       isCurrentAnnotation 
                         ? "bg-primary/10 border-primary shadow-sm" 
                         : "bg-card hover:bg-accent/50 border-border"
                     )}
                   >
-                    <div className="flex flex-col gap-3">
-                      {/* Header: Número + Timestamp */}
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2.5 min-w-0"> {/* min-w-0 permite shrink */}
+                      {/* Header: Número + Timestamp + Badge */}
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <div className={cn(
-                          "flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm shrink-0",
+                          "flex items-center justify-center w-7 h-7 rounded-full font-semibold text-xs shrink-0",
                           isCurrentAnnotation
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-muted-foreground"
@@ -442,24 +443,24 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
                           {index + 1}
                         </div>
                         
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="font-mono text-sm font-medium">
+                          <span className="font-mono text-xs font-medium truncate">
                             {formatTimestamp(annotation.timestamp_ms)}
                           </span>
                         </div>
                         
                         {hasDrawing && (
-                          <Badge variant="secondary" className="text-xs shrink-0">
-                            <Pencil className="w-3 h-3 mr-1" />
-                            {drawingCount}
+                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5 shrink-0 gap-0.5">
+                            <Pencil className="w-2.5 h-2.5" />
+                            <span>{drawingCount}</span>
                           </Badge>
                         )}
                       </div>
                       
                       {/* Comentário */}
                       {annotation.comment && (
-                        <p className="text-sm leading-relaxed text-muted-foreground">
+                        <p className="text-xs leading-relaxed text-muted-foreground break-words min-w-0">
                           {annotation.comment}
                         </p>
                       )}
