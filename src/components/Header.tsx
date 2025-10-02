@@ -7,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/contexts/UserContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useNotifications } from '@/hooks/useNotifications';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import GlobalSearch from '@/components/GlobalSearch';
 
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   const { toast } = useToast();
   const { user, isSupremeAdmin, logout } = useUser();
   const { profile } = useProfile();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   
@@ -182,7 +184,11 @@ export const Header: React.FC<HeaderProps> = ({
                 className="relative p-2 rounded-lg hover:bg-orange-600 dark:hover:bg-gray-700 transition-colors"
               >
                 <Bell className="w-6 h-6 text-white" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center px-1 font-bold">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </motion.button>
               
               <NotificationDropdown

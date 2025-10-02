@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
@@ -15,98 +15,78 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
+import { useNotifications } from '@/hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
-  const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all');
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  const { 
+    notifications, 
+    loading, 
+    unreadCount,
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification 
+  } = useNotifications();
 
-  // Mock notifications data
-  useEffect(() => {
-    const mockNotifications = [
-      {
-        id: 1,
-        type: 'project_approved',
-        title: 'Projeto Aprovado',
-        message: 'Seu projeto "Campanha Verão 2024" foi aprovado!',
-        time: '2 horas atrás',
-        read: false,
-        icon: CheckCircle,
-        color: 'text-green-600'
-      },
-      {
-        id: 2,
-        type: 'new_comment',
-        title: 'Novo Comentário',
-        message: 'Ana Silva comentou no projeto "Banner Website"',
-        time: '4 horas atrás',
-        read: false,
-        icon: MessageSquare,
-        color: 'text-blue-600'
-      },
-      {
-        id: 3,
-        type: 'project_rejected',
-        title: 'Projeto Rejeitado',
-        message: 'O projeto "Post Redes Sociais" precisa de revisão',
-        time: '1 dia atrás',
-        read: true,
-        icon: AlertTriangle,
-        color: 'text-red-600'
-      },
-      {
-        id: 4,
-        type: 'new_project',
-        title: 'Novo Projeto',
-        message: 'Carlos Oliveira criou um novo projeto',
-        time: '2 dias atrás',
-        read: true,
-        icon: FileText,
-        color: 'text-purple-600'
-      },
-      {
-        id: 5,
-        type: 'deadline_approaching',
-        title: 'Prazo se Aproxima',
-        message: 'O projeto "Vídeo Institucional" vence em 2 dias',
-        time: '3 dias atrás',
-        read: false,
-        icon: Clock,
-        color: 'text-orange-600'
-      }
-    ];
-    setNotifications(mockNotifications);
-  }, []);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
   const filteredNotifications = notifications.filter(notification => {
     if (filter === 'unread') return !notification.read;
     if (filter === 'read') return notification.read;
     return true;
   });
 
-  const markAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  // Map notification types to icons
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'project_approved':
+        return { icon: CheckCircle, color: 'text-green-600' };
+      case 'new_comment':
+        return { icon: MessageSquare, color: 'text-blue-600' };
+      case 'feedback_received':
+        return { icon: Bell, color: 'text-orange-600' };
+      case 'comment_response':
+        return { icon: FileText, color: 'text-purple-600' };
+      case 'project_rejected':
+        return { icon: AlertTriangle, color: 'text-red-600' };
+      default:
+        return { icon: Bell, color: 'text-gray-600' };
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, read: true }))
-    );
-    toast({
-      title: "✅ Todas as notificações foram marcadas como lidas",
-      duration: 2000,
-    });
+  // Format relative time
+  const formatTime = (dateString) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { 
+        addSuffix: true, 
+        locale: ptBR 
+      });
+    } catch (error) {
+      return 'agora';
+    }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    toast({
-      title: "🗑️ Notificação removida",
-      duration: 2000,
-    });
+  const handleNotificationClick = (notification) => {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    
+    if (notification.project_id) {
+      navigate(`/projetos`);
+      onClose();
+    }
+  };
+
+  const handleDeleteNotification = (id) => {
+    deleteNotification(id);
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
   };
 
   const getFilterCounts = () => ({
@@ -176,10 +156,14 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
 
         {/* Notifications List */}
         <div className="max-h-96 overflow-y-auto">
-          {filteredNotifications.length > 0 ? (
+          {loading ? (
+            <div className="p-8 text-center">
+              <p className="text-sm text-muted-foreground">Carregando notificações...</p>
+            </div>
+          ) : filteredNotifications.length > 0 ? (
             <div className="space-y-1 p-2">
               {filteredNotifications.map((notification) => {
-                const IconComponent = notification.icon;
+                const { icon: IconComponent, color } = getNotificationIcon(notification.type);
                 return (
                   <motion.div
                     key={notification.id}
@@ -188,10 +172,10 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
                     className={`p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer ${
                       !notification.read ? 'bg-accent border-l-4 border-primary' : ''
                     }`}
-                    onClick={() => !notification.read && markAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="flex items-start space-x-3">
-                      <div className={`p-2 rounded-full bg-secondary ${notification.color}`}>
+                      <div className={`p-2 rounded-full bg-secondary ${color}`}>
                         <IconComponent className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -202,7 +186,7 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              deleteNotification(notification.id);
+                              handleDeleteNotification(notification.id);
                             }}
                             className="text-muted-foreground hover:text-popover-foreground transition-colors"
                           >
@@ -214,7 +198,7 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">
-                            {notification.time}
+                            {formatTime(notification.created_at)}
                           </span>
                           {!notification.read && (
                             <div className="w-2 h-2 bg-primary rounded-full"></div>
@@ -247,7 +231,7 @@ const NotificationDropdown = ({ isOpen, onClose, buttonRef }) => {
             <Separator />
             <div className="p-3">
               <Button
-                onClick={markAllAsRead}
+                onClick={handleMarkAllAsRead}
                 variant="outline"
                 size="sm"
                 className="w-full flex items-center justify-center space-x-2"
