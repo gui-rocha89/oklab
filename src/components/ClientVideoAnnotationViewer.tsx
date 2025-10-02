@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Canvas as FabricCanvas, util } from "fabric";
+import { Canvas as FabricCanvas } from "fabric";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SkipBack, SkipForward, MessageSquare, Pencil, Clock } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Maximize, MessageSquare, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { convertFromReferenceResolution, REFERENCE_WIDTH, REFERENCE_HEIGHT } from "@/lib/annotationUtils";
-import { useVideoAspectRatio } from "@/hooks/useVideoAspectRatio";
 import { toast } from "sonner";
-import { CustomVideoPlayer } from "./CustomVideoPlayer";
 
 interface VideoAnnotation {
   id: string;
@@ -24,26 +22,19 @@ interface ClientVideoAnnotationViewerProps {
 }
 
 export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVideoAnnotationViewerProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<FabricCanvas | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoPlayerContainerRef = useRef<HTMLDivElement>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentAnnotationIndex, setCurrentAnnotationIndex] = useState<number | null>(null);
 
-  // Função para obter o vídeo real renderizado
-  const getRenderedVideo = (): HTMLVideoElement | null => {
-    if (!containerRef.current) return null;
-    const video = containerRef.current.querySelector('video:not(.hidden)') as HTMLVideoElement;
-    return video;
-  };
-
-  // Inicializar canvas e configurar dimensões baseadas no player renderizado
+  // Inicializar canvas - SIMPLES E DIRETO
   useEffect(() => {
-    if (!canvasRef.current || !containerRef.current) return;
+    if (!canvasRef.current || !videoRef.current || !containerRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
       selection: false,
@@ -54,29 +45,18 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     fabricCanvasRef.current = canvas;
 
     const updateCanvasSize = () => {
-      const videoElement = getRenderedVideo();
+      if (!videoRef.current || !canvas || !containerRef.current || !canvasRef.current) return;
       
-      if (!canvas || !containerRef.current || !canvasRef.current || !videoElement) {
-        console.warn('⚠️ Elementos não disponíveis para atualização do canvas');
-        return;
-      }
-      
+      const video = videoRef.current;
       const container = containerRef.current;
       const canvasElement = canvasRef.current;
       
-      // Obter dimensões RENDERIZADAS do vídeo real
-      const videoRect = videoElement.getBoundingClientRect();
+      const videoRect = video.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
-      
-      if (videoRect.width === 0 || videoRect.height === 0) {
-        console.warn('⚠️ Vídeo ainda não renderizado');
-        return;
-      }
       
       const offsetLeft = videoRect.left - containerRect.left;
       const offsetTop = videoRect.top - containerRect.top;
       
-      // Posicionar canvas EXATAMENTE sobre o vídeo renderizado
       canvasElement.style.left = `${offsetLeft}px`;
       canvasElement.style.top = `${offsetTop}px`;
       canvasElement.style.width = `${videoRect.width}px`;
@@ -87,7 +67,6 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         height: videoRect.height,
       });
       
-      // ✅ Recarregar anotação atual após redimensionar
       if (currentAnnotationIndex !== null && annotations[currentAnnotationIndex]) {
         setTimeout(() => {
           loadAnnotationToCanvas(annotations[currentAnnotationIndex]);
@@ -95,58 +74,34 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       } else {
         canvas.renderAll();
       }
-      
-      console.log('📐 Canvas sincronizado com vídeo:', {
-        videoSize: `${videoRect.width}x${videoRect.height}`,
-        offset: `left=${offsetLeft}px, top=${offsetTop}px`,
-        activeAnnotation: currentAnnotationIndex !== null
-      });
     };
 
-    // Aguardar CustomVideoPlayer renderizar completamente
-    const initTimer = setTimeout(() => {
-      updateCanvasSize();
-      
-      // Observer para detectar mudanças no DOM (quando o vídeo é renderizado)
-      const observer = new MutationObserver(() => {
-        updateCanvasSize();
-      });
-      
-      if (containerRef.current) {
-        observer.observe(containerRef.current, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-          attributeFilter: ['style', 'class']
-        });
-      }
-      
-      window.addEventListener('resize', updateCanvasSize);
-      
-      return () => {
-        observer.disconnect();
-        window.removeEventListener('resize', updateCanvasSize);
-      };
-    }, 200);
+    const video = videoRef.current;
+    video.addEventListener('loadedmetadata', updateCanvasSize);
+    video.addEventListener('canplay', updateCanvasSize);
+    
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
 
     return () => {
-      clearTimeout(initTimer);
+      video.removeEventListener('loadedmetadata', updateCanvasSize);
+      video.removeEventListener('canplay', updateCanvasSize);
+      window.removeEventListener('resize', updateCanvasSize);
       canvas.dispose();
     };
   }, [currentAnnotationIndex, annotations]);
 
-  // Listener para fullscreen e mudanças no player
+  // Fullscreen handler
   useEffect(() => {
     const handleFullscreenChange = () => {
       setTimeout(() => {
-        const videoElement = getRenderedVideo();
-        
-        if (fabricCanvasRef.current && containerRef.current && canvasRef.current && videoElement) {
+        if (videoRef.current && fabricCanvasRef.current && containerRef.current && canvasRef.current) {
           const canvas = fabricCanvasRef.current;
+          const video = videoRef.current;
           const container = containerRef.current;
           const canvasElement = canvasRef.current;
           
-          const videoRect = videoElement.getBoundingClientRect();
+          const videoRect = video.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
           
           const offsetLeft = videoRect.left - containerRect.left;
@@ -167,10 +122,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
           } else {
             canvas.renderAll();
           }
-          
-          console.log('🔄 Canvas atualizado após fullscreen');
         }
-      }, 150);
+      }, 100);
     };
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -211,14 +164,13 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
   }, [currentTime, annotations]);
 
   const loadAnnotationToCanvas = async (annotation: VideoAnnotation) => {
-    const videoElement = getRenderedVideo();
-    
-    if (!fabricCanvasRef.current || !videoElement) {
+    if (!fabricCanvasRef.current || !videoRef.current) {
       console.error('❌ Canvas ou vídeo não disponível');
       return;
     }
 
     const canvas = fabricCanvasRef.current;
+    const video = videoRef.current;
     
     try {
       console.group('🎯 CARREGANDO ANOTAÇÃO');
@@ -239,8 +191,8 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
         return;
       }
 
-      // Usar dimensões RENDERIZADAS do vídeo real
-      const rect = videoElement.getBoundingClientRect();
+      // Usar dimensões RENDERIZADAS do vídeo
+      const rect = video.getBoundingClientRect();
       const currentWidth = Math.floor(rect.width);
       const currentHeight = Math.floor(rect.height);
 
@@ -370,25 +322,37 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
     }
   };
 
-  const handleTimeUpdate = (time: number) => {
-    setCurrentTime(time * 1000);
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime * 1000);
+    }
   };
 
-  const handleDurationChange = (newDuration: number) => {
-    setDuration(newDuration * 1000);
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration * 1000);
+    }
   };
 
-  const handlePlayPauseChange = (playing: boolean) => {
-    setIsPlaying(playing);
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
   };
 
   const seekToAnnotation = (annotation: VideoAnnotation, index: number) => {
-    const timeInSeconds = annotation.timestamp_ms / 1000;
-    setCurrentTime(annotation.timestamp_ms);
+    if (!videoRef.current) return;
+    
+    videoRef.current.currentTime = annotation.timestamp_ms / 1000;
     setCurrentAnnotationIndex(index);
     loadAnnotationToCanvas(annotation);
     
-    // Pausar para visualizar a anotação
+    videoRef.current.pause();
     setIsPlaying(false);
   };
 
@@ -418,71 +382,117 @@ export const ClientVideoAnnotationViewer = ({ videoUrl, annotations }: ClientVid
       {/* Video Player (60%) - Adaptativo */}
       <div className="lg:col-span-3">
         <Card className="overflow-hidden border-0 shadow-lg">
-          {/* Container adaptativo que respeita a proporção do vídeo */}
+          {/* Player nativo com canvas sobreposto - FUNCIONA! */}
           <div 
             ref={containerRef} 
-            className="relative w-full bg-black group flex items-center justify-center"
-            style={{ 
-              maxHeight: '70vh'
-            }}
+            className="relative w-full bg-black rounded-lg overflow-hidden"
           >
-            <CustomVideoPlayer
+            <video
+              ref={videoRef}
               src={videoUrl}
-              currentTime={currentTime / 1000}
+              className="w-full h-full"
+              style={{ maxHeight: '70vh' }}
               onTimeUpdate={handleTimeUpdate}
-              onDurationChange={handleDurationChange}
-              isPlaying={isPlaying}
-              onPlayPauseChange={handlePlayPauseChange}
-              annotations={annotations}
-              onAnnotationClick={(annotationId) => {
-                const index = annotations.findIndex(a => a.id === annotationId);
-                if (index !== -1) {
-                  seekToAnnotation(annotations[index], index);
-                }
-              }}
-              className="w-full"
+              onLoadedMetadata={handleLoadedMetadata}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
             />
             
-            {/* Canvas para anotações - SEMPRE visível sobre o vídeo */}
+            {/* Canvas - posicionado DIRETAMENTE sobre o vídeo */}
             <canvas
               ref={canvasRef}
               className="absolute pointer-events-none"
-              style={{ 
-                zIndex: 100,
-                border: '2px solid transparent' // debug helper
-              }}
+              style={{ zIndex: 30 }}
             />
 
-            {/* Indicador de anotação atual */}
-            {currentAnnotation && (
-              <div className="absolute top-4 left-4 bg-primary text-white px-4 py-2 rounded-lg backdrop-blur-sm shadow-lg font-medium" style={{ zIndex: 101 }}>
-                Anotação {(currentAnnotationIndex || 0) + 1}/{annotations.length}
+            {/* Controles do vídeo */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 space-y-3">
+              {/* Progress Bar */}
+              <div className="relative">
+                <div 
+                  className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    const newTime = percent * duration;
+                    if (videoRef.current) {
+                      videoRef.current.currentTime = newTime / 1000;
+                      setCurrentTime(newTime);
+                    }
+                  }}
+                >
+                  <div 
+                    className="h-full bg-primary rounded-full relative"
+                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                  >
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg" />
+                  </div>
+                  
+                  {/* Marcadores de anotação */}
+                  {annotations.map((annotation, index) => {
+                    const position = (annotation.timestamp_ms / duration) * 100;
+                    return (
+                      <div
+                        key={annotation.id}
+                        className={cn(
+                          "absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white cursor-pointer hover:scale-125 transition-transform",
+                          currentAnnotationIndex === index ? "bg-primary scale-125" : "bg-yellow-400"
+                        )}
+                        style={{ left: `${position}%` }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          seekToAnnotation(annotation, index);
+                        }}
+                        title={`Anotação ${index + 1}: ${annotation.comment || 'Sem comentário'}`}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            )}
 
-            {/* Navegação entre anotações */}
-            <div className="absolute top-4 right-4 flex gap-2" style={{ zIndex: 101 }}>
-              <Button
-                size="icon"
-                variant="secondary"
-                onClick={skipToPrevAnnotation}
-                disabled={currentAnnotationIndex === null || currentAnnotationIndex === 0}
-                className="bg-black/80 hover:bg-black text-white disabled:opacity-30 h-10 w-10 shadow-lg"
-                title="Anotação anterior"
-              >
-                <SkipBack className="w-5 h-5" />
-              </Button>
-              
-              <Button
-                size="icon"
-                variant="secondary"
-                onClick={skipToNextAnnotation}
-                disabled={currentAnnotationIndex === null || currentAnnotationIndex >= annotations.length - 1}
-                className="bg-black/80 hover:bg-black text-white disabled:opacity-30 h-10 w-10 shadow-lg"
-                title="Próxima anotação"
-              >
-                <SkipForward className="w-5 h-5" />
-              </Button>
+              {/* Controles */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={togglePlay}
+                    className="text-white hover:bg-white/10 h-10 w-10"
+                  >
+                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 w-5 ml-0.5" />}
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={skipToPrevAnnotation}
+                    disabled={currentAnnotationIndex === null || currentAnnotationIndex === 0}
+                    className="text-white hover:bg-white/10 h-8 w-8 disabled:opacity-30"
+                  >
+                    <SkipBack className="w-4 h-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={skipToNextAnnotation}
+                    disabled={currentAnnotationIndex === null || currentAnnotationIndex >= annotations.length - 1}
+                    className="text-white hover:bg-white/10 h-8 w-8 disabled:opacity-30"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </Button>
+                  
+                  {currentAnnotation && (
+                    <div className="ml-4 px-3 py-1.5 bg-primary/80 rounded-full text-white text-sm font-medium">
+                      Anotação {(currentAnnotationIndex || 0) + 1}/{annotations.length}
+                    </div>
+                  )}
+                </div>
+
+                <span className="text-white text-sm font-mono">
+                  {formatTimestamp(currentTime)} / {formatTimestamp(duration)}
+                </span>
+              </div>
             </div>
           </div>
         </Card>
