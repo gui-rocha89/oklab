@@ -12,6 +12,7 @@ interface MetricCardProps {
   description?: string;
   format?: 'number' | 'percentage';
   index?: number;
+  onClick?: () => void;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -22,7 +23,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   trend,
   description,
   format = 'number',
-  index = 0
+  index = 0,
+  onClick
 }) => {
   const formatValue = (val: string | number) => {
     const numVal = typeof val === 'string' ? parseFloat(val) : val;
@@ -71,8 +73,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       className="h-full"
     >
       <div 
-        className="flex flex-col justify-between h-full min-h-[164px] p-5 rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white to-gray-50/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden hover:ring-2 hover:ring-primary/20 hover:shadow-primary/10"
+        className={cn(
+          "flex flex-col justify-between h-full min-h-[164px] p-5 rounded-2xl shadow-lg border-0 bg-gradient-to-br from-white to-gray-50/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden hover:ring-2 hover:ring-primary/20 hover:shadow-primary/10",
+          onClick && "cursor-pointer"
+        )}
         style={{ borderColor: 'transparent' }}
+        onClick={onClick}
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
       >
         {/* Orange glow effect on hover */}
         <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">

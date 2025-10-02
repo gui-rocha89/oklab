@@ -25,6 +25,7 @@ import { useProjects } from "@/contexts/ProjectContext";
 import NewProjectModal from "@/components/NewProjectModal";
 import NewAudiovisualProjectModal from "@/components/NewAudiovisualProjectModal";
 import NewBriefingModal from "@/components/NewBriefingModal";
+import ClientReviewsModal from "@/components/ClientReviewsModal";
 
 // ... keep existing code (imports)
 
@@ -141,11 +142,22 @@ const ProjectCard = ({ project, index }: any) => {
 };
 
 export default function Dashboard() {
-  const { projects, getProjectStats, addProject } = useProjects();
+  const { projects, getProjectStats, addProject, getAllReviews } = useProjects();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isAudiovisualModalOpen, setIsAudiovisualModalOpen] = useState(false);
   const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   const stats = getProjectStats();
+
+  const handleOpenReviewsModal = async () => {
+    setShowReviewsModal(true);
+    setLoadingReviews(true);
+    const reviewsData = await getAllReviews();
+    setReviews(reviewsData);
+    setLoadingReviews(false);
+  };
 
   const recentProjects = projects.slice(0, 3);
 
@@ -242,6 +254,7 @@ export default function Dashboard() {
             format="percentage"
             description="Avaliação média dos clientes"
             index={3}
+            onClick={handleOpenReviewsModal}
           />
         </div>
 
@@ -344,6 +357,13 @@ export default function Dashboard() {
         isOpen={isBriefingModalOpen}
         setIsOpen={setIsBriefingModalOpen}
         onBriefingCreate={addProject}
+      />
+
+      <ClientReviewsModal
+        open={showReviewsModal}
+        onOpenChange={setShowReviewsModal}
+        reviews={reviews}
+        loading={loadingReviews}
       />
     </div>
   );

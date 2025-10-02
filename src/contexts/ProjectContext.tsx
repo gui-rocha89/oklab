@@ -46,6 +46,7 @@ interface ProjectContextType {
   deleteProject: (id: string) => Promise<void>;
   addFeedbackResponse: (projectId: string, keyframeId: string, response: string, author?: string) => Promise<void>;
   updateFeedbackStatus: (projectId: string, keyframeId: string, status: 'resolved' | 'pending' | 'rejected') => Promise<void>;
+  getAllReviews: () => Promise<any[]>;
   getProjectStats: () => {
     total: number;
     pending: number;
@@ -413,6 +414,38 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     await fetchProjects();
   };
 
+  const getAllReviews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('platform_reviews')
+        .select(`
+          id,
+          rating,
+          comment,
+          client_name,
+          client_email,
+          created_at,
+          project_id,
+          projects (
+            title,
+            client
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map((review: any) => ({
+        ...review,
+        project_title: review.projects?.title || 'Projeto Desconhecido',
+        project_client: review.projects?.client || 'Cliente Desconhecido'
+      }));
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      return [];
+    }
+  };
+
   return (
     <ProjectContext.Provider value={{
       projects,
@@ -429,6 +462,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       addFeedbackResponse,
       updateFeedbackStatus,
       getAllFeedbacks,
+      getAllReviews,
       refreshProjects
     }}>
       {children}

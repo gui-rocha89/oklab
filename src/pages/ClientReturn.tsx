@@ -237,7 +237,7 @@ const ClientReturn = () => {
 
         {/* Estatísticas do Retorno */}
         {hasClientReturn && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
@@ -254,23 +254,6 @@ const ClientReturn = () => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-warning/10 rounded-lg">
-                    <Star className="w-6 h-6 text-warning" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {review?.rating || "N/A"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Avaliação Geral
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             <Card>
               <CardContent className="pt-6">
@@ -319,11 +302,10 @@ const ClientReturn = () => {
           />
         )}
 
-        {/* Vídeo sem anotações + Avaliação do Cliente - Layout lado a lado */}
+        {/* Vídeo sem anotações - aprovado na íntegra */}
         {project.video_url && annotations.length === 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Vídeo sem anotações - Coluna Esquerda (60%) */}
-            <div className="lg:col-span-3">
+          <div>
+            <div>
               <Card className="h-full">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -361,65 +343,6 @@ const ClientReturn = () => {
               </Card>
             </div>
 
-            {/* Avaliação do Cliente - Coluna Direita (40%) */}
-            {review && (
-              <div className="lg:col-span-2">
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-warning" />
-                    Avaliação do Cliente
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Classificação</p>
-                    {renderStars(review.rating)}
-                  </div>
-
-                  {review.comment && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Comentário Geral
-                      </p>
-                      <p className="text-sm bg-muted/50 p-4 rounded-lg leading-relaxed">
-                        {review.comment}
-                      </p>
-                    </div>
-                  )}
-
-                  <Separator />
-
-                  <div className="grid grid-cols-1 gap-4">
-                    {review.client_name && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Cliente
-                        </p>
-                        <p className="text-sm font-medium flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          {review.client_name}
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">E-mail</p>
-                      <p className="text-sm font-medium flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        {review.client_email}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <p className="text-xs text-muted-foreground">
-                      Avaliado em {format(new Date(review.created_at), "dd 'de' MMM, yyyy 'às' HH:mm", { locale: ptBR })}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            )}
           </div>
         )}
 
