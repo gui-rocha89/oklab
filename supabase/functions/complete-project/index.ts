@@ -125,27 +125,29 @@ Deno.serve(async (req) => {
         
         console.log('[complete-project] Saved keyframe feedback at', timeStr)
         
-        // If there are file attachments, save them to project_feedback
-        if (kf.attachments && kf.attachments.length > 0) {
-          console.log('[complete-project] Saving', kf.attachments.length, 'file attachments')
-          
-          const { error: feedbackError } = await supabase
-            .from('project_feedback')
-            .insert({
-              keyframe_id: newKeyframe.id,
-              user_id: project.user_id,
-              comment: kf.comment,
-              x_position: 0,
-              y_position: 0,
-              status: 'pending',
-              attachments: kf.attachments
-            })
-          
-          if (feedbackError) {
-            console.error('[complete-project] Error saving feedback attachments:', feedbackError)
-          } else {
-            console.log('[complete-project] File attachments saved successfully')
-          }
+        // Always create feedback record, with or without attachments
+        const feedbackAttachments = kf.attachments && kf.attachments.length > 0 
+          ? kf.attachments 
+          : []
+        
+        console.log('[complete-project] Creating feedback with', feedbackAttachments.length, 'attachments')
+        
+        const { error: feedbackError } = await supabase
+          .from('project_feedback')
+          .insert({
+            keyframe_id: newKeyframe.id,
+            user_id: project.user_id,
+            comment: kf.comment,
+            x_position: 0,
+            y_position: 0,
+            status: 'pending',
+            attachments: feedbackAttachments
+          })
+        
+        if (feedbackError) {
+          console.error('[complete-project] Error saving feedback:', feedbackError)
+        } else {
+          console.log('[complete-project] Feedback saved successfully')
         }
       }
       
