@@ -19,6 +19,7 @@ import { VideoPlayerWithKeyframes, VideoPlayerRef } from "@/components/VideoPlay
 import { AttachmentList } from "@/components/AttachmentList";
 import { Attachment } from "@/lib/attachmentUtils";
 import { useProjectFeedbackManagement } from "@/hooks/useProjectFeedbackManagement";
+import { FeedbackHistorySection } from "@/components/FeedbackHistorySection";
 
 interface Project {
   id: string;
@@ -263,11 +264,23 @@ const ClientReturn = () => {
     }
   };
 
-  const totalComments = keyframes.reduce((sum, kf) => sum + kf.project_feedback.length, 0);
-  const resolvedComments = keyframes.reduce(
+  // Separar feedbacks históricos de atuais
+  const historicalKeyframes = keyframes.filter(kf => 
+    kf.project_feedback.length > 0 && 
+    kf.project_feedback.every(f => f.resolved === true && f.team_response)
+  );
+
+  const currentKeyframes = keyframes.filter(kf => 
+    kf.project_feedback.some(f => f.resolved === false)
+  );
+
+  const totalComments = currentKeyframes.reduce((sum, kf) => sum + kf.project_feedback.length, 0);
+  const resolvedComments = currentKeyframes.reduce(
     (sum, kf) => sum + kf.project_feedback.filter(f => f.resolved).length, 
     0
   );
+
+  const isInNewRound = project.status === 'in-revision' && historicalKeyframes.length > 0;
 
   if (loading) {
     return (
@@ -392,13 +405,22 @@ const ClientReturn = () => {
           </Card>
         )}
 
-        {/* Progresso de Ajustes */}
-        {hasKeyframes && totalComments > 0 && (
+        {/* Histórico de Correções (Read-only) */}
+        {historicalKeyframes.length > 0 && (
+          <FeedbackHistorySection
+            keyframes={historicalKeyframes}
+            roundNumber={1}
+            formatTime={formatTime}
+          />
+        )}
+
+        {/* Progresso de Ajustes - Apenas para feedbacks atuais */}
+        {currentKeyframes.length > 0 && totalComments > 0 && (
           <Card className="border-primary/30 bg-primary/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-primary" />
-                Progresso dos Ajustes
+                Progresso dos Ajustes - Rodada {isInNewRound ? 2 : 1}
               </CardTitle>
               <CardDescription>
                 {resolvedComments} de {totalComments} ajustes marcados como resolvidos
@@ -417,6 +439,21 @@ const ClientReturn = () => {
                 </span>
               </div>
             </CardContent>
+          </Card>
+        )}
+
+        {/* Aguardando Novos Feedbacks após Reenvio */}
+        {isInNewRound && currentKeyframes.length === 0 && (
+          <Card className="border-warning/50 bg-warning/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-warning" />
+                Aguardando Novos Feedbacks do Cliente
+              </CardTitle>
+              <CardDescription>
+                O vídeo foi reenviado com as correções. Assim que o cliente enviar novos comentários, eles aparecerão aqui para gestão.
+              </CardDescription>
+            </CardHeader>
           </Card>
         )}
 
@@ -451,15 +488,15 @@ const ClientReturn = () => {
                   onDurationChange={setVideoDuration}
                 />
 
-                {/* Gestão de Ajustes */}
-                {hasKeyframes && (
+                {/* Gestão de Ajustes - Apenas Feedbacks Atuais */}
+                {currentKeyframes.length > 0 && (
                   <div className="space-y-4 pt-4 border-t">
                     <h3 className="font-semibold flex items-center gap-2">
                       <Pencil className="w-4 h-4" />
-                      Gestão de Ajustes
+                      Gestão de Ajustes {isInNewRound ? '- Rodada 2' : ''}
                     </h3>
                     <div className="space-y-3">
-                      {keyframes.map((keyframe) => {
+                      {currentKeyframes.map((keyframe) => {
                         const timeInSeconds = keyframe.attachments[0]?.time || 0;
                         const commentsCount = keyframe.project_feedback?.length || 0;
                         
@@ -579,7 +616,7 @@ const ClientReturn = () => {
         )}
 
         {/* Seção de Reenvio de Vídeo Corrigido */}
-        {hasKeyframes && totalComments > 0 && (
+        {currentKeyframes.length > 0 && totalComments > 0 && (
           <>
             {generatedShareLink ? (
               <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
