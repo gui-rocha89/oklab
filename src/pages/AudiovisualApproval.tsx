@@ -518,6 +518,7 @@ export default function AudiovisualApproval() {
     }
   };
 
+  // Only count keyframes with actual comments for feedback validation
   const hasComments = keyframes.some(k => k.comment.trim().length > 0);
   const hasAnnotations = annotations.length > 0;
   const hasFeedback = hasComments || hasAnnotations;

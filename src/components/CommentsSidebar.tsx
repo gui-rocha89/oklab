@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,18 @@ export function CommentsSidebar({
   const [editingText, setEditingText] = useState('');
   const [editingType, setEditingType] = useState<'keyframe' | 'annotation' | null>(null);
   
-  const totalComments = keyframes.filter(k => k.comment.trim()).length + annotations.length;
+  // Show ALL keyframes including empty ones + annotations
+  const totalComments = keyframes.length + annotations.length;
+  
+  // Auto-open edit mode for newly created empty keyframes
+  useEffect(() => {
+    const emptyKeyframe = keyframes.find(k => !k.comment.trim() && !editingId);
+    if (emptyKeyframe) {
+      setEditingId(emptyKeyframe.id);
+      setEditingText('');
+      setEditingType('keyframe');
+    }
+  }, [keyframes, editingId]);
 
   const startEditing = (id: string, currentText: string, type: 'keyframe' | 'annotation') => {
     setEditingId(id);
@@ -95,9 +106,9 @@ export function CommentsSidebar({
           {/* All Feedback Items - Unified */}
           {totalComments > 0 && (
             <div className="space-y-1.5">
-              {/* Merge keyframes and annotations, sort by time */}
+              {/* Merge ALL keyframes (including empty) and annotations, sort by time */}
               {[
-                ...keyframes.filter(k => k.comment.trim()).map(k => ({ ...k, type: 'keyframe' as const })),
+                ...keyframes.map(k => ({ ...k, type: 'keyframe' as const })),
                 ...annotations.map(a => ({ ...a, type: 'annotation' as const, time: a.timestamp_ms / 1000 }))
               ]
                 .sort((a, b) => a.time - b.time)
@@ -167,6 +178,11 @@ export function CommentsSidebar({
                                 className="min-h-[60px] text-xs"
                                 placeholder="Adicione seu comentário..."
                                 autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                                    saveEditing();
+                                  }
+                                }}
                               />
                               <div className="flex gap-1">
                                 <Button
@@ -191,8 +207,15 @@ export function CommentsSidebar({
                             </div>
                           ) : (
                             <>
-                              <p className="text-xs text-muted-foreground leading-relaxed mb-1.5">
-                                {isKeyframe ? item.comment : ('comment' in item ? item.comment : 'Anotação visual')}
+                              <p className={`text-xs leading-relaxed mb-1.5 ${
+                                isKeyframe && !item.comment.trim() 
+                                  ? 'text-muted-foreground/50 italic' 
+                                  : 'text-muted-foreground'
+                              }`}>
+                                {isKeyframe 
+                                  ? (item.comment.trim() || 'Clique em Editar para adicionar comentário')
+                                  : ('comment' in item ? item.comment : 'Anotação visual')
+                                }
                               </p>
                               
                               {/* Action Buttons */}
