@@ -9,7 +9,7 @@ export function Nav() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > window.innerHeight);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -24,12 +24,12 @@ export function Nav() {
       <div className="container px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center logo-glint logo-pop" aria-label="OK Lab - Página inicial">
+          <a href="/" className="flex items-center logo-glint logo-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded" aria-label="OK Lab - Página inicial">
             <img 
               src="/mkt/brand-mark.svg" 
               alt="OK Lab" 
               className="h-5 w-auto"
-              style={{ height: '20px' }}
+              style={{ height: '18px' }}
             />
           </a>
 
@@ -39,7 +39,7 @@ export function Nav() {
               <a
                 key={idx}
                 href={link.href}
-                className="text-sm text-foreground/80 hover:text-primary transition-colors"
+                className="text-sm text-foreground/80 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded px-1"
               >
                 {link.label}
               </a>
