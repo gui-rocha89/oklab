@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
+import { fadeUpViewport, fadeUpViewportStagger, motionConfig } from '@/lib/motionVariants';
 
 interface FeatureBandProps {
   id: string;
@@ -26,10 +27,7 @@ export function FeatureBand({
       >
         {/* Content */}
         <motion.div
-          initial={{ opacity: 0, x: reverse ? 20 : -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
+          {...fadeUpViewport}
           className={reverse ? 'lg:order-2' : ''}
         >
           <h3 className="mkt-h2 text-foreground mb-4">
@@ -42,13 +40,13 @@ export function FeatureBand({
             {bullets.map((bullet, idx) => (
               <motion.li
                 key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
+                initial={{ opacity: 0, y: motionConfig.translateY }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={motionConfig.viewport}
                 transition={{
-                  duration: 0.25,
-                  delay: idx * 0.06,
-                  ease: 'easeOut',
+                  duration: motionConfig.duration,
+                  ease: motionConfig.easing,
+                  delay: idx * 0.08,
                 }}
                 className="flex items-start gap-3"
               >
@@ -63,10 +61,14 @@ export function FeatureBand({
 
         {/* Image */}
         <motion.div
-          initial={{ opacity: 0, x: reverse ? -20 : 20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.28, ease: 'easeOut', delay: 0.1 }}
+          initial={{ opacity: 0, y: motionConfig.translateY }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={motionConfig.viewport}
+          transition={{
+            duration: motionConfig.duration,
+            ease: motionConfig.easing,
+            delay: 0.1,
+          }}
           className={reverse ? 'lg:order-1' : ''}
         >
           <div className="relative rounded-lg overflow-hidden mkt-card">

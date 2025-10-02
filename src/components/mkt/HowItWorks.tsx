@@ -1,5 +1,6 @@
 import { howItWorks } from '@/mkt/content';
 import { motion } from 'framer-motion';
+import { fadeUpViewport, fadeUpViewportStagger } from '@/lib/motionVariants';
 
 export function HowItWorks() {
   return (
@@ -9,10 +10,7 @@ export function HowItWorks() {
     >
       <div className="container px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.3 }}
+          {...fadeUpViewport}
           className="text-center mb-16"
         >
           <h2 className="mkt-h2 text-foreground mb-4">
@@ -27,10 +25,7 @@ export function HowItWorks() {
           {howItWorks.steps.map((step, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: idx * 0.1 }}
+              {...fadeUpViewportStagger(idx)}
               className="space-y-4"
             >
               <div className="relative rounded-lg overflow-hidden mkt-card">

@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { hero } from '@/mkt/content';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { fadeUp } from '@/lib/motionVariants';
 
 export function Hero() {
   const [isVisible, setIsVisible] = useState(false);
@@ -25,9 +26,8 @@ export function Hero() {
 
       <div className="container relative z-10 px-4 sm:px-6 lg:px-8 py-32">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+          {...fadeUp}
+          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : fadeUp.initial.y }}
           className="max-w-5xl mx-auto text-center space-y-12"
         >
           {/* Headline & Subcopy */}
