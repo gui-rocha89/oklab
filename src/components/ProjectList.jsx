@@ -20,21 +20,20 @@ import {
   AlertTriangle,
   Loader2,
   Eye,
-  Filter,
   ChevronDown,
   X,
   Video,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ProjectViewerModal from '@/components/ProjectViewerModal';
 import CommentModal from '@/components/CommentModal';
 import ProjectEditModal from '@/components/ProjectEditModal';
+import { StatusBadge, statusConfig } from '@/components/StatusBadge';
 
 const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTab }) => {
-  // Task 1: Estados para filtros avançados
+  // Estados para filtros
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [downloadingId, setDownloadingId] = useState(null);
@@ -42,9 +41,8 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
   const [commentingProject, setCommentingProject] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
   
-  // Novos estados para filtros avançados
+  // Status filter only
   const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   
   const { toast } = useToast();
@@ -59,45 +57,21 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
   // Status options for dropdown
   const statusOptions = [
     { value: 'all', label: 'Todos os Status', count: projects.length },
-    { value: 'pending', label: 'Pendente', count: projects.filter(p => p.status === 'pending').length },
-    { value: 'approved', label: 'Aprovado', count: projects.filter(p => p.status === 'approved').length },
-    { value: 'rejected', label: 'Rejeitado', count: projects.filter(p => p.status === 'rejected').length },
+    { value: 'pending', label: 'Em Produção', count: projects.filter(p => p.status === 'pending').length },
     { value: 'feedback-sent', label: 'Feedback Enviado', count: projects.filter(p => p.status === 'feedback-sent').length },
-  ];
-
-  // Priority options for dropdown 
-  const priorityOptions = [
-    { value: 'all', label: 'Todas as Prioridades', count: projects.length, icon: '📋' },
-    { value: 'urgent', label: 'Urgente', count: projects.filter(p => p.priority === 'urgent').length, icon: '⚠️' },
-    { value: 'high', label: 'Alta', count: projects.filter(p => p.priority === 'high').length, icon: '🔴' },
-    { value: 'medium', label: 'Média', count: projects.filter(p => p.priority === 'medium').length, icon: '🟡' },
-    { value: 'low', label: 'Baixa', count: projects.filter(p => p.priority === 'low').length, icon: '🟢' },
+    { value: 'feedback-resent', label: 'Feedback Reenviado', count: projects.filter(p => p.status === 'feedback-resent').length },
+    { value: 'feedback-received', label: 'Feedback Recebido', count: projects.filter(p => p.status === 'feedback-received').length },
+    { value: 'in-revision', label: 'Em Revisão', count: projects.filter(p => p.status === 'in-revision').length },
+    { value: 'approved', label: 'Aprovado', count: projects.filter(p => p.status === 'approved').length },
+    { value: 'completed', label: 'Concluído', count: projects.filter(p => p.status === 'completed').length },
   ];
 
   // Utility functions
   const getStatusConfig = (status) => {
-    const configs = {
-      pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', label: 'Pendente' },
-      approved: { color: 'bg-green-100 text-green-800 border-green-300', label: 'Aprovado' },
-      rejected: { color: 'bg-red-100 text-red-800 border-red-300', label: 'Rejeitado' },
-      'feedback-sent': { color: 'bg-blue-100 text-blue-800 border-blue-300', label: 'Feedback Enviado' },
-      default: { color: 'bg-gray-100 text-gray-600 border-gray-300', label: 'Desconhecido' }
-    };
-    return configs[status] || configs.default;
+    return statusConfig[status] || statusConfig['pending'];
   };
 
-  const getPriorityConfig = (priority) => {
-    const configs = {
-      urgent: { color: 'bg-red-200 text-red-900 border-red-400', label: 'Urgente', icon: '⚠️' },
-      high: { color: 'bg-red-100 text-red-800 border-red-300', label: 'Alta', icon: '🔴' },
-      medium: { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', label: 'Média', icon: '🟡' },
-      low: { color: 'bg-emerald-100 text-emerald-800 border-emerald-300', label: 'Baixa', icon: '🟢' },
-      default: { color: 'bg-gray-100 text-gray-600 border-gray-300', label: 'Não definida', icon: '⚪' }
-    };
-    return configs[priority] || configs.default;
-  };
-
-  // Task 2: Lógica de filtragem avançada dos projetos
+  // Lógica de filtragem dos projetos
   const filteredProjects = projects.filter(project => {
     // Filtro básico (existente)
     const matchesBasicFilter = activeFilter === 'all' || 
@@ -109,23 +83,21 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
                          (project.author && project.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Filtros avançados
+    // Filtro de status
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
     
-    return matchesBasicFilter && matchesSearch && matchesStatus && matchesPriority;
+    return matchesBasicFilter && matchesSearch && matchesStatus;
   });
 
   // Clear all filters function
   const clearAllFilters = () => {
     setActiveFilter('all');
     setStatusFilter('all');
-    setPriorityFilter('all');
     setSearchTerm('');
   };
 
   // Check if any advanced filters are active
-  const hasActiveFilters = statusFilter !== 'all' || priorityFilter !== 'all' || searchTerm !== '';
+  const hasActiveFilters = statusFilter !== 'all' || searchTerm !== '';
 
   const handleAdjustProject = (projectId) => {
     const project = projects.find(p => p.id === projectId);
@@ -277,16 +249,7 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
       }
     };
 
-    const priorityConfig = {
-      high: { color: 'priority-high', label: 'Alta', dot: 'bg-red-500' },
-      medium: { color: 'priority-medium', label: 'Média', dot: 'bg-yellow-500' },
-      low: { color: 'priority-low', label: 'Baixa', dot: 'bg-emerald-500' },
-      urgent: { color: 'priority-urgent', label: 'Urgente', dot: 'bg-red-600 animate-pulse' },
-      default: { color: 'priority-low', label: 'Não definida', dot: 'bg-gray-400' }
-    };
-
     const config = statusConfig[project.status] || statusConfig.default;
-    const priority = priorityConfig[project.priority] || priorityConfig.default;
     const StatusIcon = config.icon;
 
     const isRejectedOrSent = project.sharedAt || project.status === 'rejected';
@@ -318,7 +281,6 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">
               <h3 className="font-bold text-gray-900 text-lg">{project.title}</h3>
-              <div className={`w-2 h-2 rounded-full ${priority.dot}`} title={`Prioridade ${priority.label}`}></div>
             </div>
             <p className="text-gray-600 mb-3">{project.description}</p>
             
@@ -355,15 +317,12 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
               {project.type}
             </span>
           )}
-          <Badge className={`${getPriorityConfig(project.priority).color} border text-xs font-medium`}>
-            <span className="flex items-center space-x-1">
-              <span>{getPriorityConfig(project.priority).icon}</span>
-              <span>Prioridade {getPriorityConfig(project.priority).label}</span>
-            </span>
-          </Badge>
-          <Badge className={`${getStatusConfig(project.status).color} border text-xs font-medium`}>
-            {getStatusConfig(project.status).label}
-          </Badge>
+          <StatusBadge
+            currentStatus={project.status}
+            onChange={async (newStatus) => {
+              await onProjectAction(project.id, 'update', { ...project, status: newStatus });
+            }}
+          />
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">

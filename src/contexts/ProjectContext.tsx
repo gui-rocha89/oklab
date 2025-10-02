@@ -8,8 +8,7 @@ export interface Project {
   share_id: string;
   title: string;
   description?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'feedback-sent' | 'in-progress' | 'archived';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'approved' | 'rejected' | 'feedback-sent' | 'feedback-resent' | 'feedback-received' | 'in-revision' | 'in-progress' | 'completed' | 'archived';
   client: string;
   type: 'Vídeo' | 'Audiovisual' | 'Design' | 'Documento' | 'Apresentação';
   approval_date?: string;
@@ -56,9 +55,7 @@ interface ProjectContextType {
     feedbacks: number;
     clientSatisfaction: number;
   };
-  filterByPriority: (priority: Project['priority']) => Project[];
   filterByStatus: (status: Project['status']) => Project[];
-  sortByPriority: (projects?: Project[]) => Project[];
   getProjectsByClient: (client: string) => Project[];
   getOverdueProjects: () => Project[];
   getAllFeedbacks: () => Array<{
@@ -353,18 +350,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
-  const sortByPriority = (projectList: Project[] = projects): Project[] => {
-    const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-    return [...projectList].sort((a, b) => {
-      const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
-      const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-      return priorityB - priorityA;
-    });
-  };
-
-  const filterByPriority = (priority: Project['priority']): Project[] => {
-    return projects.filter(project => project.priority === priority);
-  };
 
   const filterByStatus = (status: Project['status']): Project[] => {
     return projects.filter(project => project.status === status);
@@ -392,7 +377,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
             status: feedback.status,
             author: project.client || 'Cliente',
             response: feedback.response,
-            priority: project.priority,
             type: project.type,
           });
         });
@@ -454,9 +438,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       updateProject,
       deleteProject,
       getProjectStats,
-      filterByPriority,
       filterByStatus,
-      sortByPriority,
       getProjectsByClient,
       getOverdueProjects,
       addFeedbackResponse,

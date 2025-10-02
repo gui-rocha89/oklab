@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Grid, List, Plus, Eye, Edit, Trash2, ChevronDown, MessageSquare, Video, CheckCircle2, Link } from "lucide-react";
+import { Search, Grid, List, Plus, Eye, Edit, Trash2, MessageSquare, Video, CheckCircle2, Link, Inbox } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { StatusBadge, statusConfig } from "@/components/StatusBadge";
 
 // ... keep existing code (imports)
 
@@ -20,62 +20,23 @@ export default function Projects() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const navigate = useNavigate();
 
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case "approved": return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "pending": return "bg-amber-100 text-amber-800 border-amber-200";
-      case "rejected": return "bg-red-100 text-red-800 border-red-200";
-      case "feedback-sent": return "bg-blue-100 text-blue-800 border-blue-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusText = (status: string): string => {
-    switch (status) {
-      case "approved": return "Aprovado";
-      case "pending": return "Pendente";
-      case "rejected": return "Rejeitado";
-      case "feedback-sent": return "Feedback Enviado";
-      default: return status;
-    }
-  };
-
-  const getPriorityColor = (priority: string): string => {
-    switch (priority) {
-      case "high": 
-      case "urgent": 
-        return "bg-red-100 text-red-800 border-red-300 hover:bg-red-200";
-      case "medium": 
-        return "bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200";
-      case "low": 
-        return "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200";
-      default: 
-        return "bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200";
-    }
-  };
-
-  const getPriorityText = (priority: string): string => {
-    switch (priority) {
-      case "high": return "Alta";
-      case "medium": return "Média";
-      case "low": return "Baixa";
-      case "urgent": return "Urgente";
-      default: return "Não definida";
-    }
-  };
-
-  const getPriorityIcon = (priority: string): string => {
-    switch (priority) {
-      case "high": return "🔴";
-      case "urgent": return "⚠️";
-      case "medium": return "🟡";
-      case "low": return "🟢";
-      default: return "⚪";
+  const handleStatusChange = async (projectId: string, newStatus: string) => {
+    try {
+      await updateProject(projectId, { status: newStatus as any });
+      toast({
+        title: "Status atualizado",
+        description: `Status alterado para: ${statusConfig[newStatus as keyof typeof statusConfig]?.label}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar status",
+        variant: "destructive",
+      });
     }
   };
 
@@ -84,21 +45,19 @@ export default function Projects() {
                          (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          project.client.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || project.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || project.priority === priorityFilter;
     const matchesType = typeFilter === "all" || project.type === typeFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority && matchesType;
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   // Get unique project types for filter
   const uniqueTypes = [...new Set(projects.map(p => p.type))];
 
   // Stats for filter badges
-  const getFilterCount = (filter: string, type: 'status' | 'priority' | 'type') => {
+  const getFilterCount = (filter: string, type: 'status' | 'type') => {
     if (filter === "all") return projects.length;
     return projects.filter(p => {
       if (type === 'status') return p.status === filter;
-      if (type === 'priority') return p.priority === filter;
       if (type === 'type') return p.type === filter;
       return false;
     }).length;
@@ -192,97 +151,15 @@ export default function Projects() {
                   </SelectTrigger>
                   <SelectContent className="bg-popover border shadow-lg z-50">
                     <SelectItem value="all">Todos ({getFilterCount("all", "status")})</SelectItem>
-                    <SelectItem value="pending">Pendente ({getFilterCount("pending", "status")})</SelectItem>
-                    <SelectItem value="approved">Aprovado ({getFilterCount("approved", "status")})</SelectItem>
-                    <SelectItem value="in-progress">Em Progresso ({getFilterCount("in-progress", "status")})</SelectItem>
-                    <SelectItem value="rejected">Rejeitado ({getFilterCount("rejected", "status")})</SelectItem>
+                    <SelectItem value="pending">Em Produção ({getFilterCount("pending", "status")})</SelectItem>
                     <SelectItem value="feedback-sent">Feedback Enviado ({getFilterCount("feedback-sent", "status")})</SelectItem>
+                    <SelectItem value="feedback-resent">Feedback Reenviado ({getFilterCount("feedback-resent", "status")})</SelectItem>
+                    <SelectItem value="feedback-received">Feedback Recebido ({getFilterCount("feedback-received", "status")})</SelectItem>
+                    <SelectItem value="in-revision">Em Revisão ({getFilterCount("in-revision", "status")})</SelectItem>
+                    <SelectItem value="approved">Aprovado ({getFilterCount("approved", "status")})</SelectItem>
+                    <SelectItem value="completed">Concluído ({getFilterCount("completed", "status")})</SelectItem>
                   </SelectContent>
                 </Select>
-
-                {/* Enhanced Priority Filter with Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-full sm:w-44 h-11 px-3 rounded-md justify-between bg-background shadow-sm hover:bg-muted hover:text-foreground hover:border-border transition-all duration-200 truncate text-ellipsis whitespace-nowrap overflow-hidden"
-                      data-filter="priority"
-                    >
-                      <span className="flex items-center space-x-2 truncate">
-                        <span>{getPriorityIcon(priorityFilter)}</span>
-                        <span className="truncate">
-                          {priorityFilter === "all" 
-                            ? "Todas as Prioridades" 
-                            : getPriorityText(priorityFilter)
-                          }
-                        </span>
-                      </span>
-                      <ChevronDown className="h-4 w-4 flex-shrink-0" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-popover border shadow-lg z-50">
-                    <DropdownMenuItem 
-                      onClick={() => setPriorityFilter("all")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-muted"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <span>📋</span>
-                        <span>Todas as Prioridades</span>
-                      </span>
-                      <Badge variant="secondary" className="ml-2">
-                        {getFilterCount("all", "priority")}
-                      </Badge>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setPriorityFilter("urgent")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <span>⚠️</span>
-                        <span>Urgente</span>
-                      </span>
-                      <Badge className="bg-red-100 text-red-800">
-                        {getFilterCount("urgent", "priority")}
-                      </Badge>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setPriorityFilter("high")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/20"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <span>🔴</span>
-                        <span>Alta</span>
-                      </span>
-                      <Badge className="bg-red-100 text-red-800">
-                        {getFilterCount("high", "priority")}
-                      </Badge>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setPriorityFilter("medium")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <span>🟡</span>
-                        <span>Média</span>
-                      </span>
-                      <Badge className="bg-yellow-100 text-yellow-800">
-                        {getFilterCount("medium", "priority")}
-                      </Badge>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setPriorityFilter("low")}
-                      className="flex items-center justify-between cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <span>🟢</span>
-                        <span>Baixa</span>
-                      </span>
-                      <Badge className="bg-emerald-100 text-emerald-800">
-                        {getFilterCount("low", "priority")}
-                      </Badge>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
 
                 {/* Type Filter */}
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -326,7 +203,7 @@ export default function Projects() {
           </div>
 
           {/* Active Filters Display */}
-          {(priorityFilter !== "all" || statusFilter !== "all" || typeFilter !== "all" || searchTerm) && (
+          {(statusFilter !== "all" || typeFilter !== "all" || searchTerm) && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -345,21 +222,10 @@ export default function Projects() {
                 </Badge>
               )}
               {statusFilter !== "all" && (
-                <Badge variant="secondary" className={getStatusColor(statusFilter)}>
-                  Status: {getStatusText(statusFilter)}
+                <Badge variant="secondary" className={statusConfig[statusFilter as keyof typeof statusConfig]?.color}>
+                  Status: {statusConfig[statusFilter as keyof typeof statusConfig]?.label}
                   <button 
                     onClick={() => setStatusFilter("all")} 
-                    className="ml-1 hover:bg-opacity-70 rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {priorityFilter !== "all" && (
-                <Badge variant="secondary" className={getPriorityColor(priorityFilter)}>
-                  {getPriorityIcon(priorityFilter)} {getPriorityText(priorityFilter)}
-                  <button 
-                    onClick={() => setPriorityFilter("all")} 
                     className="ml-1 hover:bg-opacity-70 rounded-full w-4 h-4 flex items-center justify-center text-xs"
                   >
                     ×
@@ -450,17 +316,12 @@ export default function Projects() {
                         )}
                       </div>
                       
-                      {/* Status & Priority Badges */}
-                      <div className="flex flex-col items-end space-y-2 ml-3">
-                        <Badge className={`${getStatusColor(project.status)} border-0 shadow-sm font-medium`}>
-                          {getStatusText(project.status)}
-                        </Badge>
-                        <Badge className={`${getPriorityColor(project.priority)} border-0 shadow-sm font-medium`}>
-                          <span className="flex items-center space-x-1">
-                            <span>{getPriorityIcon(project.priority)}</span>
-                            <span>{getPriorityText(project.priority)}</span>
-                          </span>
-                        </Badge>
+                      {/* Status Badge - Click to Change */}
+                      <div className="flex flex-col items-end space-y-2 ml-3" onClick={(e) => e.stopPropagation()}>
+                        <StatusBadge
+                          currentStatus={project.status}
+                          onChange={(newStatus) => handleStatusChange(project.id, newStatus)}
+                        />
                       </div>
                     </div>
                   </CardHeader>
@@ -607,14 +468,14 @@ export default function Projects() {
                               <Video className="w-3 h-3 mr-1" />
                               AUDIOVISUAL
                             </Badge>
-                          )}
-                          <Badge className={getStatusColor(project.status)}>
-                            {getStatusText(project.status)}
-                          </Badge>
-                          <Badge className={getPriorityColor(project.priority)}>
-                            {project.priority === "high" ? "Alta" : project.priority === "medium" ? "Média" : "Baixa"}
-                          </Badge>
-                        </div>
+                           )}
+                           <div onClick={(e) => e.stopPropagation()}>
+                             <StatusBadge
+                               currentStatus={project.status}
+                               onChange={(newStatus) => handleStatusChange(project.id, newStatus)}
+                             />
+                           </div>
+                         </div>
                         
                         <p className="text-muted-foreground text-sm mb-2 line-clamp-1">
                           {project.description}
@@ -705,7 +566,7 @@ export default function Projects() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <div className="text-center">
-                <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum projeto encontrado</h3>
                 <p className="text-muted-foreground mb-4">
                   Tente ajustar os filtros ou criar um novo projeto.
