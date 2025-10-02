@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Clock, 
   CheckCircle, 
@@ -27,9 +28,8 @@ import NewAudiovisualProjectModal from "@/components/NewAudiovisualProjectModal"
 import NewBriefingModal from "@/components/NewBriefingModal";
 import ClientReviewsModal from "@/components/ClientReviewsModal";
 
-// ... keep existing code (imports)
-
 const ProjectCard = ({ project, index }: any) => {
+  const navigate = useNavigate();
   const statusConfig = {
     pending: { 
       color: 'status-pending', 
@@ -83,7 +83,8 @@ const ProjectCard = ({ project, index }: any) => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="project-card card-hover bg-card border border-border rounded-xl p-6 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+      onClick={() => navigate(`/retorno-cliente/${project.id}`)}
+      className="project-card card-hover bg-card border border-border rounded-xl p-6 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
