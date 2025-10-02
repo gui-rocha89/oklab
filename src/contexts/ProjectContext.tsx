@@ -13,6 +13,7 @@ export interface Project {
   type: 'Vídeo' | 'Audiovisual' | 'Design' | 'Documento' | 'Apresentação';
   approval_date?: string;
   completed_at?: string;
+  resent_at?: string;
   created_at: string;
   updated_at: string;
   user_id: string;

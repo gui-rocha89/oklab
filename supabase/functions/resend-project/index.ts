@@ -70,7 +70,7 @@ serve(async (req) => {
     // Generate new share_id for each resend to invalidate old links
     const newShareId = `av-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
     
-    // Update project with new video, new share_id and status
+    // Update project with new video, new share_id, status and resent_at timestamp
     const { error: updateError } = await supabase
       .from('projects')
       .update({
@@ -78,6 +78,7 @@ serve(async (req) => {
         share_id: newShareId,
         status: 'in-revision',
         completed_at: null,
+        resent_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', projectId);

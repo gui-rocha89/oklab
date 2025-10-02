@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 export type WorkflowStatus = 
   | 'pending'
   | 'feedback-sent' 
-  | 'feedback-resent'
   | 'in-revision'
   | 'approved'
   | 'completed';
@@ -31,12 +30,6 @@ const statusConfig: Record<WorkflowStatus, StatusConfig> = {
     color: '!bg-blue-100 !text-blue-800 !border-blue-300 hover:!bg-blue-200',
     icon: '📤',
     dot: 'bg-blue-500'
-  },
-  'feedback-resent': {
-    label: 'Feedback Reenviado',
-    color: '!bg-purple-100 !text-purple-800 !border-purple-300 hover:!bg-purple-200',
-    icon: '🔄',
-    dot: 'bg-purple-500'
   },
   'in-revision': {
     label: 'Em Revisão',

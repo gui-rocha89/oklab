@@ -306,12 +306,20 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           {isAudiovisual ? (
-            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs font-bold flex items-center space-x-1">
-              <Video className="w-3 h-3" />
-              <span>AUDIOVISUAL</span>
-            </Badge>
+            <>
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs font-bold flex items-center space-x-1">
+                <Video className="w-3 h-3" />
+                <span>AUDIOVISUAL</span>
+              </Badge>
+              {project.resent_at && !project.completed_at && (
+                <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-xs font-bold animate-pulse flex items-center space-x-1">
+                  <Video className="w-3 h-3" />
+                  <span>PROJETO REENVIADO</span>
+                </Badge>
+              )}
+            </>
           ) : (
             <span className="text-xs bg-white bg-opacity-70 text-gray-700 px-3 py-1 rounded-full border">
               {project.type}

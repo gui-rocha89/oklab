@@ -335,6 +335,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          resent_at: string | null
           share_id: string
           status: string
           title: string
@@ -350,6 +351,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          resent_at?: string | null
           share_id: string
           status?: string
           title: string
@@ -365,6 +367,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          resent_at?: string | null
           share_id?: string
           status?: string
           title?: string

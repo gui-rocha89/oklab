@@ -322,6 +322,12 @@ export default function Projects() {
                               <Video className="w-3 h-3 mr-1" />
                               AUDIOVISUAL
                             </Badge>
+                            {project.resent_at && !project.completed_at && (
+                              <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-xs font-bold animate-pulse">
+                                <Video className="w-3 h-3 mr-1" />
+                                PROJETO REENVIADO
+                              </Badge>
+                            )}
                             {project.completed_at && (
                               <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 text-xs font-bold">
                                 <CheckCircle2 className="w-3 h-3 mr-1" />
