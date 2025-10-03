@@ -348,7 +348,7 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="w-full text-sm text-gray-800 font-medium hover:text-primary mt-4 transition-colors"
+                  className="w-full text-sm text-[#666666] font-medium hover:text-primary mt-4 transition-colors"
                 >
                   {isSignUp ? 
                     "Já tem uma conta? Fazer login" : 
