@@ -23,11 +23,6 @@ export function Nav() {
     >
       <div className="container px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center">
-            <span className="text-sm font-semibold text-foreground">OK Lab</span>
-          </div>
-
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-8">
             {nav.links.map((link, idx) => (
