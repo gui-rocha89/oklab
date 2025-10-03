@@ -242,10 +242,10 @@ export default function Auth() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-gray-800 text-sm leading-relaxed"
+                className="text-slate-700 text-sm leading-relaxed"
               >
                 Acesso exclusivo aos tripulantes da galáxia<br />
-                <span className="font-semibold">streamlab.com.br</span>
+                <span className="font-semibold text-slate-800">streamlab.com.br</span>
               </motion.p>
             </div>
 
@@ -259,7 +259,7 @@ export default function Auth() {
                 transition={{ delay: 0.3 }}
               >
                 <div className="space-y-2">
-                  <Label htmlFor="reset-email" className="text-sm font-medium text-[#374151]">
+                  <Label htmlFor="reset-email" className="text-sm font-medium text-slate-700">
                     E-mail
                   </Label>
                   <Input
@@ -268,7 +268,7 @@ export default function Auth() {
                     placeholder="seu@email.com"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     required
                   />
                 </div>
@@ -276,7 +276,7 @@ export default function Auth() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold text-base rounded-xl mt-6 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold text-base rounded-xl mt-6 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   {loading ? "ENVIANDO..." : "ENVIAR EMAIL DE RECUPERAÇÃO"}
                 </Button>
@@ -287,7 +287,7 @@ export default function Auth() {
                     setIsResetPassword(false);
                     setFormData({ email: '', password: '', confirmPassword: '' });
                   }}
-                  className="w-full text-sm text-[#6B7280] font-medium hover:text-[#C2410C] mt-4 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309] rounded"
+                  className="w-full text-sm text-slate-600 font-medium hover:text-primary mt-4 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary rounded"
                 >
                   Voltar ao login
                 </button>
@@ -301,7 +301,7 @@ export default function Auth() {
                 transition={{ delay: 0.3 }}
               >
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-[#374151]">
+                  <Label htmlFor="email" className="text-sm font-medium text-slate-700">
                     E-mail
                   </Label>
                   <Input
@@ -310,13 +310,13 @@ export default function Auth() {
                     placeholder="seu@email.com"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-[#374151]">
+                  <Label htmlFor="password" className="text-sm font-medium text-slate-700">
                     Senha
                   </Label>
                   <Input
@@ -325,14 +325,14 @@ export default function Auth() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     required
                   />
                 </div>
 
                 {isSignUp && (
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password" className="text-sm font-medium text-[#374151]">
+                    <Label htmlFor="confirm-password" className="text-sm font-medium text-slate-700">
                       Confirmar Senha
                     </Label>
                     <Input
@@ -341,7 +341,7 @@ export default function Auth() {
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                      className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                       required
                     />
                   </div>
@@ -352,7 +352,7 @@ export default function Auth() {
                     <button
                       type="button"
                       onClick={() => setIsResetPassword(true)}
-                      className="text-sm text-[#C2410C] hover:text-[#9A3412] underline-offset-2 hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309] rounded"
+                      className="text-sm text-primary hover:text-primary/80 underline-offset-2 hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary rounded"
                     >
                       Esqueceu a senha?
                     </button>
@@ -362,7 +362,7 @@ export default function Auth() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold text-base rounded-xl mt-6 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold text-base rounded-xl mt-6 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   {loading ? 
                     (isSignUp ? "CADASTRANDO..." : "ENTRANDO...") : 
@@ -373,7 +373,7 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="w-full text-sm text-[#6B7280] font-medium hover:text-[#C2410C] mt-4 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309] rounded"
+                  className="w-full text-sm text-slate-600 font-medium hover:text-primary mt-4 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary rounded"
                 >
                   {isSignUp ? 
                     "Já tem uma conta? Fazer login" : 
@@ -390,7 +390,7 @@ export default function Auth() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <p className="text-[#6B7280] text-xs">
+              <p className="text-slate-600 text-xs">
                 Um produto desenvolvido <span className="font-semibold">By Stream Lab</span>
               </p>
             </motion.div>
