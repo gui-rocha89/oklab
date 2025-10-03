@@ -37,7 +37,7 @@ export default function Auth() {
         }
         
         if (session) {
-          navigate('/');
+          navigate('/dashboard');
         }
       } catch (error) {
         console.error('Error checking session:', error);
@@ -189,8 +189,8 @@ export default function Auth() {
             description: "Redirecionando...",
           });
           
-          console.log('↪️ Navegando para home...');
-          navigate('/');
+          console.log('↪️ Navegando para dashboard...');
+          navigate('/dashboard');
         }
       }
     } catch (error) {
