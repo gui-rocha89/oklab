@@ -366,7 +366,7 @@ export default function Auth() {
               transition={{ delay: 0.4 }}
             >
               <p className="text-[#666666] text-xs">
-                Um produto desenvolvido <span className="font-medium text-gray-800">By Stream Lab</span>
+                Um produto desenvolvido <span className="font-medium text-primary">By Stream Lab</span>
               </p>
             </motion.div>
           </CardContent>
