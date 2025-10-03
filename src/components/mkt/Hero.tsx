@@ -35,9 +35,9 @@ export function Hero() {
             <img 
               src="/brand/oklab-logo-white.svg" 
               alt="OK Lab" 
-              className="h-16 w-auto logo-glint"
-              width="240"
-              height="64"
+              className="h-24 w-auto logo-glint"
+              width="360"
+              height="96"
             />
           </div>
 
