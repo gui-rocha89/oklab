@@ -82,75 +82,80 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Base colors - Gray scale theme */
-    --background: 0 0% 7%;           /* #121212 - Very dark gray */
-    --foreground: 0 0% 98%;          /* #fafafa - Pure white text */
+    /* Base colors - Dark Polish */
+    --background: 220 25% 5%;        /* #0B0D12 */
+    --foreground: 220 25% 92%;       /* #E8EBF0 */
 
     /* Card and surfaces */
-    --card: 0 0% 12%;               /* #1f1f1f - Dark gray cards */
-    --card-foreground: 0 0% 98%;    /* #fafafa - White text on cards */
-    --surface: 0 0% 10%;            /* #1a1a1a - Elevated surface */
+    --card: 220 22% 8%;              /* #11141A */
+    --card-foreground: 220 25% 92%;  /* #E8EBF0 */
+    --surface: 220 22% 8%;           /* #11141A */
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 22% 8%;
+    --popover-foreground: 220 25% 92%;
 
-    /* Primary - Keep the orange vibrant */
-    --primary: 22 91% 59%;          /* OK Lab Orange #f58634 */
-    --primary-foreground: 0 0% 98%; /* White text on orange */
-    --primary-glow: 22 91% 68%;     /* Brighter orange for glow */
-    --primary-light: 25 85% 60%;    /* Light orange variant */
+    /* Primary - OK Lab Orange */
+    --primary: 22 91% 59%;           /* #f58634 */
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 22 91% 68%;
+    --primary-light: 22 91% 85%;
 
-    /* Secondary and muted - Gray scale */
-    --secondary: 0 0% 18%;          /* #2d2d2d - Medium gray */
-    --secondary-foreground: 0 0% 98%; /* White text */
-    
-    --accent: 0 0% 18%;
+    /* Brand accent - Cyan */
+    --brand: 189 94% 43%;            /* #06B6D4 */
+    --brand-foreground: 0 0% 98%;
+
+    /* Accent - Purple */
+    --accent: 270 67% 57%;           /* #7C3AED */
     --accent-foreground: 0 0% 98%;
 
+    /* Secondary - Dark surface */
+    --secondary: 220 22% 10%;
+    --secondary-foreground: 220 25% 92%;
+
     /* Muted backgrounds and text */
-    --muted: 0 0% 20%;              /* #333333 - Muted gray background */
-    --muted-foreground: 0 0% 70%;   /* #b3b3b3 - Light gray text */
+    --muted: 220 22% 12%;
+    --muted-foreground: 220 15% 70%;  /* #A7B0BE */
 
-    /* Status colors - Adjusted for dark theme with white text */
-    --success: 142 71% 45%;         /* Green */
-    --success-foreground: 0 0% 98%; /* White text */
+    /* Status colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
     
-    --warning: 43 96% 56%;          /* Yellow */
-    --warning-foreground: 0 0% 7%;  /* Dark text on yellow */
+    --warning: 43 96% 56%;
+    --warning-foreground: 0 0% 7%;
     
-    --destructive: 0 72% 51%;       /* Red */
-    --destructive-foreground: 0 0% 98%; /* White text */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
 
-    /* Neutral palette - Pure gray scale */
-    --neutral-dark: 0 0% 7%;        /* Very dark */
-    --neutral-medium: 0 0% 18%;     /* Medium gray */
-    --neutral-light: 0 0% 20%;      /* Light gray */
+    /* Neutral palette */
+    --neutral-dark: 220 25% 5%;
+    --neutral-medium: 220 22% 12%;
+    --neutral-light: 220 15% 20%;
 
-    /* Borders and inputs - Gray scale */
-    --border: 0 0% 25%;             /* #404040 - Subtle gray borders */
-    --input: 0 0% 18%;              /* #2d2d2d - Dark input background */
-    --ring: 25 75% 52%;             /* Orange focus ring */
+    /* Borders and inputs */
+    --border: 220 20% 14%;           /* #1D222B */
+    --input: 220 22% 10%;
+    --ring: 22 91% 59%;
 
-  /* Gradients - Enhanced with top-to-bottom gradient */
-  --gradient-primary: hsl(25 75% 52%);
-  --gradient-secondary: hsl(25 75% 58%);
-  --gradient-subtle: linear-gradient(180deg, hsl(0 0% 7%), hsl(0 0% 12%));
-  --gradient-header-dark: linear-gradient(180deg, hsl(0 0% 20%), hsl(0 0% 7%));
+    /* Gradients */
+    --gradient-primary: hsl(22 91% 59%);
+    --gradient-secondary: hsl(22 91% 68%);
+    --gradient-subtle: linear-gradient(180deg, hsl(220 25% 5%), hsl(220 22% 8%));
 
-    /* Shadows - Adjusted for dark theme */
+    /* Shadows - Dark Polish */
     --shadow-elegant: 0 4px 6px -1px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 0 1px hsl(25 75% 52% / 0.4), 0 10px 15px -3px hsl(25 75% 52% / 0.4);
+    --shadow-glow: 0 0 0 1px hsl(22 91% 59% / 0.4), 0 10px 15px -3px hsl(22 91% 59% / 0.4);
     --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.5), 0 1px 2px -1px hsl(0 0% 0% / 0.5);
+    --shadow-mkt: 0 10px 30px rgba(0, 0, 0, 0.35);
 
-    /* Sidebar specific - Gray scale */
-    --sidebar-background: 0 0% 10%;     /* #1a1a1a - Slightly lighter than main bg */
-    --sidebar-foreground: 0 0% 98%;     /* White text */
-    --sidebar-primary: 25 75% 52%;      /* Orange accent */
-    --sidebar-primary-foreground: 0 0% 98%; /* White text */
-    --sidebar-accent: 0 0% 18%;         /* Medium gray */
-    --sidebar-accent-foreground: 0 0% 98%; /* White text */
-    --sidebar-border: 0 0% 25%;         /* Gray border */
-    --sidebar-ring: 25 75% 52%;         /* Orange focus */
+    /* Sidebar */
+    --sidebar-background: 220 22% 8%;
+    --sidebar-foreground: 220 25% 92%;
+    --sidebar-primary: 22 91% 59%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 220 22% 12%;
+    --sidebar-accent-foreground: 220 25% 92%;
+    --sidebar-border: 220 20% 14%;
+    --sidebar-ring: 22 91% 59%;
   }
 }
 

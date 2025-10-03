@@ -2,27 +2,27 @@
 
 /* Typography Scale - Marketing */
 .mkt-h1 {
-  font-size: clamp(2.5rem, 6vw, 4.5rem); /* 40-72px */
+  font-size: clamp(4rem, 6vw, 4.5rem); /* 64-72px */
   line-height: 1.05;
   letter-spacing: -0.02em;
   font-weight: 600;
 }
 
 .mkt-h2 {
-  font-size: clamp(2.25rem, 3.5vw, 3rem); /* 36-48px */
+  font-size: clamp(2.5rem, 4vw, 3rem); /* 40-48px */
   line-height: 1.15;
   letter-spacing: -0.01em;
   font-weight: 600;
 }
 
 .mkt-h3 {
-  font-size: clamp(1.5rem, 2.5vw, 2rem); /* 24-32px */
+  font-size: clamp(1.75rem, 2.5vw, 2rem); /* 28-32px */
   line-height: 1.2;
   font-weight: 600;
 }
 
 .mkt-body {
-  font-size: clamp(1rem, 2vw, 1.25rem); /* 16-20px */
+  font-size: clamp(1.125rem, 1.5vw, 1.25rem); /* 18-20px */
   line-height: 1.6;
 }
 
@@ -37,9 +37,9 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 80% at 50% 20%, #0EA5B722 0%, transparent 60%),
-    radial-gradient(40% 60% at 80% 10%, #7C3AED22 0%, transparent 70%),
-    #0B0D12;
+    radial-gradient(60% 80% at 50% 20%, hsl(var(--brand) / 0.12) 0%, transparent 60%),
+    radial-gradient(40% 60% at 80% 10%, hsl(var(--accent) / 0.12) 0%, transparent 70%),
+    hsl(var(--background));
   mask-image: radial-gradient(120% 100% at 50% 0%, #000 60%, transparent 100%);
   animation: mktShift 14s ease-in-out infinite alternate;
   will-change: transform;
@@ -50,7 +50,7 @@
   position: absolute;
   inset: 0;
   background: url('/mkt/noise.png') repeat;
-  opacity: 0.03;
+  opacity: 0.025;
   mix-blend-mode: overlay;
 }
 
@@ -135,6 +135,13 @@
 /* Section Backgrounds with Radials */
 .mkt-section-bg {
   position: relative;
+  padding: 6rem 0; /* 96px */
+}
+
+@media (min-width: 1024px) {
+  .mkt-section-bg {
+    padding: 8rem 0; /* 128px */
+  }
 }
 
 .mkt-section-bg::before {
@@ -142,15 +149,15 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(50% 50% at 50% 50%, #0EA5B708 0%, transparent 100%);
-  opacity: 0.5;
+  background: radial-gradient(50% 50% at 50% 50%, hsl(var(--brand) / 0.05) 0%, transparent 100%);
+  opacity: 0.6;
 }
 
-/* Card Surface */
+/* Card Surface with Polish Shadow */
 .mkt-card {
   background-color: hsl(var(--surface));
-  border: 1px solid #1D222B;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-mkt);
 }
 
 /* Smooth Performance & Accessibility */
