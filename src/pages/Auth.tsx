@@ -287,7 +287,7 @@ export default function Auth() {
                     setIsResetPassword(false);
                     setFormData({ email: '', password: '', confirmPassword: '' });
                   }}
-                  className="w-full text-sm text-gray-700 font-medium hover:text-primary mt-4 transition-colors"
+                  className="w-full text-sm text-[#6B7280] font-medium hover:text-[#C2410C] mt-4 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309] rounded"
                 >
                   Voltar ao login
                 </button>
