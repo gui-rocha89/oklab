@@ -19,16 +19,16 @@ All colors MUST be HSL.
     --popover-foreground: 220 13% 18%;
 
     /* Primary Orange Palette - Brand Color */
-    --primary: 25 75% 52%;           /* Brand Orange #e67e22 */
+    --primary: 22 91% 59%;           /* OK Lab Orange #f58634 */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 25 75% 58%;      /* Slightly lighter variant */
-    --primary-light: 25 75% 85%;     /* Light tint */
+    --primary-glow: 22 91% 65%;      /* Slightly lighter variant */
+    --primary-light: 22 91% 85%;     /* Light tint */
 
     /* Secondary & Accent Colors */
     --secondary: 220 14% 96%;        /* #f3f4f6 */
     --secondary-foreground: 220 13% 18%;
     
-    --accent: 25 75% 52%;            /* Same as primary brand color */
+    --accent: 22 91% 59%;            /* Same as primary brand color */
     --accent-foreground: 0 0% 100%;
 
     /* Neutral Grays */
@@ -52,29 +52,29 @@ All colors MUST be HSL.
     /* Interactive Elements */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 25 75% 52%;
+    --ring: 22 91% 59%;
 
     --radius: 0.75rem;
 
     /* Gradients - Removed, using solid colors */
-    --gradient-primary: hsl(25 75% 52%);
-    --gradient-secondary: hsl(25 75% 58%);
+    --gradient-primary: hsl(22 91% 59%);
+    --gradient-secondary: hsl(22 91% 65%);
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 98%));
     
     /* Shadows */
-    --shadow-elegant: 0 4px 6px -1px hsl(25 75% 52% / 0.1), 0 2px 4px -2px hsl(25 75% 52% / 0.1);
-    --shadow-glow: 0 0 0 1px hsl(25 75% 52% / 0.1), 0 10px 15px -3px hsl(25 75% 52% / 0.1);
+    --shadow-elegant: 0 4px 6px -1px hsl(22 91% 59% / 0.1), 0 2px 4px -2px hsl(22 91% 59% / 0.1);
+    --shadow-glow: 0 0 0 1px hsl(22 91% 59% / 0.1), 0 10px 15px -3px hsl(22 91% 59% / 0.1);
     --shadow-card: 0 1px 3px 0 hsl(220 13% 18% / 0.1), 0 1px 2px -1px hsl(220 13% 18% / 0.1);
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 13% 18%;
-    --sidebar-primary: 25 75% 52%;
+    --sidebar-primary: 22 91% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
     --sidebar-accent-foreground: 220 13% 18%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 25 75% 52%;
+    --sidebar-ring: 22 91% 59%;
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -95,9 +95,9 @@ All colors MUST be HSL.
     --popover-foreground: 0 0% 98%;
 
     /* Primary - Keep the orange vibrant */
-    --primary: 25 75% 52%;          /* Keep original orange */
+    --primary: 22 91% 59%;          /* OK Lab Orange #f58634 */
     --primary-foreground: 0 0% 98%; /* White text on orange */
-    --primary-glow: 25 95% 65%;     /* Brighter orange for glow */
+    --primary-glow: 22 91% 68%;     /* Brighter orange for glow */
     --primary-light: 25 85% 60%;    /* Light orange variant */
 
     /* Secondary and muted - Gray scale */

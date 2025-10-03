@@ -24,12 +24,17 @@ export function Nav() {
       <div className="container px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center logo-glint logo-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded" aria-label="OK Lab - Página inicial">
+          <a 
+            href="/" 
+            className="flex items-center logo-glint logo-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm" 
+            aria-label="OK Lab - Página inicial"
+          >
             <img 
-              src="/mkt/brand-mark.svg" 
+              src="/brand/oklab-logo-white.svg" 
               alt="OK Lab" 
-              className="h-5 w-auto"
-              style={{ height: '18px' }}
+              className="h-[20px] w-auto"
+              width="120"
+              height="20"
             />
           </a>
 
