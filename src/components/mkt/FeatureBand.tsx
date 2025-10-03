@@ -71,7 +71,7 @@ export function FeatureBand({
           }}
           className={reverse ? 'lg:order-1' : ''}
         >
-          <div className="relative rounded-lg overflow-hidden mkt-card">
+          <div className="relative rounded-lg overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-border/50">
             <img
               src={image}
               alt={title}
