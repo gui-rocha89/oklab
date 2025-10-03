@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Logo } from '@/components/ui/logo';
@@ -252,24 +253,30 @@ export default function Auth() {
             {isResetPassword ? (
               <motion.form 
                 onSubmit={handleResetPassword} 
-                className="space-y-4"
+                className="space-y-5"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Input
-                  type="email"
-                  placeholder="E-mail"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
-                  required
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email" className="text-sm font-medium text-[#374151]">
+                    E-mail
+                  </Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                    required
+                  />
+                </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium text-base rounded-xl mt-6 transition-all duration-200"
+                  className="w-full h-12 bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold text-base rounded-xl mt-6 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
                 >
                   {loading ? "ENVIANDO..." : "ENVIAR EMAIL DE RECUPERAÇÃO"}
                 </Button>
@@ -288,38 +295,56 @@ export default function Auth() {
             ) : (
               <motion.form 
                 onSubmit={handleSubmit} 
-                className="space-y-4"
+                className="space-y-5"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Input
-                  type="email"
-                  placeholder="E-mail"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
-                  required
-                />
-
-                <Input
-                  type="password"
-                  placeholder="Senha"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
-                  required
-                />
-
-                {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-[#374151]">
+                    E-mail
+                  </Label>
                   <Input
-                    type="password"
-                    placeholder="Confirmar Senha"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-[#374151]">
+                    Senha
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                    required
+                  />
+                </div>
+
+                {isSignUp && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password" className="text-sm font-medium text-[#374151]">
+                      Confirmar Senha
+                    </Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
+                      required
+                    />
+                  </div>
                 )}
 
                 {!isSignUp && (
@@ -327,7 +352,7 @@ export default function Auth() {
                     <button
                       type="button"
                       onClick={() => setIsResetPassword(true)}
-                      className="text-sm text-primary hover:underline"
+                      className="text-sm text-[#C2410C] hover:text-[#9A3412] underline-offset-2 hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309] rounded"
                     >
                       Esqueceu a senha?
                     </button>
@@ -337,7 +362,7 @@ export default function Auth() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium text-base rounded-xl mt-6 transition-all duration-200"
+                  className="w-full h-12 bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold text-base rounded-xl mt-6 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309]"
                 >
                   {loading ? 
                     (isSignUp ? "CADASTRANDO..." : "ENTRANDO...") : 
@@ -348,7 +373,7 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="w-full text-sm text-gray-700 font-medium hover:text-primary mt-4 transition-colors"
+                  className="w-full text-sm text-[#6B7280] font-medium hover:text-[#C2410C] mt-4 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B45309] rounded"
                 >
                   {isSignUp ? 
                     "Já tem uma conta? Fazer login" : 
@@ -365,8 +390,8 @@ export default function Auth() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <p className="text-gray-600 text-xs">
-                Um produto desenvolvido <span className="font-medium">By Stream Lab</span>
+              <p className="text-[#6B7280] text-xs">
+                Um produto desenvolvido <span className="font-semibold">By Stream Lab</span>
               </p>
             </motion.div>
           </CardContent>
