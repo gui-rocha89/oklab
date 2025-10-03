@@ -244,7 +244,7 @@ export default function Auth() {
                 className="text-[#666666] text-sm leading-relaxed"
               >
                 Acesso exclusivo aos tripulantes da galáxia<br />
-                <span className="font-semibold text-gray-900">streamlab.com.br</span>
+                <span className="font-semibold text-[#666666]">streamlab.com.br</span>
               </motion.p>
             </div>
 
