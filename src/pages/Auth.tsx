@@ -214,7 +214,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
+    <div className="light min-h-screen bg-primary flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -262,7 +262,7 @@ export default function Auth() {
                   placeholder="E-mail"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
                   required
                 />
 
@@ -298,7 +298,7 @@ export default function Auth() {
                   placeholder="E-mail"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
                   required
                 />
 
@@ -307,7 +307,7 @@ export default function Auth() {
                   placeholder="Senha"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
                   required
                 />
 
@@ -317,7 +317,7 @@ export default function Auth() {
                     placeholder="Confirmar Senha"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className="h-12 border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                    className="h-12 !bg-white border-gray-200 rounded-xl !text-gray-900 placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary"
                     required
                   />
                 )}
@@ -365,7 +365,7 @@ export default function Auth() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <p className="text-gray-400 text-xs">
+              <p className="text-gray-500 text-xs">
                 Um produto desenvolvido <span className="font-medium">By Stream Lab</span>
               </p>
             </motion.div>
