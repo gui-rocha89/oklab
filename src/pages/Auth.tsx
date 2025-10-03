@@ -241,10 +241,10 @@ export default function Auth() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-gray-600 text-sm leading-relaxed"
+                className="text-gray-800 text-sm leading-relaxed"
               >
                 Acesso exclusivo aos tripulantes da galáxia<br />
-                <span className="font-medium">streamlab.com.br</span>
+                <span className="font-semibold">streamlab.com.br</span>
               </motion.p>
             </div>
 
@@ -280,7 +280,7 @@ export default function Auth() {
                     setIsResetPassword(false);
                     setFormData({ email: '', password: '', confirmPassword: '' });
                   }}
-                  className="w-full text-sm text-gray-600 hover:text-primary mt-4 transition-colors"
+                  className="w-full text-sm text-gray-700 font-medium hover:text-primary mt-4 transition-colors"
                 >
                   Voltar ao login
                 </button>
@@ -348,7 +348,7 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="w-full text-sm text-gray-600 hover:text-primary mt-4 transition-colors"
+                  className="w-full text-sm text-gray-700 font-medium hover:text-primary mt-4 transition-colors"
                 >
                   {isSignUp ? 
                     "Já tem uma conta? Fazer login" : 
@@ -365,7 +365,7 @@ export default function Auth() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <p className="text-gray-500 text-xs">
+              <p className="text-gray-600 text-xs">
                 Um produto desenvolvido <span className="font-medium">By Stream Lab</span>
               </p>
             </motion.div>
