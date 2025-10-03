@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { plans } from '@/mkt/content';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Pricing() {
   return (
@@ -87,7 +88,7 @@ export function Pricing() {
                 asChild
                 aria-label={`${plan.cta} - Plano ${plan.name}`}
               >
-                <a href={plan.ctaHref}>{plan.cta}</a>
+                <Link to={plan.ctaHref}>{plan.cta}</Link>
               </Button>
             </motion.div>
           ))}

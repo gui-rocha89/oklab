@@ -3,6 +3,7 @@ import { hero } from '@/mkt/content';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { fadeUp } from '@/lib/motionVariants';
+import { Link } from 'react-router-dom';
 
 export function Hero() {
   const [isVisible, setIsVisible] = useState(false);
@@ -62,7 +63,7 @@ export function Hero() {
                 className="min-w-[220px]"
                 aria-label={cta.label}
               >
-                <a href={cta.href}>{cta.label}</a>
+                <Link to={cta.href}>{cta.label}</Link>
               </Button>
             ))}
           </div>
