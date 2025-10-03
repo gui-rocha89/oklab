@@ -67,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
         title: "🚪 Logout realizado com sucesso!",
         duration: 2000,
       });
+      navigate('/');
     } catch (error) {
       toast({
         title: "Erro ao sair",
