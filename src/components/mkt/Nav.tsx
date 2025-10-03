@@ -27,13 +27,13 @@ export function Nav() {
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-8">
             {nav.links.map((link, idx) => (
-              <a
+              <Link
                 key={idx}
-                href={link.href}
+                to={link.href}
                 className="text-sm text-foreground/80 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded px-1"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -65,14 +65,14 @@ export function Nav() {
           <div className="lg:hidden border-t border-border bg-background/95 backdrop-blur-md">
             <div className="py-4 space-y-4">
               {nav.links.map((link, idx) => (
-                <a
+                <Link
                   key={idx}
-                  href={link.href}
+                  to={link.href}
                   className="block text-sm text-foreground/80 hover:text-primary transition-colors py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
               <div className="pt-4 space-y-3 border-t border-border">
                 {nav.ctas.map((cta, idx) => (
