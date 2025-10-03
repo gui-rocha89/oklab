@@ -241,7 +241,7 @@ export default function Auth() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-gray-800 text-sm leading-relaxed"
+                className="text-gray-900 text-sm leading-relaxed"
               >
                 Acesso exclusivo aos tripulantes da galáxia<br />
                 <span className="font-semibold text-gray-900">streamlab.com.br</span>
