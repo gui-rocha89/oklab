@@ -24,14 +24,14 @@ export function Hero() {
       {/* Animated Background */}
       <div className="mkt-hero-bg" aria-hidden="true" />
 
-      <div className="container relative z-10 px-4 sm:px-6 lg:px-8 py-32">
+      <div className="container relative z-10 px-4 sm:px-6 lg:px-8 py-20">
         <motion.div
           {...fadeUp}
           animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : fadeUp.initial.y }}
           className="max-w-5xl mx-auto text-center space-y-12"
         >
           {/* Logo Centralizada */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6 pt-4">
             <img 
               src="/brand/oklab-logo-white.svg" 
               alt="OK Lab" 
