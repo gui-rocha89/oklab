@@ -13,7 +13,7 @@ export function Hero() {
     offset: ['start start', 'end start']
   });
   
-  const y = useTransform(scrollYProgress, [0, 1], [0, -30]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, -24]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -35,7 +35,7 @@ export function Hero() {
             <h1 className="mkt-h1 text-foreground font-semibold">
               {hero.headline}
             </h1>
-            <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="mkt-body text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {hero.subcopy}
             </p>
           </div>

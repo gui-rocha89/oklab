@@ -2,7 +2,7 @@
 
 /* Typography Scale - Marketing */
 .mkt-h1 {
-  font-size: clamp(3rem, 5vw, 4.5rem); /* 48-72px */
+  font-size: clamp(2.5rem, 6vw, 4.5rem); /* 40-72px */
   line-height: 1.05;
   letter-spacing: -0.02em;
   font-weight: 600;
@@ -22,7 +22,7 @@
 }
 
 .mkt-body {
-  font-size: clamp(1.125rem, 1.5vw, 1.25rem); /* 18-20px */
+  font-size: clamp(1rem, 2vw, 1.25rem); /* 16-20px */
   line-height: 1.6;
 }
 
@@ -49,7 +49,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background: url('/mkt/noise.png') repeat;
   opacity: 0.03;
   mix-blend-mode: overlay;
 }

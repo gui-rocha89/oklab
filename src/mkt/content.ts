@@ -14,8 +14,8 @@ export const nav = {
 };
 
 export const hero = {
-  headline: 'Sua central de aprovação para vídeos, roteiros e social.',
-  subcopy: 'Marque no frame, comente nos roteiros e aprove posts no mesmo painel. Em reais e com suporte em português.',
+  headline: 'Aprovação e criação integradas em um só lugar.',
+  subcopy: 'Marque no frame, comente nos roteiros e aprove posts no mesmo painel — em reais e com suporte em português.',
   ctas: [
     { label: 'Teste grátis 14 dias', href: '/auth', variant: 'default' as const },
     { label: 'Ver planos', href: '#precos', variant: 'outline' as const },
