@@ -365,7 +365,7 @@ export default function Auth() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <p className="text-gray-700 text-xs">
+              <p className="text-[#666666] text-xs">
                 Um produto desenvolvido <span className="font-medium text-gray-800">By Stream Lab</span>
               </p>
             </motion.div>
