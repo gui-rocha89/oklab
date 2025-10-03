@@ -30,6 +30,17 @@ export function Hero() {
           animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : fadeUp.initial.y }}
           className="max-w-5xl mx-auto text-center space-y-12"
         >
+          {/* Logo Centralizada */}
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/brand/oklab-logo-white.svg" 
+              alt="OK Lab" 
+              className="h-16 w-auto logo-glint"
+              width="240"
+              height="64"
+            />
+          </div>
+
           {/* Headline & Subcopy */}
           <div className="space-y-6">
             <h1 className="mkt-h1 text-foreground font-semibold">
