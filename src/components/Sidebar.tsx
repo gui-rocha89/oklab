@@ -16,7 +16,7 @@ import { Logo } from "@/components/ui/logo";
 const navigationItems = [
   {
     title: "Dashboard",
-    href: "/",
+    href: "/dashboard",
     icon: BarChart3,
   },
   {
