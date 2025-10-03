@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { nav } from '@/mkt/content';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export function Nav() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -40,7 +41,7 @@ export function Nav() {
           <div className="hidden lg:flex items-center gap-3">
             {nav.ctas.map((cta, idx) => (
               <Button key={idx} variant={cta.variant} size="sm" asChild>
-                <a href={cta.href}>{cta.label}</a>
+                <Link to={cta.href}>{cta.label}</Link>
               </Button>
             ))}
           </div>
@@ -82,7 +83,7 @@ export function Nav() {
                     className="w-full"
                     asChild
                   >
-                    <a href={cta.href}>{cta.label}</a>
+                    <Link to={cta.href}>{cta.label}</Link>
                   </Button>
                 ))}
               </div>
