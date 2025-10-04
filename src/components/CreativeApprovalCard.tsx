@@ -56,12 +56,15 @@ export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
 }) => {
   const [feedback, setFeedback] = useState(approval?.feedback || '');
   const [submitting, setSubmitting] = useState(false);
+  const [needsAttention, setNeedsAttention] = useState(false);
   const feedbackRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAction = async (action: 'approved' | 'changes_requested') => {
     if (action === 'changes_requested' && !feedback.trim()) {
+      setNeedsAttention(true);
       feedbackRef.current?.focus();
       toast.error("Por favor, descreva as alterações desejadas antes de solicitar mudanças.");
+      setTimeout(() => setNeedsAttention(false), 3000);
       return;
     }
 
@@ -299,9 +302,18 @@ Prepare-se para uma experiência única com nossa nova campanha.
               <Textarea
                 ref={feedbackRef}
                 value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Descreva quais alterações você gostaria de ver neste criativo..."
-                className="min-h-[100px] resize-none"
+                onChange={(e) => {
+                  setFeedback(e.target.value);
+                  if (needsAttention && e.target.value.trim()) {
+                    setNeedsAttention(false);
+                  }
+                }}
+                placeholder="Descreva as alterações necessárias..."
+                className={`min-h-[100px] resize-none transition-all duration-300 ${
+                  needsAttention 
+                    ? 'border-amber-500 ring-2 ring-amber-200 focus:ring-amber-300' 
+                    : ''
+                }`}
               />
             </div>
           )}
