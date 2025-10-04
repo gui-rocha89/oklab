@@ -34,7 +34,7 @@ export function Hero() {
         >
           {/* Logo Centralizada */}
           <div className="flex justify-center mb-6 pt-4">
-            <Logo className="h-24 w-auto logo-glint" alt="OK Lab" />
+            <Logo className="h-32 w-auto logo-glint" alt="OK Lab" />
           </div>
 
           {/* Headline & Subcopy */}
