@@ -752,7 +752,15 @@ export default function AudiovisualApproval() {
                     onTimeUpdate={setCurrentTime}
                     onDurationChange={setDuration}
                     annotations={[]}
-                    keyframes={keyframes}
+                    keyframes={keyframes.filter(k => !k.pinNumber)}
+                    pins={keyframes.filter(k => k.pinNumber && k.x !== undefined && k.y !== undefined).map(k => ({
+                      id: k.id,
+                      time: k.time,
+                      comment: k.comment,
+                      pinNumber: k.pinNumber!,
+                      x: k.x!,
+                      y: k.y!,
+                    }))}
                     onSeek={(time) => {
                       if (videoRef.current) {
                         videoRef.current.currentTime = time;
@@ -766,6 +774,15 @@ export default function AudiovisualApproval() {
                       const keyframe = keyframes.find(k => k.id === keyframeId);
                       if (keyframe) {
                         seekTo(keyframe.time);
+                      }
+                    }}
+                    onPinClick={(pinId) => {
+                      const pin = keyframes.find(k => k.id === pinId);
+                      if (pin) {
+                        seekTo(pin.time);
+                        // Scroll to comment in sidebar
+                        const element = document.getElementById(`keyframe-${pinId}`);
+                        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                       }
                     }}
                   />

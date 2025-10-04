@@ -1,8 +1,14 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward, MapPin } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CustomVideoPlayerProps {
   src: string;
@@ -10,7 +16,8 @@ interface CustomVideoPlayerProps {
   onTimeUpdate: (time: number) => void;
   onDurationChange: (duration: number) => void;
   annotations?: Array<{ timestamp_ms: number; id: string; comment?: string | null }>;
-  keyframes?: Array<{ id: string; time: number; comment: string }>;
+  keyframes?: Array<{ id: string; time: number; comment: string; pinNumber?: number }>;
+  pins?: Array<{ id: string; time: number; comment: string; pinNumber: number; x: number; y: number }>;
   onSeek?: (time: number) => void;
   className?: string;
   isPlaying?: boolean;
@@ -18,6 +25,7 @@ interface CustomVideoPlayerProps {
   isDrawingMode?: boolean;
   onAnnotationClick?: (annotationId: string) => void;
   onKeyframeClick?: (keyframeId: string) => void;
+  onPinClick?: (pinId: string) => void;
 }
 
 export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
@@ -27,6 +35,7 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   onDurationChange,
   annotations = [],
   keyframes = [],
+  pins = [],
   onSeek,
   className,
   isPlaying: externalIsPlaying,
@@ -34,6 +43,7 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   isDrawingMode = false,
   onAnnotationClick,
   onKeyframeClick,
+  onPinClick,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -354,20 +364,74 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
               );
             })}
 
-            {/* Keyframe Markers (Blue) */}
-            {keyframes.map((keyframe) => {
+            {/* Keyframe Markers (Blue) - Only non-pin keyframes */}
+            {keyframes.filter(kf => !kf.pinNumber).map((keyframe) => {
               const position = duration > 0 ? (keyframe.time / duration) * 100 : 0;
               return (
-                <div
-                  key={keyframe.id}
-                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform z-10"
-                  style={{ left: `${position}%` }}
-                  title={keyframe.comment || 'Comentário'}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onKeyframeClick?.(keyframe.id);
-                  }}
-                />
+                <TooltipProvider key={keyframe.id}>
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform z-10"
+                        style={{ left: `${position}%` }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onKeyframeClick?.(keyframe.id);
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <div className="text-xs">
+                        <div className="font-semibold mb-1">Comentário - {formatTime(keyframe.time)}</div>
+                        {keyframe.comment && (
+                          <div className="text-muted-foreground line-clamp-2">
+                            {keyframe.comment}
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+
+            {/* Pin Markers (Red) */}
+            {pins.map((pin) => {
+              const position = duration > 0 ? (pin.time / duration) * 100 : 0;
+              return (
+                <TooltipProvider key={pin.id}>
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 cursor-pointer hover:scale-125 transition-transform z-10"
+                        style={{ left: `${position}%` }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPinClick?.(pin.id);
+                        }}
+                      >
+                        <div className="relative flex flex-col items-center -translate-x-1/2">
+                          <div className="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-lg">
+                            {pin.pinNumber}
+                          </div>
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <div className="text-xs">
+                        <div className="flex items-center gap-1.5 font-semibold mb-1">
+                          <MapPin className="w-3 h-3" />
+                          Pin #{pin.pinNumber} - {formatTime(pin.time)}
+                        </div>
+                        {pin.comment && (
+                          <div className="text-muted-foreground line-clamp-2">
+                            {pin.comment}
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               );
             })}
 
