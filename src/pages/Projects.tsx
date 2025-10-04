@@ -218,7 +218,7 @@ export default function Projects() {
               </Button>
               <Button className="ml-2 h-11">
                 <Plus className="h-4 w-4 mr-2" />
-                Novo Projeto
+                Aprovação Visual Conteúdos
               </Button>
             </div>
           </div>
@@ -596,7 +596,7 @@ export default function Projects() {
                 </p>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Criar Novo Projeto
+                  Aprovação Visual Conteúdos
                 </Button>
               </div>
             </CardContent>

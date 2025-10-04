@@ -297,7 +297,7 @@ export default function Dashboard() {
               onClick={() => setIsNewProjectModalOpen(true)}
             >
               <FileText className="w-5 h-5" />
-              <span>Novo Projeto</span>
+              <span>Aprovação Visual Conteúdos</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
