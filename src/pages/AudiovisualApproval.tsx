@@ -32,6 +32,9 @@ interface Keyframe {
   comment: string;
   attachments?: Attachment[];
   created_at?: string;
+  x?: number; // normalized 0-1
+  y?: number; // normalized 0-1
+  pinNumber?: number;
 }
 
 interface VideoPin {
@@ -246,18 +249,23 @@ export default function AudiovisualApproval() {
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
     
-    // Create new keyframe with pin marker
+    const pinNumber = videoPins.length + 1;
+    
+    // Create new keyframe with pin marker and coordinates
     const newKeyframe: Keyframe = {
       id: Date.now().toString(),
       time: currentTime,
       comment: '',
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+      pinNumber: pinNumber,
     };
     
     const newPin: VideoPin = {
       id: newKeyframe.id,
       x: Math.max(0, Math.min(1, x)),
       y: Math.max(0, Math.min(1, y)),
-      number: videoPins.length + 1,
+      number: pinNumber,
       keyframeId: newKeyframe.id,
     };
     
@@ -772,7 +780,7 @@ export default function AudiovisualApproval() {
                     {videoPins.map((pin) => (
                       <div
                         key={pin.id}
-                        className="absolute group"
+                        className="absolute group pointer-events-auto"
                         style={{
                           left: `${pin.x * 100}%`,
                           top: `${pin.y * 100}%`,
@@ -780,14 +788,26 @@ export default function AudiovisualApproval() {
                         }}
                       >
                         <div className="relative">
-                          {/* Pin marker */}
-                          <div className="flex flex-col items-center">
-                            <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">
+                          {/* Pin marker - clickable to focus comment */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const keyframe = keyframes.find(k => k.id === pin.id);
+                              if (keyframe) {
+                                seekTo(keyframe.time);
+                                // Scroll to comment in sidebar
+                                const element = document.getElementById(`keyframe-${pin.id}`);
+                                element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }
+                            }}
+                            className="flex flex-col items-center cursor-pointer transition-transform hover:scale-110"
+                          >
+                            <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white hover:shadow-xl">
                               {pin.number}
                             </div>
                             <div className="w-0.5 h-4 bg-primary" />
                             <div className="w-2 h-2 bg-primary rounded-full" />
-                          </div>
+                          </button>
                           
                           {/* Remove button on hover */}
                           <button
@@ -796,7 +816,7 @@ export default function AudiovisualApproval() {
                               handleRemovePin(pin.id);
                               handleRemoveKeyframe(pin.id);
                             }}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                           >
                             ×
                           </button>

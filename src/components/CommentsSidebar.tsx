@@ -16,6 +16,9 @@ interface Keyframe {
   comment: string;
   attachments?: Attachment[];
   created_at?: string;
+  x?: number;
+  y?: number;
+  pinNumber?: number;
 }
 
 interface Annotation {
@@ -180,6 +183,7 @@ export function CommentsSidebar({
                   return (
                     <motion.div
                       key={item.id}
+                      id={`keyframe-${item.id}`}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       onClick={() => {
@@ -200,9 +204,19 @@ export function CommentsSidebar({
                         {/* Icon or Thumbnail - Fixed Width Container */}
                         <div className="w-12 h-9 shrink-0 flex items-center justify-center">
                           {isKeyframe ? (
-                            <div className={`p-2 rounded-md ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
-                              <MessageSquare className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                            </div>
+                            'pinNumber' in item && item.pinNumber ? (
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 ${
+                                isActive 
+                                  ? 'bg-primary text-white border-primary' 
+                                  : 'bg-muted text-foreground border-border'
+                              }`}>
+                                {item.pinNumber}
+                              </div>
+                            ) : (
+                              <div className={`p-2 rounded-md ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
+                                <MessageSquare className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                              </div>
+                            )
                           ) : (
                             'screenshot_url' in item && item.screenshot_url && (
                               <div className="w-12 h-9 rounded overflow-hidden bg-muted">
