@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/ui/logo';
 import { hero } from '@/mkt/content';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
@@ -33,13 +34,7 @@ export function Hero() {
         >
           {/* Logo Centralizada */}
           <div className="flex justify-center mb-6 pt-4">
-            <img 
-              src="/brand/oklab-logo-white.svg" 
-              alt="OK Lab" 
-              className="h-24 w-auto logo-glint"
-              width="360"
-              height="96"
-            />
+            <Logo className="h-24 w-auto logo-glint" alt="OK Lab" />
           </div>
 
           {/* Headline & Subcopy */}
