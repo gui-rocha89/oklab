@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CheckCircle, 
@@ -56,10 +56,12 @@ export const CreativeApprovalCard: React.FC<CreativeApprovalCardProps> = ({
 }) => {
   const [feedback, setFeedback] = useState(approval?.feedback || '');
   const [submitting, setSubmitting] = useState(false);
+  const feedbackRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAction = async (action: 'approved' | 'changes_requested') => {
     if (action === 'changes_requested' && !feedback.trim()) {
-      toast.error("Por favor, descreva as alterações desejadas.");
+      feedbackRef.current?.focus();
+      toast.error("Por favor, descreva as alterações desejadas antes de solicitar mudanças.");
       return;
     }
 
@@ -291,13 +293,14 @@ Prepare-se para uma experiência única com nossa nova campanha.
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />
                 <label className="text-sm font-medium text-foreground">
-                  Feedback (opcional para aprovação, obrigatório para alterações)
+                  Feedback <span className="text-amber-600">(obrigatório para solicitar alterações)</span>
                 </label>
               </div>
               <Textarea
+                ref={feedbackRef}
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Descreva suas observações ou sugestões para este criativo..."
+                placeholder="Descreva quais alterações você gostaria de ver neste criativo..."
                 className="min-h-[100px] resize-none"
               />
             </div>
