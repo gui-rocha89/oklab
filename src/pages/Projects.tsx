@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Grid, List, Plus, Eye, Edit, Trash2, MessageSquare, Video, CheckCircle2, Link, Inbox } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, Grid, List, Plus, Eye, Edit, Trash2, MessageSquare, Video, CheckCircle2, Link, Inbox, ClipboardList, FileText, Film } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
@@ -13,11 +14,14 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { StatusBadge, statusConfig } from "@/components/StatusBadge";
 import { ProjectQuickEditModal } from "@/components/ProjectQuickEditModal";
+import NewProjectModal from "@/components/NewProjectModal";
+import NewAudiovisualProjectModal from "@/components/NewAudiovisualProjectModal";
+import NewBriefingModal from "@/components/NewBriefingModal";
 
 // ... keep existing code (imports)
 
 export default function Projects() {
-  const { projects, updateProject, deleteProject } = useProjects();
+  const { projects, updateProject, deleteProject, addProject } = useProjects();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -25,6 +29,9 @@ export default function Projects() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [editingProject, setEditingProject] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [isAudiovisualModalOpen, setIsAudiovisualModalOpen] = useState(false);
+  const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleStatusChange = async (projectId: string, newStatus: string) => {
@@ -216,10 +223,28 @@ export default function Projects() {
               >
                 <List className="h-4 w-4" />
               </Button>
-              <Button className="ml-2 h-11">
-                <Plus className="h-4 w-4 mr-2" />
-                Aprovação Visual Conteúdos
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="ml-2 h-11">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crie Um Novo Projeto
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => setIsBriefingModalOpen(true)}>
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Briefing
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsNewProjectModalOpen(true)}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Aprovação Visual Conteúdos
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsAudiovisualModalOpen(true)}>
+                    <Film className="h-4 w-4 mr-2" />
+                    Audiovisual
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -612,6 +637,24 @@ export default function Projects() {
         }}
         project={editingProject}
         onSave={handleSaveProject}
+      />
+
+      <NewProjectModal
+        isOpen={isNewProjectModalOpen}
+        setIsOpen={setIsNewProjectModalOpen}
+        onProjectCreate={addProject}
+      />
+      
+      <NewAudiovisualProjectModal
+        isOpen={isAudiovisualModalOpen}
+        setIsOpen={setIsAudiovisualModalOpen}
+        onProjectCreate={addProject}
+      />
+      
+      <NewBriefingModal
+        isOpen={isBriefingModalOpen}
+        setIsOpen={setIsBriefingModalOpen}
+        onBriefingCreate={addProject}
       />
     </div>
   );
