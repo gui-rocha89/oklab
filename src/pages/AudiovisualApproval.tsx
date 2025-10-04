@@ -125,27 +125,14 @@ export default function AudiovisualApproval() {
         console.log('✅ Projeto carregado, permitindo acesso');
         setProject(projectData);
 
-        // Fetch existing keyframes for this project
-        const { data: keyframesData, error: keyframesError } = await supabase
-          .from('project_keyframes')
-          .select('*')
-          .eq('project_id', projectData.id)
-          .order('created_at', { ascending: true });
+        // For audiovisual projects, start with empty keyframes so client can add new feedback
+        // Previous feedback is shown in the history sidebar
+        setKeyframes([]);
 
-        if (keyframesError) {
-          console.error('Error fetching keyframes:', keyframesError);
-        } else if (keyframesData && keyframesData.length > 0) {
-          // Convert database keyframes to component format
-          const formattedKeyframes: Keyframe[] = keyframesData.map(kf => ({
-            id: kf.id,
-            time: 0, // Initialize with 0, would need to parse from title or store separately
-            comment: kf.title,
-            created_at: kf.created_at
-          }));
-          setKeyframes(formattedKeyframes);
-        }
-
-        // Fetch resolved feedback history (previous round corrections)
+        // Fetch resolved feedback history (only previous round corrections)
+        const currentRound = projectData.current_feedback_round || 1;
+        const previousRound = currentRound - 1;
+        
         const { data: previousFeedbacks, error: feedbackError } = await supabase
           .from('project_feedback')
           .select(`
@@ -153,11 +140,13 @@ export default function AudiovisualApproval() {
             comment,
             team_response,
             created_at,
+            feedback_round,
             keyframe_id,
             project_keyframes!inner(title)
           `)
           .eq('project_keyframes.project_id', projectData.id)
           .eq('resolved', true)
+          .eq('feedback_round', previousRound)
           .order('created_at', { ascending: true });
 
         if (feedbackError) {
