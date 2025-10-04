@@ -23,6 +23,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { InstagramPost } from '@/components/InstagramPost';
 import { SimplePlatformRating } from '@/components/SimplePlatformRating';
 import { DownloadSection } from '@/components/DownloadSection';
@@ -50,6 +60,8 @@ const ClientApprovalPremium = () => {
   const [submitting, setSubmitting] = useState(false);
   const [actionCompleted, setActionCompleted] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [showFinalConfirmationModal, setShowFinalConfirmationModal] = useState(false);
+  const [confirmingApproval, setConfirmingApproval] = useState(false);
   const { generateDeliveryKit, isGenerating } = useDeliveryKit();
   const { toast } = useToast();
 
@@ -153,6 +165,20 @@ const ClientApprovalPremium = () => {
         updated[keyframeId][existingIndex] = approval;
       } else {
         updated[keyframeId].push(approval);
+      }
+      
+      // Check if this approval completes all creatives
+      if (approval.status === 'approved') {
+        // Count how many creatives will be approved after this update
+        const approvedCount = keyframes.filter(kf => {
+          const kfApprovals = updated[kf.id] || [];
+          return kfApprovals.some(app => app.status === 'approved');
+        }).length;
+        
+        // If this is the last one being approved, show confirmation modal
+        if (approvedCount === keyframes.length && !confirmingApproval) {
+          setShowFinalConfirmationModal(true);
+        }
       }
       
       return updated;
@@ -491,8 +517,8 @@ const ClientApprovalPremium = () => {
 
         {/* Legacy Project Approval (fallback for old projects) - REMOVED */}
 
-        {/* General Project Feedback Section - Only show if all individual creatives are approved */}
-        {isFullyApproved() && !actionCompleted && (
+        {/* General Project Feedback Section - Only show if all individual creatives are approved AND confirmed */}
+        {isFullyApproved() && !actionCompleted && confirmingApproval && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -735,7 +761,28 @@ const ClientApprovalPremium = () => {
         </div>
       </footer>
 
-      {/* Platform Rating Modal - Removed, now inline */}
+      {/* Final Confirmation Modal */}
+      <AlertDialog open={showFinalConfirmationModal} onOpenChange={setShowFinalConfirmationModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Finalizar Aprovação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a aprovar todos os criativos. Esta ação não poderá ser desfeita. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmingApproval(true);
+                setShowFinalConfirmationModal(false);
+              }}
+            >
+              Sim, aprovar tudo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
