@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Info, Star, Pencil, FileText, User } from 'lucide-react';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Info, Star, Pencil, FileText, User, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,6 +32,14 @@ interface Keyframe {
   comment: string;
   attachments?: Attachment[];
   created_at?: string;
+}
+
+interface VideoPin {
+  id: string;
+  x: number; // normalized 0-1
+  y: number; // normalized 0-1
+  number: number;
+  keyframeId?: string;
 }
 
 interface FeedbackHistory {
@@ -75,6 +83,8 @@ export default function AudiovisualApproval() {
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
+  const [videoPins, setVideoPins] = useState<VideoPin[]>([]);
+  const [isPinMode, setIsPinMode] = useState(false);
 
   // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
   const { aspectRatio, isReady: videoReady } = useVideoAspectRatio(videoRef);
@@ -223,12 +233,56 @@ export default function AudiovisualApproval() {
     });
   };
 
+  const handleVideoClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isPinMode || !videoContainerRef.current) return;
+    
+    // Pause video when placing pin
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setIsPlaying(false);
+    
+    const rect = videoContainerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    
+    // Create new keyframe with pin marker
+    const newKeyframe: Keyframe = {
+      id: Date.now().toString(),
+      time: currentTime,
+      comment: '',
+    };
+    
+    const newPin: VideoPin = {
+      id: newKeyframe.id,
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+      number: videoPins.length + 1,
+      keyframeId: newKeyframe.id,
+    };
+    
+    setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
+    setVideoPins(prev => [...prev, newPin]);
+    
+    toast({
+      title: "📍 Pin adicionado",
+      description: `Marcador #${newPin.number} criado em ${formatTime(currentTime)}. Adicione seu comentário na lateral.`,
+      duration: 3000,
+    });
+  };
+
+  const handleRemovePin = (pinId: string) => {
+    setVideoPins(prev => prev.filter(p => p.id !== pinId));
+  };
+
   const handleKeyframeCommentChange = (id: string, comment: string, attachments?: Attachment[]) => {
     setKeyframes(keyframes.map(k => k.id === id ? { ...k, comment, attachments: attachments || k.attachments } : k));
   };
   
   const handleRemoveKeyframe = (id: string) => {
     setKeyframes(keyframes.filter(k => k.id !== id));
+    // Also remove associated pin
+    setVideoPins(prev => prev.filter(p => p.keyframeId !== id));
     toast({
       title: "Comentário removido",
       description: "O feedback foi excluído com sucesso.",
@@ -707,6 +761,49 @@ export default function AudiovisualApproval() {
                       }
                     }}
                   />
+                  
+                  {/* Clickable Pin Overlay */}
+                  <div
+                    className={`absolute inset-0 ${isPinMode ? 'cursor-crosshair' : 'pointer-events-none'}`}
+                    onClick={handleVideoClick}
+                    style={{ zIndex: isPinMode ? 10 : 5 }}
+                  >
+                    {/* Render pins */}
+                    {videoPins.map((pin) => (
+                      <div
+                        key={pin.id}
+                        className="absolute group"
+                        style={{
+                          left: `${pin.x * 100}%`,
+                          top: `${pin.y * 100}%`,
+                          transform: 'translate(-50%, -100%)',
+                        }}
+                      >
+                        <div className="relative">
+                          {/* Pin marker */}
+                          <div className="flex flex-col items-center">
+                            <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">
+                              {pin.number}
+                            </div>
+                            <div className="w-0.5 h-4 bg-primary" />
+                            <div className="w-2 h-2 bg-primary rounded-full" />
+                          </div>
+                          
+                          {/* Remove button on hover */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemovePin(pin.id);
+                              handleRemoveKeyframe(pin.id);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               
@@ -719,6 +816,15 @@ export default function AudiovisualApproval() {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Comentário
+                </Button>
+                <Button
+                  onClick={() => setIsPinMode(!isPinMode)}
+                  variant={isPinMode ? "default" : "outline"}
+                  className={`touch-manipulation ${isMobile ? 'w-full min-h-[44px]' : ''}`}
+                  size={isMobile ? "default" : "sm"}
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  {isPinMode ? 'Desativar Pins' : 'Marcar no Vídeo'}
                 </Button>
               </div>
             </Card>
