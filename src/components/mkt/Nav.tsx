@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/ui/logo';
 import { nav } from '@/mkt/content';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -37,6 +38,11 @@ export function Nav() {
             ))}
           </div>
 
+          {/* Logo - Center */}
+          <Link to="/" className="absolute left-1/2 -translate-x-1/2">
+            <Logo className="h-12 w-auto" />
+          </Link>
+
           {/* Desktop CTAs */}
           <div className="hidden lg:flex items-center gap-3">
             {nav.ctas.map((cta, idx) => (
@@ -45,6 +51,11 @@ export function Nav() {
               </Button>
             ))}
           </div>
+
+          {/* Mobile Logo */}
+          <Link to="/" className="lg:hidden">
+            <Logo className="h-10 w-auto" />
+          </Link>
 
           {/* Mobile Menu Button */}
           <button
