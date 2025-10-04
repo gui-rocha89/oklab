@@ -289,11 +289,20 @@ export default function Dashboard() {
           className="bg-card border border-border rounded-2xl p-6 shadow-lg"
         >
           <h2 className="text-xl font-bold text-foreground mb-6">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="btn-primary flex items-center justify-center space-x-2 py-4"
+              onClick={() => setIsBriefingModalOpen(true)}
+            >
+              <ClipboardList className="w-5 h-5" />
+              <span>Briefing</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
               onClick={() => setIsNewProjectModalOpen(true)}
             >
               <FileText className="w-5 h-5" />
@@ -307,31 +316,6 @@ export default function Dashboard() {
             >
               <Film className="w-5 h-5" />
               <span>Audiovisual</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
-              onClick={() => setIsBriefingModalOpen(true)}
-            >
-              <ClipboardList className="w-5 h-5" />
-              <span>Briefing</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
-            >
-              <Clock className="w-5 h-5" />
-              <span>Ver Pendentes</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-outline-orange flex items-center justify-center space-x-2 py-4"
-            >
-              <CheckCircle className="w-5 h-5" />
-              <span>Ver Aprovados</span>
             </motion.button>
           </div>
         </motion.div>
