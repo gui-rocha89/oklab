@@ -12,7 +12,6 @@ interface FeedbackUpdate {
 export const useProjectFeedbackManagement = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
 
   const updateFeedback = async (feedbackId: string, updates: Partial<FeedbackUpdate>) => {
@@ -60,7 +59,6 @@ export const useProjectFeedbackManagement = () => {
 
   const resendProject = async (projectId: string, videoFile: File, message?: string) => {
     setIsResending(true);
-    setUploadProgress(0);
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -81,14 +79,10 @@ export const useProjectFeedbackManagement = () => {
 
       if (uploadError) throw uploadError;
 
-      setUploadProgress(70);
-
       // 2. Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('audiovisual-projects')
         .getPublicUrl(fileName);
-
-      setUploadProgress(80);
 
       // 3. Chamar Edge Function apenas para atualizar metadados
       const response = await supabase.functions.invoke('resend-project', {
@@ -98,8 +92,6 @@ export const useProjectFeedbackManagement = () => {
           message 
         }
       });
-
-      setUploadProgress(100);
 
       if (response.error) throw response.error;
 
@@ -119,7 +111,6 @@ export const useProjectFeedbackManagement = () => {
       return null;
     } finally {
       setIsResending(false);
-      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -128,6 +119,5 @@ export const useProjectFeedbackManagement = () => {
     resendProject,
     isUpdating,
     isResending,
-    uploadProgress,
   };
 };

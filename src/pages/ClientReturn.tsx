@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil, Play, Upload, Send, CheckCircle, AlertCircle, Copy, Loader2, ChevronDown } from "lucide-react";
@@ -90,7 +90,7 @@ const ClientReturn = () => {
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
-  const { updateFeedback, resendProject, isUpdating, isResending, uploadProgress } = useProjectFeedbackManagement();
+  const { updateFeedback, resendProject, isUpdating, isResending } = useProjectFeedbackManagement();
 
   useEffect(() => {
     fetchProjectReturn();
@@ -800,15 +800,6 @@ const ClientReturn = () => {
                     )}
                   </div>
 
-                  {isResending && uploadProgress > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Enviando vídeo...</span>
-                        <span className="font-semibold text-primary">{uploadProgress}%</span>
-                      </div>
-                      <Progress value={uploadProgress} className="h-2" />
-                    </div>
-                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="resend-message">Mensagem para o Cliente (Opcional)</Label>
@@ -844,7 +835,7 @@ const ClientReturn = () => {
                     {isResending ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {uploadProgress > 0 ? `Enviando... ${uploadProgress}%` : 'Processando...'}
+                        Processando...
                       </>
                     ) : (
                       <>
