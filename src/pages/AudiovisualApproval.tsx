@@ -129,7 +129,7 @@ export default function AudiovisualApproval() {
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
   const [videoPins, setVideoPins] = useState<VideoPin[]>([]);
   const [isPinMode, setIsPinMode] = useState(false);
-  const [lastCreatedKeyframeId, setLastCreatedKeyframeId] = useState<string | null>(null);
+  const [tLock, setTLock] = useState<number | null>(null);
   
   // Review features states
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -201,23 +201,28 @@ export default function AudiovisualApproval() {
     };
   }, [videoNaturalSize]);
 
-  // Keyboard shortcut: C to add comment at current time
+  // Lock time on first keypress when composer is focused
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      
-      if (e.key.toLowerCase() === 'c') {
-        e.preventDefault();
-        handleAddCommentAtCurrentTime();
+      // Only trigger if composer is focused and tLock is not set
+      if (document.activeElement === composerRef.current && tLock === null && videoRef.current) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+        
+        const locked = Math.round(videoRef.current.currentTime * 100) / 100;
+        setTLock(locked);
+        
+        toast({
+          title: "⏸️ Vídeo pausado",
+          description: `Comentário será criado em ${formatTime(locked)}.`,
+          duration: 2500,
+        });
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentTime, keyframes]);
+  }, [tLock]);
 
   // Render shapes on canvas
   useEffect(() => {
@@ -389,6 +394,16 @@ export default function AudiovisualApproval() {
       return;
     }
     
+    // tLock must be set (captured on focus/first keypress)
+    if (tLock === null) {
+      toast({
+        title: "⚠️ Erro interno",
+        description: "Timecode não foi capturado. Por favor, clique no campo novamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Validate link URL if provided
     if (composerLinkUrl && !composerLinkUrl.match(/^https?:\/\/.+/i)) {
       toast({
@@ -399,22 +414,29 @@ export default function AudiovisualApproval() {
       return;
     }
     
-    // Pause video
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-    setIsPlaying(false);
-    
-    // Check for existing keyframe at this time
-    const conflictingKeyframe = keyframes.find(k => Math.abs(k.time - currentTime) < 0.5);
+    // Check for existing keyframe at tLock (within 0.01s tolerance)
+    const conflictingKeyframe = keyframes.find(k => Math.abs(k.time - tLock) < 0.01);
     
     if (conflictingKeyframe) {
+      // Append comment to existing thread
       toast({
-        title: "⚠️ Comentário muito próximo",
-        description: `Já existe um comentário em ${formatTime(conflictingKeyframe.time)}. Mova o vídeo pelo menos 0.5 segundos para adicionar um novo comentário.`,
-        variant: "destructive",
-        duration: 4000,
+        title: "💬 Comentário adicionado",
+        description: `Comentário anexado ao thread existente em ${formatTime(tLock)}.`,
+        duration: 3000,
       });
+      
+      // In real implementation, would append to existing thread's comments
+      // For now, we'll treat it as update
+      handleKeyframeCommentChange(conflictingKeyframe.id, composerText);
+      
+      // Reset composer and tLock
+      setComposerText('');
+      setComposerAttachmentUrl('');
+      setComposerAttachmentName('');
+      setComposerLinkUrl('');
+      setShowAttachmentInput(false);
+      setShowLinkInput(false);
+      setTLock(null);
       return;
     }
     
@@ -445,55 +467,55 @@ export default function AudiovisualApproval() {
     
     const newKeyframe: Keyframe = {
       id: Date.now().toString(),
-      time: currentTime,
+      time: tLock, // Use tLock instead of currentTime
       comment: composerText,
       attachments: attachments.length > 0 ? attachments : undefined,
     };
     
     setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
     
-    // Reset composer
+    // Reset composer and tLock
     setComposerText('');
     setComposerAttachmentUrl('');
     setComposerAttachmentName('');
     setComposerLinkUrl('');
     setShowAttachmentInput(false);
     setShowLinkInput(false);
-    
-    // Clear last created tracking (comment was saved)
-    setLastCreatedKeyframeId(null);
+    setTLock(null);
     
     toast({
       title: "✅ Comentário adicionado",
-      description: `Comentário criado em ${formatTime(currentTime)}.`,
+      description: `Comentário criado em ${formatTime(tLock)}.`,
       duration: 3000,
     });
   };
   
   const handleCancelComment = () => {
-    // If last created keyframe is empty (no comment), remove it
-    if (lastCreatedKeyframeId) {
-      const keyframe = keyframes.find(k => k.id === lastCreatedKeyframeId);
+    // If tLock was set and no comment was posted, check for empty thread
+    if (tLock !== null) {
+      const keyframe = keyframes.find(k => Math.abs(k.time - tLock) < 0.01);
+      
+      // If keyframe exists but has no comment, remove it (empty thread cleanup)
       if (keyframe && !keyframe.comment.trim()) {
-        setKeyframes(prev => prev.filter(k => k.id !== lastCreatedKeyframeId));
-        setVideoPins(prev => prev.filter(p => p.keyframeId !== lastCreatedKeyframeId));
+        setKeyframes(prev => prev.filter(k => k.id !== keyframe.id));
+        setVideoPins(prev => prev.filter(p => p.keyframeId !== keyframe.id));
         
         toast({
-          title: "🗑️ Comentário removido",
-          description: "Comentário vazio descartado.",
+          title: "🗑️ Thread vazio removido",
+          description: "Nenhum comentário foi adicionado.",
           duration: 2000,
         });
       }
-      setLastCreatedKeyframeId(null);
     }
     
-    // Reset composer fields
+    // Reset composer fields and tLock
     setComposerText('');
     setComposerAttachmentUrl('');
     setComposerAttachmentName('');
     setComposerLinkUrl('');
     setShowAttachmentInput(false);
     setShowLinkInput(false);
+    setTLock(null);
   };
 
   const handleAddKeyframe = () => {
@@ -531,59 +553,22 @@ export default function AudiovisualApproval() {
     });
   };
 
-  const handleAddCommentAtCurrentTime = () => {
-    // 1. Pause video
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
+  const onComposerFocus = () => {
+    if (!videoRef.current || tLock !== null) return;
+    
+    // Pause video
+    videoRef.current.pause();
     setIsPlaying(false);
     
-    // 2. Normalize time (round to 0.01s)
-    const normalizedTime = Math.round(currentTime * 100) / 100;
-    
-    // 3. Check for existing keyframe within 0.5 seconds
-    const existingKeyframe = keyframes.find(k => Math.abs(k.time - normalizedTime) < 0.5);
-    
-    if (existingKeyframe) {
-      // Keyframe already exists, just focus it
-      toast({
-        title: "📍 Comentário selecionado",
-        description: `Editando comentário em ${formatTime(existingKeyframe.time)}.`,
-        duration: 2500,
-      });
-      
-      // Scroll to keyframe in sidebar
-      const element = document.getElementById(`keyframe-${existingKeyframe.id}`);
-      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-      // Focus composer
-      setTimeout(() => {
-        composerRef.current?.focus();
-      }, 300);
-      
-      return;
-    }
-    
-    // 4. Create new empty keyframe
-    const newKeyframe: Keyframe = {
-      id: Date.now().toString(),
-      time: normalizedTime,
-      comment: '',
-    };
-    
-    setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
-    setLastCreatedKeyframeId(newKeyframe.id);
+    // Lock time (round to 0.01s)
+    const locked = Math.round(videoRef.current.currentTime * 100) / 100;
+    setTLock(locked);
     
     toast({
-      title: "✅ Novo comentário",
-      description: `Comentário criado em ${formatTime(normalizedTime)}. Escreva seu feedback.`,
-      duration: 3000,
+      title: "⏸️ Vídeo pausado",
+      description: `Comentário será criado em ${formatTime(locked)}.`,
+      duration: 2500,
     });
-    
-    // 5. Focus composer
-    setTimeout(() => {
-      composerRef.current?.focus();
-    }, 100);
   };
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -1260,21 +1245,6 @@ export default function AudiovisualApproval() {
                 
                 {/* Tab 1: Anotações */}
                 <TabsContent value="anotacoes" className="flex-1 overflow-hidden m-0 flex flex-col">
-                  {/* Header with + button */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-                    <h3 className="text-sm font-semibold text-foreground">
-                      Comentários ({keyframes.length})
-                    </h3>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={handleAddCommentAtCurrentTime}
-                      className="h-8 px-3 text-xs font-medium"
-                    >
-                      <Plus className="w-3.5 h-3.5 mr-1.5" />
-                      Adicionar comentário
-                    </Button>
-                  </div>
                   
                   <div className="flex-1 overflow-hidden">
                     <CommentsSidebar
@@ -1310,27 +1280,56 @@ export default function AudiovisualApproval() {
                       placeholder="Escreva aqui seu feedback…"
                       value={composerText}
                       onChange={(e) => setComposerText(e.target.value)}
+                      onFocus={onComposerFocus}
                       className="min-h-[80px] text-sm resize-none"
                     />
                     
-                    <div className="flex gap-2">
+                    {/* Time Badge */}
+                    {tLock !== null && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 text-xs text-muted-foreground"
+                      >
+                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                          ⏱️ {formatTime(tLock)}
+                        </Badge>
+                        <span>← Comentário será criado neste momento</span>
+                      </motion.div>
+                    )}
+                    
+                    {/* Compact Icons for Attachments/Links + Buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowAttachmentInput(!showAttachmentInput)}
+                        className="p-1.5 hover:bg-accent rounded-md transition-colors"
+                        title="Anexar arquivo"
+                      >
+                        <Paperclip className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={() => setShowLinkInput(!showLinkInput)}
+                        className="p-1.5 hover:bg-accent rounded-md transition-colors"
+                        title="Link de vídeo"
+                      >
+                        <LinkIcon className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      
+                      <div className="flex-1" /> {/* Spacer */}
+                      
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowAttachmentInput(!showAttachmentInput)}
-                        className="text-xs"
+                        onClick={handleCancelComment}
                       >
-                        <Paperclip className="w-3 h-3 mr-1.5" />
-                        Anexar Arquivo
+                        Cancelar
                       </Button>
                       <Button
-                        variant="outline"
                         size="sm"
-                        onClick={() => setShowLinkInput(!showLinkInput)}
-                        className="text-xs"
+                        onClick={handleSaveComment}
+                        disabled={!composerText.trim() || tLock === null}
                       >
-                        <LinkIcon className="w-3 h-3 mr-1.5" />
-                        Link de Vídeo
+                        Salvar
                       </Button>
                     </div>
                     
@@ -1359,23 +1358,6 @@ export default function AudiovisualApproval() {
                         className="text-sm"
                       />
                     )}
-                    
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCancelComment}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleSaveComment}
-                        disabled={!composerText.trim()}
-                      >
-                        Salvar
-                      </Button>
-                    </div>
                   </div>
                 </TabsContent>
                 
