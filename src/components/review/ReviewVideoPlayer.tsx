@@ -81,6 +81,26 @@ export const ReviewVideoPlayer = ({
     setIsDrawing(false);
   };
 
+  const calculateChipPosition = (shape: Shape) => {
+    if (!shape.points.length || !videoDimensions.width || !videoDimensions.height) {
+      return { x: 0, y: 0 };
+    }
+    // Denormalize first point
+    const firstPt = shape.points[0];
+    const x = firstPt.x * videoDimensions.width;
+    const y = firstPt.y * videoDimensions.height;
+    return { x, y: y - 30 }; // 30px above the drawing
+  };
+
+  const handleChipClick = (thread: Thread) => {
+    onThreadClick(thread.id);
+    if (videoRef.current) {
+      videoRef.current.currentTime = thread.tStart;
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
   // Update video dimensions when metadata loads
   useEffect(() => {
     const video = videoRef.current;
@@ -104,6 +124,25 @@ export const ReviewVideoPlayer = ({
       video.removeEventListener('timeupdate', handleTimeUpdate);
     };
   }, [onTimeUpdate]);
+
+  // ResizeObserver to update dimensions when container resizes
+  useEffect(() => {
+    const container = containerRef.current;
+    const video = videoRef.current;
+    if (!container || !video) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (video.videoWidth && video.videoHeight) {
+        setVideoDimensions({
+          width: video.videoWidth,
+          height: video.videoHeight
+        });
+      }
+    });
+
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   // Draw thread shapes on canvas
   useEffect(() => {
@@ -164,6 +203,10 @@ export const ReviewVideoPlayer = ({
     });
   }, [threads, currentTime, videoDimensions]);
 
+  const visibleThreads = threads.filter(thread => 
+    currentTime >= thread.tStart && (!thread.tEnd || currentTime <= thread.tEnd)
+  );
+
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
@@ -178,7 +221,30 @@ export const ReviewVideoPlayer = ({
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 20 }}
         />
+        
+        {/* Interactive chips layer */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
+          {visibleThreads.map(thread => {
+            if (!thread.shapes.length) return null;
+            const pos = calculateChipPosition(thread.shapes[0]);
+            return (
+              <button
+                key={thread.id}
+                className="absolute pointer-events-auto w-8 h-8 bg-primary text-primary-foreground rounded-full border-2 border-background shadow-lg hover:scale-110 transition-transform flex items-center justify-center text-sm font-bold cursor-pointer"
+                style={{ 
+                  left: `${pos.x}px`, 
+                  top: `${pos.y}px`,
+                  transform: 'translate(-50%, -50%)'
+                }}
+                onClick={() => handleChipClick(thread)}
+              >
+                {thread.chip}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {isDrawing && (
