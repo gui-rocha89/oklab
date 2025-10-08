@@ -53,10 +53,11 @@ export default function ReviewPage() {
     setCurrentTime(time);
   };
 
-  const handleAddShapes = async (shapes: Shape[], timestamp: number) => {
+  const handleAddShapes = async (shapes: Shape[], timestamp: number, tEnd?: number) => {
     try {
       await addThread({
         tStart: timestamp,
+        tEnd,
         shapes,
       });
     } catch (err) {

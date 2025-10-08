@@ -90,6 +90,7 @@ export const ThreadPanel = ({
                 className="text-xs font-mono text-muted-foreground hover:text-primary"
               >
                 {formatTime(thread.tStart)}
+                {thread.tEnd && ` - ${formatTime(thread.tEnd)}`}
               </button>
               {thread.state === 'resolved' && (
                 <Badge variant="outline" className="h-5 text-xs">

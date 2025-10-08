@@ -9,7 +9,8 @@ import { normalizeShape } from '@/lib/shapeUtils';
 interface DrawingCanvasProps {
   videoWidth: number;
   videoHeight: number;
-  onComplete: (shapes: Shape[]) => void;
+  currentTime: number;
+  onComplete: (shapes: Shape[], tEnd?: number) => void;
   onCancel: () => void;
   color?: string;
 }
@@ -17,6 +18,7 @@ interface DrawingCanvasProps {
 export const DrawingCanvas = ({
   videoWidth,
   videoHeight,
+  currentTime,
   onComplete,
   onCancel,
   color = '#FF3B30'
@@ -25,6 +27,7 @@ export const DrawingCanvas = ({
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [tool, setTool] = useState<'pencil' | 'circle'>('pencil');
   const [shapes, setShapes] = useState<Shape[]>([]);
+  const [tEnd, setTEnd] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -144,7 +147,13 @@ export const DrawingCanvas = ({
   const handleComplete = () => {
     // Normalize shapes before saving
     const normalized = shapes.map(s => normalizeShape(s, videoWidth, videoHeight));
-    onComplete(normalized);
+    onComplete(normalized, tEnd);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -152,41 +161,64 @@ export const DrawingCanvas = ({
       <div className="relative">
         <canvas ref={canvasRef} className="border-2 border-primary" />
         
-        <div className="absolute top-4 left-4 flex flex-col gap-2 bg-background/95 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-          <Button
-            variant={tool === 'pencil' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => setTool('pencil')}
-            title="Desenhar à mão livre"
-          >
-            <Pencil className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={tool === 'circle' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => setTool('circle')}
-            title="Adicionar círculo"
-          >
-            <CircleIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleUndo}
-            disabled={shapes.length === 0}
-            title="Desfazer"
-          >
-            <Undo className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleClear}
-            disabled={shapes.length === 0}
-            title="Limpar tudo"
-          >
-            <Eraser className="w-4 h-4" />
-          </Button>
+        <div className="absolute top-4 left-4 space-y-2">
+          <div className="flex flex-col gap-2 bg-background/95 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+            <Button
+              variant={tool === 'pencil' ? 'default' : 'outline'}
+              size="icon"
+              onClick={() => setTool('pencil')}
+              title="Desenhar à mão livre"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={tool === 'circle' ? 'default' : 'outline'}
+              size="icon"
+              onClick={() => setTool('circle')}
+              title="Adicionar círculo"
+            >
+              <CircleIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleUndo}
+              disabled={shapes.length === 0}
+              title="Desfazer"
+            >
+              <Undo className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleClear}
+              disabled={shapes.length === 0}
+              title="Limpar tudo"
+            >
+              <Eraser className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {shapes.length > 0 && (
+            <div className="bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg space-y-2">
+              <div className="text-xs text-muted-foreground font-mono">
+                In: {formatTime(currentTime)}
+              </div>
+              {tEnd !== undefined && (
+                <div className="text-xs text-muted-foreground font-mono">
+                  Out: {formatTime(tEnd)}
+                </div>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTEnd(tEnd === undefined ? currentTime : undefined)}
+                className="w-full text-xs"
+              >
+                {tEnd === undefined ? 'Definir Fim' : 'Remover Fim'}
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="absolute bottom-4 right-4 flex gap-2">

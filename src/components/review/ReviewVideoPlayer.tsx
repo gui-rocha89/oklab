@@ -11,7 +11,7 @@ interface ReviewVideoPlayerProps {
   threads: Thread[];
   currentTime: number;
   onTimeUpdate: (time: number) => void;
-  onAddShapes: (shapes: Shape[], timestamp: number) => void;
+  onAddShapes: (shapes: Shape[], timestamp: number, tEnd?: number) => void;
   onThreadClick: (threadId: string) => void;
 }
 
@@ -72,8 +72,8 @@ export const ReviewVideoPlayer = ({
     setIsDrawing(true);
   };
 
-  const handleDrawingComplete = (shapes: Shape[]) => {
-    onAddShapes(shapes, currentTime);
+  const handleDrawingComplete = (shapes: Shape[], tEnd?: number) => {
+    onAddShapes(shapes, currentTime, tEnd);
     setIsDrawing(false);
   };
 
@@ -229,10 +229,15 @@ export const ReviewVideoPlayer = ({
           {visibleThreads.map(thread => {
             if (!thread.shapes.length) return null;
             const pos = calculateChipPosition(thread.shapes[0]);
+            const isInRange = currentTime >= thread.tStart && 
+                             (!thread.tEnd || currentTime <= thread.tEnd);
             return (
               <button
                 key={thread.id}
-                className="absolute pointer-events-auto w-8 h-8 bg-primary text-primary-foreground rounded-full border-2 border-background shadow-lg hover:scale-110 transition-transform flex items-center justify-center text-sm font-bold cursor-pointer"
+                className={cn(
+                  "absolute pointer-events-auto w-8 h-8 bg-primary text-primary-foreground rounded-full border-2 border-background shadow-lg hover:scale-110 transition-all duration-200 flex items-center justify-center text-sm font-bold cursor-pointer",
+                  isInRange && "ring-4 ring-primary/50 scale-110"
+                )}
                 style={{ 
                   left: `${pos.x}px`, 
                   top: `${pos.y}px`,
@@ -251,6 +256,7 @@ export const ReviewVideoPlayer = ({
         <DrawingCanvas
           videoWidth={videoDimensions.width}
           videoHeight={videoDimensions.height}
+          currentTime={currentTime}
           onComplete={handleDrawingComplete}
           onCancel={handleDrawingCancel}
         />
@@ -283,12 +289,44 @@ export const ReviewVideoPlayer = ({
             />
             
             {threads.map((thread) => {
-              const position = duration > 0 ? (thread.tStart / duration) * 100 : 0;
+              const startPosition = duration > 0 ? (thread.tStart / duration) * 100 : 0;
+              
+              if (thread.tEnd) {
+                const endPosition = duration > 0 ? (thread.tEnd / duration) * 100 : 0;
+                const width = endPosition - startPosition;
+                
+                return (
+                  <div key={thread.id}>
+                    <div
+                      className="absolute top-0 h-full bg-primary/30 border-l-2 border-r-2 border-primary cursor-pointer hover:bg-primary/40 transition-colors"
+                      style={{ 
+                        left: `${startPosition}%`,
+                        width: `${width}%`
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onThreadClick(thread.id);
+                      }}
+                    />
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-primary text-primary-foreground rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-transform flex items-center justify-center text-xs font-bold z-10"
+                      style={{ left: `${startPosition}%` }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onThreadClick(thread.id);
+                      }}
+                    >
+                      {thread.chip}
+                    </div>
+                  </div>
+                );
+              }
+              
               return (
                 <div
                   key={thread.id}
                   className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-primary text-primary-foreground rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-transform flex items-center justify-center text-xs font-bold"
-                  style={{ left: `${position}%` }}
+                  style={{ left: `${startPosition}%` }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onThreadClick(thread.id);
