@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ReviewVideoPlayer } from '@/components/review/ReviewVideoPlayer';
 import { ThreadPanel } from '@/components/review/ThreadPanel';
-import { CommentPanel } from '@/components/review/CommentPanel';
+import { ThreadDetailSheet } from '@/components/review/ThreadDetailSheet';
 import { ReviewActions } from '@/components/review/ReviewActions';
 import { useReview } from '@/stores/reviewStore';
 import { useReviewUI } from '@/hooks/useReviewUI';
-import type { Shape } from '@/types/review';
+import type { Shape, Thread } from '@/types/review';
 
 export default function ReviewPage() {
   const { token } = useParams<{ token: string }>();
-  const { loadAsset, selectThread, addThread } = useReview();
-  const { asset, isLoading, error, selectedThread } = useReviewUI();
+  const { loadAsset, addThread } = useReview();
+  const { asset, isLoading, error } = useReviewUI();
   const [currentTime, setCurrentTime] = useState(0);
+  const [openThreadDetail, setOpenThreadDetail] = useState<Thread | null>(null);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -53,6 +54,11 @@ export default function ReviewPage() {
     setCurrentTime(time);
   };
 
+  const handleOpenThread = (thread: Thread) => {
+    setOpenThreadDetail(thread);
+    setCurrentTime(thread.tStart);
+  };
+
   const handleAddShapes = async (shapes: Shape[], timestamp: number, tEnd?: number) => {
     try {
       await addThread({
@@ -82,25 +88,31 @@ export default function ReviewPage() {
             currentTime={currentTime}
             onTimeUpdate={setCurrentTime}
             onAddShapes={handleAddShapes}
-            onThreadClick={selectThread}
+            onThreadClick={(threadId) => {
+              const thread = asset.threads.find(t => t.id === threadId);
+              if (thread) handleOpenThread(thread);
+            }}
           />
         </div>
 
-        {/* Right: Thread/Comment Panels */}
+        {/* Right: Thread Panel (always visible, fixed width) */}
         <div className="w-96 border-l bg-background flex flex-col">
-          {selectedThread ? (
-            <CommentPanel thread={selectedThread} formatTime={formatTime} />
-          ) : (
-            <ThreadPanel
-              threads={asset.threads}
-              selectedThreadId={selectedThread?.id}
-              onSelectThread={selectThread}
-              onSeekToThread={handleSeekToThread}
-              formatTime={formatTime}
-            />
-          )}
+          <ThreadPanel
+            threads={asset.threads}
+            onOpenThread={handleOpenThread}
+            onSeekToThread={handleSeekToThread}
+            formatTime={formatTime}
+          />
         </div>
       </div>
+
+      {/* Thread Detail Sheet (overlay) */}
+      <ThreadDetailSheet
+        thread={openThreadDetail}
+        open={!!openThreadDetail}
+        onClose={() => setOpenThreadDetail(null)}
+        formatTime={formatTime}
+      />
     </div>
   );
 }

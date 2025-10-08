@@ -10,25 +10,30 @@ import type { Thread } from '@/types/review';
 
 interface ThreadPanelProps {
   threads: Thread[];
-  selectedThreadId?: string;
-  onSelectThread: (threadId: string) => void;
+  onOpenThread: (thread: Thread) => void;
   onSeekToThread: (time: number) => void;
   formatTime: (seconds: number) => string;
 }
 
 export const ThreadPanel = ({
   threads,
-  selectedThreadId,
-  onSelectThread,
+  onOpenThread,
   onSeekToThread,
   formatTime
 }: ThreadPanelProps) => {
   const [filter, setFilter] = useState<'all' | 'open' | 'resolved'>('all');
-
+  const [selectedThreadId, setSelectedThreadId] = useState<string>();
+  
   const { hasPrevious, hasNext, goToPrevious, goToNext } = useThreadNavigation({
     threads,
     selectedThreadId,
-    onSelectThread,
+    onSelectThread: (threadId) => {
+      const thread = threads.find(t => t.id === threadId);
+      if (thread) {
+        setSelectedThreadId(threadId);
+        onOpenThread(thread);
+      }
+    },
     onSeekToThread
   });
 
@@ -73,7 +78,10 @@ export const ThreadPanel = ({
           "p-3 cursor-pointer transition-colors hover:bg-accent/50",
           isSelected && "border-primary bg-accent"
         )}
-        onClick={() => onSelectThread(thread.id)}
+        onClick={() => {
+          setSelectedThreadId(thread.id);
+          onOpenThread(thread);
+        }}
       >
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
