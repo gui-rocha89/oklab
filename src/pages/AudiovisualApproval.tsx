@@ -2,16 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Info, Star, Pencil, FileText, User, MapPin } from 'lucide-react';
+import { CheckCircle, MessageSquare, Send, ThumbsUp, XCircle, Plus, Trash2, Loader2, Info, Star, Pencil, FileText, User, MapPin, Badge as BadgeIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
 import { CommentsSidebar } from '@/components/CommentsSidebar';
 import { useVideoAspectRatio } from '@/hooks/useVideoAspectRatio';
+import { DrawingCanvas } from '@/components/review/DrawingCanvas';
+import { ThreadDetailSheet } from '@/components/review/ThreadDetailSheet';
+import type { Thread, Shape, Pt } from '@/types/review';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 import logoOrange from '@/assets/logo-orange-bg.png';
@@ -25,6 +29,39 @@ const formatTime = (seconds: number): string => {
   date.setSeconds(seconds);
   return date.toISOString().substr(14, 5);
 };
+
+// Mapping functions for letterboxing (object-fit: contain)
+type VR = { x: number; y: number; w: number; h: number };
+
+function computeVideoRect(container: DOMRect, videoAR: number): VR {
+  const contAR = container.width / container.height;
+  if (contAR > videoAR) {
+    const h = container.height;
+    const w = h * videoAR;
+    return { x: (container.width - w) / 2, y: 0, w, h };
+  } else {
+    const w = container.width;
+    const h = w / videoAR;
+    return { x: 0, y: (container.height - h) / 2, w, h };
+  }
+}
+
+function pxToNorm(x: number, y: number, vr: VR): Pt {
+  return { x: (x - vr.x) / vr.w, y: (y - vr.y) / vr.h };
+}
+
+function normToPx(p: Pt, vr: VR): { x: number; y: number } {
+  return { x: vr.x + p.x * vr.w, y: vr.y + p.y * vr.h };
+}
+
+function centroid(points: Pt[]): Pt {
+  if (points.length === 0) return { x: 0.5, y: 0.5 };
+  const n = points.length;
+  return {
+    x: points.reduce((a, p) => a + p.x, 0) / n,
+    y: points.reduce((a, p) => a + p.y, 0) / n
+  };
+}
 
 interface Keyframe {
   id: string;
@@ -76,6 +113,7 @@ export default function AudiovisualApproval() {
   const [loading, setLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [feedbackHistory, setFeedbackHistory] = useState<FeedbackHistory[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -88,9 +126,117 @@ export default function AudiovisualApproval() {
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
   const [videoPins, setVideoPins] = useState<VideoPin[]>([]);
   const [isPinMode, setIsPinMode] = useState(false);
+  
+  // Review features states
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [openThreadDetail, setOpenThreadDetail] = useState<Thread | null>(null);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState<'in_review' | 'changes_requested' | 'approved'>('in_review');
+  const [videoRect, setVideoRect] = useState<VR | null>(null);
+  const [videoNaturalSize, setVideoNaturalSize] = useState<{ width: number; height: number } | null>(null);
 
   // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
   const { aspectRatio, isReady: videoReady } = useVideoAspectRatio(videoRef);
+
+  // Setup canvas overlay ResizeObserver + DPR
+  useEffect(() => {
+    if (!canvasRef.current || !videoContainerRef.current || !videoRef.current) return;
+
+    const canvas = canvasRef.current;
+    const container = videoContainerRef.current;
+    const video = videoRef.current;
+
+    const updateCanvasSize = () => {
+      const r = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      
+      canvas.style.width = r.width + 'px';
+      canvas.style.height = r.height + 'px';
+      canvas.width = Math.round(r.width * dpr);
+      canvas.height = Math.round(r.height * dpr);
+      
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      // Update video rect for chip positioning
+      if (videoNaturalSize) {
+        const videoAR = videoNaturalSize.width / videoNaturalSize.height;
+        setVideoRect(computeVideoRect(r, videoAR));
+      }
+    };
+
+    const ro = new ResizeObserver(updateCanvasSize);
+    ro.observe(container);
+    
+    const handleLoadedMetadata = () => {
+      setVideoNaturalSize({
+        width: video.videoWidth,
+        height: video.videoHeight
+      });
+      updateCanvasSize();
+    };
+    
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    if (video.videoWidth > 0) {
+      handleLoadedMetadata();
+    }
+
+    return () => {
+      ro.disconnect();
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [videoNaturalSize]);
+
+  // Render shapes on canvas
+  useEffect(() => {
+    if (!canvasRef.current || !videoRect || !videoNaturalSize) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw shapes for visible threads
+    threads.forEach(thread => {
+      // Check if thread is visible at current time
+      const isVisible = currentTime >= thread.tStart && (!thread.tEnd || currentTime <= thread.tEnd);
+      if (!isVisible || thread.shapes.length === 0) return;
+
+      const isSelected = selectedThreadId === thread.id;
+      
+      thread.shapes.forEach(shape => {
+        ctx.strokeStyle = isSelected ? '#FFB84D' : shape.color;
+        ctx.lineWidth = shape.width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (shape.type === 'path' && shape.points.length > 0) {
+          ctx.beginPath();
+          const firstPoint = normToPx(shape.points[0], videoRect);
+          ctx.moveTo(firstPoint.x, firstPoint.y);
+          
+          for (let i = 1; i < shape.points.length; i++) {
+            const point = normToPx(shape.points[i], videoRect);
+            ctx.lineTo(point.x, point.y);
+          }
+          ctx.stroke();
+        } else if (shape.type === 'circle' && shape.points.length >= 2) {
+          const center = normToPx(shape.points[0], videoRect);
+          const radiusPoint = shape.points[1];
+          const radius = radiusPoint.x * videoRect.w; // radius stored in x
+          
+          ctx.beginPath();
+          ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+      });
+    });
+  }, [threads, currentTime, selectedThreadId, videoRect, videoNaturalSize]);
 
   // Fetch project data from Supabase
   useEffect(() => {
@@ -141,6 +287,9 @@ export default function AudiovisualApproval() {
         // For audiovisual projects, start with empty keyframes so client can add new feedback
         // Previous feedback is shown in the history sidebar
         setKeyframes([]);
+        
+        // Initialize threads as empty (client will create new ones)
+        setThreads([]);
 
         // Fetch resolved feedback history (only previous round corrections)
         const currentRound = projectData.current_feedback_round || 1;
@@ -200,6 +349,42 @@ export default function AudiovisualApproval() {
   }, [shareId]);
 
 
+
+  const handleStartDrawing = () => {
+    // Pause video immediately
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setIsPlaying(false);
+    setIsDrawingMode(true);
+  };
+
+  const handleDrawingComplete = (shapes: Shape[], tEnd?: number) => {
+    const chipNumber = threads.length + 1;
+    
+    const newThread: Thread = {
+      id: crypto.randomUUID(),
+      chip: chipNumber,
+      tStart: currentTime,
+      tEnd: tEnd,
+      shapes: shapes,
+      comments: [],
+      state: 'open'
+    };
+    
+    setThreads(prev => [...prev, newThread].sort((a, b) => a.tStart - b.tStart));
+    setIsDrawingMode(false);
+    
+    toast({
+      title: "✅ Anotação criada",
+      description: `Marcador #${chipNumber} criado em ${formatTime(currentTime)}. Clique nele para adicionar comentários.`,
+      duration: 3000,
+    });
+  };
+
+  const handleDrawingCancel = () => {
+    setIsDrawingMode(false);
+  };
 
   const handleAddKeyframe = () => {
     // Pause video immediately
@@ -328,6 +513,10 @@ export default function AudiovisualApproval() {
     setSubmitting(true);
 
     try {
+      // Update review status badge
+      const newReviewStatus = action === 'approved' ? 'approved' : 'changes_requested';
+      setReviewStatus(newReviewStatus);
+      
       // Update project status and mark as completed using Edge Function
       const newStatus = action === 'approved' ? 'approved' : 'feedback-sent';
       
@@ -734,6 +923,60 @@ export default function AudiovisualApproval() {
                   maxHeight: isMobile ? '60vh' : '70vh'
                 }}
               >
+                {/* Canvas overlay for drawing annotations */}
+                <canvas
+                  ref={canvasRef}
+                  data-testid="review-overlay"
+                  className="absolute inset-0 z-20"
+                  style={{ pointerEvents: isDrawingMode ? 'auto' : 'none' }}
+                />
+                
+                {/* Numbered chips for threads */}
+                {videoRect && threads.map(thread => {
+                  if (thread.shapes.length === 0) return null;
+                  
+                  const firstShape = thread.shapes[0];
+                  const center = centroid(firstShape.points);
+                  const { x, y } = normToPx(center, videoRect);
+                  const isSelected = selectedThreadId === thread.id;
+                  
+                  return (
+                    <button
+                      key={thread.id}
+                      className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full w-8 h-8 text-sm font-semibold
+                                  transition-all duration-200 shadow-lg ${
+                                    isSelected
+                                      ? 'bg-primary text-primary-foreground ring-4 ring-primary/30 scale-110'
+                                      : 'bg-white text-black ring-1 ring-black/10 hover:scale-105'
+                                  }`}
+                      style={{ left: x, top: y, zIndex: 21 }}
+                      onClick={() => {
+                        if (videoRef.current) {
+                          videoRef.current.pause();
+                          videoRef.current.currentTime = thread.tStart;
+                        }
+                        setIsPlaying(false);
+                        setSelectedThreadId(thread.id);
+                        setOpenThreadDetail(thread);
+                      }}
+                    >
+                      {thread.chip}
+                    </button>
+                  );
+                })}
+                
+                {/* DrawingCanvas overlay when drawing */}
+                {isDrawingMode && videoNaturalSize && videoRect && (
+                  <DrawingCanvas
+                    videoWidth={videoRect.w}
+                    videoHeight={videoRect.h}
+                    currentTime={currentTime}
+                    onComplete={handleDrawingComplete}
+                    onCancel={handleDrawingCancel}
+                    color="#FF3B30"
+                  />
+                )}
+                
                 {/* Hidden video element for syncing with canvas */}
                 <video
                   ref={videoRef}
@@ -847,21 +1090,22 @@ export default function AudiovisualApproval() {
               {/* Comment Controls */}
               <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
                 <Button
-                  onClick={handleAddKeyframe}
+                  onClick={handleStartDrawing}
+                  disabled={isDrawingMode}
                   className={`bg-primary hover:bg-primary/90 touch-manipulation ${isMobile ? 'w-full min-h-[44px]' : ''}`}
                   size={isMobile ? "default" : "sm"}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Comentário
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Criar Anotação Visual
                 </Button>
                 <Button
-                  onClick={() => setIsPinMode(!isPinMode)}
-                  variant={isPinMode ? "default" : "outline"}
+                  onClick={handleAddKeyframe}
                   className={`touch-manipulation ${isMobile ? 'w-full min-h-[44px]' : ''}`}
                   size={isMobile ? "default" : "sm"}
+                  variant="outline"
                 >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  {isPinMode ? 'Desativar Pins' : 'Marcar no Vídeo'}
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Comentário
                 </Button>
               </div>
             </Card>
@@ -877,6 +1121,23 @@ export default function AudiovisualApproval() {
                   <h3 className={`font-bold text-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
                     Avaliação e Ações
                   </h3>
+                </div>
+                
+                {/* Review Status Badge */}
+                <div className="mb-4 flex justify-center">
+                  <Badge 
+                    variant="outline"
+                    className={`px-3 py-1.5 text-xs font-medium ${
+                      reviewStatus === 'approved'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : reviewStatus === 'changes_requested'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <BadgeIcon className="w-3 h-3 mr-1.5" />
+                    {reviewStatus === 'approved' ? 'Aprovado' : reviewStatus === 'changes_requested' ? 'Ajustes solicitados' : 'Em revisão'}
+                  </Badge>
                 </div>
 
                 {/* Compact Rating */}
@@ -1004,6 +1265,8 @@ export default function AudiovisualApproval() {
                   keyframes={keyframes}
                   annotations={[]}
                   feedbackHistory={feedbackHistory}
+                  threads={threads}
+                  selectedThreadId={selectedThreadId}
                   currentTime={currentTime}
                   onSeekToTime={seekTo}
                   onLoadAnnotation={() => {}}
@@ -1011,6 +1274,15 @@ export default function AudiovisualApproval() {
                   onDeleteKeyframe={handleRemoveKeyframe}
                   onUpdateAnnotation={() => {}}
                   onDeleteAnnotation={() => {}}
+                  onSelectThread={(threadId) => {
+                    setSelectedThreadId(threadId);
+                    const thread = threads.find(t => t.id === threadId);
+                    if (thread) {
+                      seekTo(thread.tStart);
+                      setOpenThreadDetail(thread);
+                    }
+                  }}
+                  onSeekToThread={(time) => seekTo(time)}
                   formatTime={formatTime}
                 />
               </div>
@@ -1019,6 +1291,14 @@ export default function AudiovisualApproval() {
         </div>
 
       </div>
+      
+      {/* ThreadDetailSheet */}
+      <ThreadDetailSheet
+        thread={openThreadDetail}
+        open={!!openThreadDetail}
+        onClose={() => setOpenThreadDetail(null)}
+        formatTime={formatTime}
+      />
     </div>
   );
 }
