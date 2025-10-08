@@ -563,7 +563,7 @@ export function CommentsSidebar({
                 Nenhum feedback adicionado
               </p>
               <p className="text-xs text-muted-foreground/60 mt-0.5">
-                Use o botão + ou desenhe no vídeo
+                Use o botão + para comentar no tempo atual.
               </p>
             </div>
           )}

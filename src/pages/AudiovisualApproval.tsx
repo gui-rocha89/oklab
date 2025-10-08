@@ -116,6 +116,7 @@ export default function AudiovisualApproval() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [feedbackHistory, setFeedbackHistory] = useState<FeedbackHistory[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -128,6 +129,7 @@ export default function AudiovisualApproval() {
   const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
   const [videoPins, setVideoPins] = useState<VideoPin[]>([]);
   const [isPinMode, setIsPinMode] = useState(false);
+  const [lastCreatedKeyframeId, setLastCreatedKeyframeId] = useState<string | null>(null);
   
   // Review features states
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -198,6 +200,24 @@ export default function AudiovisualApproval() {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
     };
   }, [videoNaturalSize]);
+
+  // Keyboard shortcut: C to add comment at current time
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input/textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      if (e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        handleAddCommentAtCurrentTime();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentTime, keyframes]);
 
   // Render shapes on canvas
   useEffect(() => {
@@ -440,6 +460,9 @@ export default function AudiovisualApproval() {
     setShowAttachmentInput(false);
     setShowLinkInput(false);
     
+    // Clear last created tracking (comment was saved)
+    setLastCreatedKeyframeId(null);
+    
     toast({
       title: "✅ Comentário adicionado",
       description: `Comentário criado em ${formatTime(currentTime)}.`,
@@ -448,6 +471,23 @@ export default function AudiovisualApproval() {
   };
   
   const handleCancelComment = () => {
+    // If last created keyframe is empty (no comment), remove it
+    if (lastCreatedKeyframeId) {
+      const keyframe = keyframes.find(k => k.id === lastCreatedKeyframeId);
+      if (keyframe && !keyframe.comment.trim()) {
+        setKeyframes(prev => prev.filter(k => k.id !== lastCreatedKeyframeId));
+        setVideoPins(prev => prev.filter(p => p.keyframeId !== lastCreatedKeyframeId));
+        
+        toast({
+          title: "🗑️ Comentário removido",
+          description: "Comentário vazio descartado.",
+          duration: 2000,
+        });
+      }
+      setLastCreatedKeyframeId(null);
+    }
+    
+    // Reset composer fields
     setComposerText('');
     setComposerAttachmentUrl('');
     setComposerAttachmentName('');
@@ -489,6 +529,61 @@ export default function AudiovisualApproval() {
       description: `Comentário criado em ${formatTime(currentTime)}. Edite na timeline à direita.`,
       duration: 3000,
     });
+  };
+
+  const handleAddCommentAtCurrentTime = () => {
+    // 1. Pause video
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setIsPlaying(false);
+    
+    // 2. Normalize time (round to 0.01s)
+    const normalizedTime = Math.round(currentTime * 100) / 100;
+    
+    // 3. Check for existing keyframe within 0.5 seconds
+    const existingKeyframe = keyframes.find(k => Math.abs(k.time - normalizedTime) < 0.5);
+    
+    if (existingKeyframe) {
+      // Keyframe already exists, just focus it
+      toast({
+        title: "📍 Comentário selecionado",
+        description: `Editando comentário em ${formatTime(existingKeyframe.time)}.`,
+        duration: 2500,
+      });
+      
+      // Scroll to keyframe in sidebar
+      const element = document.getElementById(`keyframe-${existingKeyframe.id}`);
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Focus composer
+      setTimeout(() => {
+        composerRef.current?.focus();
+      }, 300);
+      
+      return;
+    }
+    
+    // 4. Create new empty keyframe
+    const newKeyframe: Keyframe = {
+      id: Date.now().toString(),
+      time: normalizedTime,
+      comment: '',
+    };
+    
+    setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
+    setLastCreatedKeyframeId(newKeyframe.id);
+    
+    toast({
+      title: "✅ Novo comentário",
+      description: `Comentário criado em ${formatTime(normalizedTime)}. Escreva seu feedback.`,
+      duration: 3000,
+    });
+    
+    // 5. Focus composer
+    setTimeout(() => {
+      composerRef.current?.focus();
+    }, 100);
   };
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -1165,6 +1260,22 @@ export default function AudiovisualApproval() {
                 
                 {/* Tab 1: Anotações */}
                 <TabsContent value="anotacoes" className="flex-1 overflow-hidden m-0 flex flex-col">
+                  {/* Header with + button */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Comentários ({keyframes.length})
+                    </h3>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleAddCommentAtCurrentTime}
+                      className="h-8 px-3 text-xs font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1.5" />
+                      Adicionar comentário
+                    </Button>
+                  </div>
+                  
                   <div className="flex-1 overflow-hidden">
                     <CommentsSidebar
                       keyframes={keyframes}
@@ -1195,6 +1306,7 @@ export default function AudiovisualApproval() {
                   {/* Fixed Composer */}
                   <div className="sticky bottom-0 bg-background border-t border-border p-4 space-y-3">
                     <Textarea
+                      ref={composerRef}
                       placeholder="Escreva aqui seu feedback…"
                       value={composerText}
                       onChange={(e) => setComposerText(e.target.value)}
