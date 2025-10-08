@@ -395,6 +395,118 @@ export type Database = {
           },
         ]
       }
+      review_assets: {
+        Row: {
+          created_at: string
+          duration: number
+          id: string
+          share_token: string | null
+          status: string
+          updated_at: string
+          version: number
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          duration: number
+          id?: string
+          share_token?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number
+          id?: string
+          share_token?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+          video_url?: string
+        }
+        Relationships: []
+      }
+      thread_comments: {
+        Row: {
+          attachments: Json | null
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          thread_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          thread_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_comments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      threads: {
+        Row: {
+          asset_id: string
+          chip: number
+          created_at: string
+          id: string
+          shapes: Json
+          state: string
+          t_end: number | null
+          t_start: number
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          chip: number
+          created_at?: string
+          id?: string
+          shapes?: Json
+          state?: string
+          t_end?: number | null
+          t_start: number
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          chip?: number
+          created_at?: string
+          id?: string
+          shapes?: Json
+          state?: string
+          t_end?: number | null
+          t_start?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "threads_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "review_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

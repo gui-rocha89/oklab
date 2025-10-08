@@ -26,6 +26,9 @@ interface ReviewState {
   // Status do Asset
   setStatus: (s: ReviewAsset['status']) => Promise<void>;
 
+  // Share Token
+  generateShareToken: () => Promise<string | undefined>;
+
   // Seletores
   getOpenThreads: () => Thread[];
   getResolvedThreads: () => Thread[];
@@ -280,6 +283,35 @@ export const useReview = create<ReviewState>((set, get) => ({
     } catch (err) {
       set({ asset: a });
       console.error('Error updating status:', err);
+      throw err;
+    }
+  },
+
+  generateShareToken: async () => {
+    const a = get().asset;
+    if (!a) return undefined;
+    
+    // If already has token, return it
+    if (a.shareToken) return a.shareToken;
+    
+    // Generate new token (8 characters from UUID)
+    const token = crypto.randomUUID().split('-')[0];
+    
+    try {
+      const { error } = await supabase
+        .from('review_assets')
+        .update({ share_token: token })
+        .eq('id', a.id);
+
+      if (error) throw error;
+      
+      // Update local state
+      const updatedAsset = { ...a, shareToken: token };
+      set({ asset: updatedAsset });
+      
+      return token;
+    } catch (err) {
+      console.error('Error generating share token:', err);
       throw err;
     }
   },

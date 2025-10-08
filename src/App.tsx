@@ -18,6 +18,7 @@ import Settings from "./pages/Settings";
 import AudiovisualApproval from "./pages/AudiovisualApproval";
 import ClientApproval from "./pages/ClientApproval";
 import ClientReturn from "./pages/ClientReturn";
+import ReviewPage from "./pages/ReviewPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +51,7 @@ const App = () => (
           } />
           <Route path="/aprovacao-audiovisual/:shareId" element={<AudiovisualApproval />} />
           <Route path="/projeto/:shareId" element={<ClientApproval />} />
+          <Route path="/review/:token" element={<ReviewPage />} />
           <Route path="/projetos" element={
             <ProtectedRoute>
               <Layout>
