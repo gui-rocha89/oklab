@@ -68,10 +68,6 @@ const ProjectEditModal = ({ isOpen, onClose, project, onSave }) => {
       newErrors.type = 'Tipo de projeto é obrigatório';
     }
     
-    if (!editedProject?.priority) {
-      newErrors.priority = 'Prioridade é obrigatória';
-    }
-    
     // Validate creatives
     if (editedProject?.creatives?.length === 0) {
       newErrors.creatives = 'Pelo menos um criativo é necessário';
@@ -335,26 +331,6 @@ const ProjectEditModal = ({ isOpen, onClose, project, onSave }) => {
                       )}
                     </div>
 
-                    <div>
-                      <Label htmlFor="priority">Prioridade *</Label>
-                      <Select 
-                        value={editedProject.priority} 
-                        onValueChange={(value) => handleFieldChange('priority', value)}
-                      >
-                        <SelectTrigger className={errors.priority ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="Selecione a prioridade" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="urgent">🔴 Urgente</SelectItem>
-                          <SelectItem value="high">🟡 Alta</SelectItem>
-                          <SelectItem value="medium">🟢 Média</SelectItem>
-                          <SelectItem value="low">⚪ Baixa</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {errors.priority && (
-                        <p className="text-red-500 text-sm mt-1">{errors.priority}</p>
-                      )}
-                    </div>
                   </div>
 
                   <div className="space-y-4">

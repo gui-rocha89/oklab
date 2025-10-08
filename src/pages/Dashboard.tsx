@@ -76,13 +76,6 @@ const ProjectCard = ({ project, index }: any) => {
   const config = statusConfig[project.status as keyof typeof statusConfig] || statusConfig.default;
   const StatusIcon = config.icon;
 
-  const priorityColors = {
-    low: 'bg-gray-200',
-    medium: 'bg-yellow-400',
-    high: 'bg-orange-500',
-    urgent: 'bg-red-500'
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -101,7 +94,6 @@ const ProjectCard = ({ project, index }: any) => {
           {/* Project title - secondary prominence */}
           <div className="flex items-center space-x-2 mb-2">
             <h3 className="font-semibold text-foreground/90">{project.title}</h3>
-            <div className={`w-2 h-2 rounded-full ${priorityColors[project.priority as keyof typeof priorityColors]}`}></div>
           </div>
 
           {/* Status Badges */}

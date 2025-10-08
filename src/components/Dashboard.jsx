@@ -102,7 +102,6 @@ const Dashboard = ({ projects, onNewProjectClick, onNewAudiovisualClick, setActi
           <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
             {project.type}
           </span>
-          <div className={`w-2 h-2 rounded-full priority-${project.priority}`}></div>
         </div>
       </motion.div>
     );

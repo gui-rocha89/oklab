@@ -169,7 +169,6 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
         description: comment.trim() || null,
         type: 'Audiovisual',
         status: 'pending',
-        priority: 'medium',
         video_url: publicUrl,
         share_id: shareId,
         user_id: user.id

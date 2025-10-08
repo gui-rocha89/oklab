@@ -278,19 +278,6 @@ All colors MUST be HSL.
     @apply bg-gray-100 text-gray-800 border border-gray-200;
   }
 
-  /* Priority Components */
-  .priority-high {
-    @apply bg-red-500;
-  }
-
-  .priority-medium {
-    @apply bg-yellow-500;
-  }
-
-  .priority-low {
-    @apply bg-green-500;
-  }
-
   /* Background Components */
   .gradient-bg {
     @apply bg-primary;

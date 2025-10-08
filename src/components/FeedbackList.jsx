@@ -494,16 +494,6 @@ const FeedbackList = () => {
                                   {formatTime(feedback.time)}
                                 </Badge>
                               )}
-                              {feedback.priority && (
-                                <Badge className={`text-xs ${
-                                  feedback.priority === 'high' ? 'bg-red-100 text-red-800' :
-                                  feedback.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-emerald-100 text-emerald-800'
-                                }`}>
-                                  {feedback.priority === 'high' ? 'Alta' : 
-                                   feedback.priority === 'medium' ? 'Média' : 'Baixa'}
-                                </Badge>
-                              )}
                             </div>
                             
                             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

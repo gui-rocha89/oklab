@@ -69,11 +69,10 @@ interface ProjectContextType {
     x_position: number;
     y_position: number;
     timestamp: string;
-    status: 'resolved' | 'pending' | 'rejected';
-    author: string;
-    response?: string;
-    priority: string;
-    type: string;
+      status: 'resolved' | 'pending' | 'rejected';
+      author: string;
+      response?: string;
+      type: string;
   }>;
   refreshProjects: () => Promise<void>;
 }
@@ -162,7 +161,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const addProject = async (projectData: any) => {
     try {
       // Lista de campos válidos da tabela projects
-      const validFields = ['title', 'client', 'description', 'type', 'status', 'priority', 'user_id', 'share_id', 'video_url', 'approval_date'];
+      const validFields = ['title', 'client', 'description', 'type', 'status', 'user_id', 'share_id', 'video_url', 'approval_date'];
       
       // Criar objeto limpo com APENAS campos válidos
       const cleanData: any = {};
