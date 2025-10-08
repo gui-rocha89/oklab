@@ -13,9 +13,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CustomVideoPlayer } from '@/components/CustomVideoPlayer';
 import { CommentsSidebar } from '@/components/CommentsSidebar';
 import { useVideoAspectRatio } from '@/hooks/useVideoAspectRatio';
-import { DrawingCanvas } from '@/components/review/DrawingCanvas';
 import { ThreadDetailSheet } from '@/components/review/ThreadDetailSheet';
-import type { Thread, Shape, Pt } from '@/types/review';
+import type { Thread, Pt } from '@/types/review';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Paperclip, Link as LinkIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import logoWhite from '@/assets/logo-white-bg.png';
 import logoDark from '@/assets/logo-dark-mode.svg';
 import logoOrange from '@/assets/logo-orange-bg.png';
@@ -131,10 +133,17 @@ export default function AudiovisualApproval() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [openThreadDetail, setOpenThreadDetail] = useState<Thread | null>(null);
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [reviewStatus, setReviewStatus] = useState<'in_review' | 'changes_requested' | 'approved'>('in_review');
   const [videoRect, setVideoRect] = useState<VR | null>(null);
   const [videoNaturalSize, setVideoNaturalSize] = useState<{ width: number; height: number } | null>(null);
+  
+  // Composer state (for Anotações tab)
+  const [composerText, setComposerText] = useState('');
+  const [composerAttachmentUrl, setComposerAttachmentUrl] = useState('');
+  const [composerAttachmentName, setComposerAttachmentName] = useState('');
+  const [composerLinkUrl, setComposerLinkUrl] = useState('');
+  const [showAttachmentInput, setShowAttachmentInput] = useState(false);
+  const [showLinkInput, setShowLinkInput] = useState(false);
 
   // Hook para detectar proporção do vídeo automaticamente (Frame.IO style)
   const { aspectRatio, isReady: videoReady } = useVideoAspectRatio(videoRef);
@@ -350,40 +359,101 @@ export default function AudiovisualApproval() {
 
 
 
-  const handleStartDrawing = () => {
-    // Pause video immediately
+  const handleSaveComment = () => {
+    if (!composerText.trim()) {
+      toast({
+        title: "❌ Texto obrigatório",
+        description: "Por favor, adicione um texto ao comentário.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Validate link URL if provided
+    if (composerLinkUrl && !composerLinkUrl.match(/^https?:\/\/.+/i)) {
+      toast({
+        title: "❌ Link inválido",
+        description: "O link deve começar com http:// ou https://",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Pause video
     if (videoRef.current) {
       videoRef.current.pause();
     }
     setIsPlaying(false);
-    setIsDrawingMode(true);
-  };
-
-  const handleDrawingComplete = (shapes: Shape[], tEnd?: number) => {
-    const chipNumber = threads.length + 1;
     
-    const newThread: Thread = {
-      id: crypto.randomUUID(),
-      chip: chipNumber,
-      tStart: currentTime,
-      tEnd: tEnd,
-      shapes: shapes,
-      comments: [],
-      state: 'open'
+    // Check for existing keyframe at this time
+    const conflictingKeyframe = keyframes.find(k => Math.abs(k.time - currentTime) < 0.5);
+    
+    if (conflictingKeyframe) {
+      toast({
+        title: "⚠️ Comentário muito próximo",
+        description: `Já existe um comentário em ${formatTime(conflictingKeyframe.time)}. Mova o vídeo pelo menos 0.5 segundos para adicionar um novo comentário.`,
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+    
+    const attachments: Attachment[] = [];
+    if (composerAttachmentUrl) {
+      attachments.push({
+        id: crypto.randomUUID(),
+        name: composerAttachmentName || 'Anexo',
+        url: composerAttachmentUrl,
+        type: 'document',
+        mimeType: 'application/octet-stream',
+        size: 0,
+        uploadedAt: new Date().toISOString()
+      });
+    }
+    
+    if (composerLinkUrl) {
+      attachments.push({
+        id: crypto.randomUUID(),
+        name: composerLinkUrl,
+        url: composerLinkUrl,
+        type: 'video-link',
+        mimeType: 'text/uri-list',
+        size: 0,
+        uploadedAt: new Date().toISOString()
+      });
+    }
+    
+    const newKeyframe: Keyframe = {
+      id: Date.now().toString(),
+      time: currentTime,
+      comment: composerText,
+      attachments: attachments.length > 0 ? attachments : undefined,
     };
     
-    setThreads(prev => [...prev, newThread].sort((a, b) => a.tStart - b.tStart));
-    setIsDrawingMode(false);
+    setKeyframes(prev => [...prev, newKeyframe].sort((a, b) => a.time - b.time));
+    
+    // Reset composer
+    setComposerText('');
+    setComposerAttachmentUrl('');
+    setComposerAttachmentName('');
+    setComposerLinkUrl('');
+    setShowAttachmentInput(false);
+    setShowLinkInput(false);
     
     toast({
-      title: "✅ Anotação criada",
-      description: `Marcador #${chipNumber} criado em ${formatTime(currentTime)}. Clique nele para adicionar comentários.`,
+      title: "✅ Comentário adicionado",
+      description: `Comentário criado em ${formatTime(currentTime)}.`,
       duration: 3000,
     });
   };
-
-  const handleDrawingCancel = () => {
-    setIsDrawingMode(false);
+  
+  const handleCancelComment = () => {
+    setComposerText('');
+    setComposerAttachmentUrl('');
+    setComposerAttachmentName('');
+    setComposerLinkUrl('');
+    setShowAttachmentInput(false);
+    setShowLinkInput(false);
   };
 
   const handleAddKeyframe = () => {
@@ -923,12 +993,12 @@ export default function AudiovisualApproval() {
                   maxHeight: isMobile ? '60vh' : '70vh'
                 }}
               >
-                {/* Canvas overlay for drawing annotations */}
+                {/* Canvas overlay for drawing annotations (readonly now) */}
                 <canvas
                   ref={canvasRef}
                   data-testid="review-overlay"
                   className="absolute inset-0 z-20"
-                  style={{ pointerEvents: isDrawingMode ? 'auto' : 'none' }}
+                  style={{ pointerEvents: 'none' }}
                 />
                 
                 {/* Numbered chips for threads */}
@@ -964,18 +1034,6 @@ export default function AudiovisualApproval() {
                     </button>
                   );
                 })}
-                
-                {/* DrawingCanvas overlay when drawing */}
-                {isDrawingMode && videoNaturalSize && videoRect && (
-                  <DrawingCanvas
-                    videoWidth={videoRect.w}
-                    videoHeight={videoRect.h}
-                    currentTime={currentTime}
-                    onComplete={handleDrawingComplete}
-                    onCancel={handleDrawingCancel}
-                    color="#FF3B30"
-                  />
-                )}
                 
                 {/* Hidden video element for syncing with canvas */}
                 <video
@@ -1087,205 +1145,266 @@ export default function AudiovisualApproval() {
                 </div>
               </div>
               
-              {/* Comment Controls */}
-              <div className={`mt-4 flex ${isMobile ? 'flex-col gap-3' : 'items-center space-x-4'}`}>
-                <Button
-                  onClick={handleStartDrawing}
-                  disabled={isDrawingMode}
-                  className={`bg-primary hover:bg-primary/90 touch-manipulation ${isMobile ? 'w-full min-h-[44px]' : ''}`}
-                  size={isMobile ? "default" : "sm"}
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Criar Anotação Visual
-                </Button>
-                <Button
-                  onClick={handleAddKeyframe}
-                  className={`touch-manipulation ${isMobile ? 'w-full min-h-[44px]' : ''}`}
-                  size={isMobile ? "default" : "sm"}
-                  variant="outline"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Comentário
-                </Button>
-              </div>
             </Card>
           </div>
 
-          {/* Coluna Direita: Sidebar Unificado (40% - 2/5 columns) */}
+          {/* Coluna Direita: Sidebar com Tabs (40% - 2/5 columns) */}
           <div className={`${isMobile ? '' : 'lg:col-span-2 sticky top-6'}`}>
-            <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-4' : 'p-0'}`}>
-              {/* Seção de Ações - Estilo Frame.io Premium */}
-              <div className={`border-b border-border/50 bg-primary/5 ${isMobile ? 'pb-4 mb-4 px-4 pt-4' : 'p-5 pb-5'}`}>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-8 w-1 bg-primary rounded-full" />
-                  <h3 className={`font-bold text-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
-                    Avaliação e Ações
-                  </h3>
+            <Card className={`bg-card border-primary/20 shadow-xl flex flex-col ${isMobile ? 'p-0' : 'p-0'} overflow-hidden`}>
+              <Tabs defaultValue="anotacoes" className="flex flex-col h-full">
+                <div className="border-b border-border/50 px-4 pt-4">
+                  <TabsList className="w-full grid grid-cols-2 mb-4">
+                    <TabsTrigger value="anotacoes" className="text-xs sm:text-sm">
+                      Anotações
+                    </TabsTrigger>
+                    <TabsTrigger value="acoes" className="text-xs sm:text-sm">
+                      Ações e Aprovação
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
                 
-                {/* Review Status Badge */}
-                <div className="mb-4 flex justify-center">
-                  <Badge 
-                    variant="outline"
-                    className={`px-3 py-1.5 text-xs font-medium ${
-                      reviewStatus === 'approved'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : reviewStatus === 'changes_requested'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-slate-50 text-slate-700 border-slate-200'
-                    }`}
-                  >
-                    <BadgeIcon className="w-3 h-3 mr-1.5" />
-                    {reviewStatus === 'approved' ? 'Aprovado' : reviewStatus === 'changes_requested' ? 'Ajustes solicitados' : 'Em revisão'}
-                  </Badge>
-                </div>
-
-                {/* Compact Rating */}
-                {hasSubmittedRating ? (
-                  <div className="text-center mb-3">
-                    <CheckCircle className={`text-green-600 mx-auto mb-1.5 ${isMobile ? 'w-8 h-8' : 'w-9 h-9'}`} />
-                    <p className={`font-semibold text-green-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                      Obrigado pela avaliação!
-                    </p>
-                    <div className="flex justify-center gap-0.5 mt-1.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`${isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${
-                            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                          }`}
+                {/* Tab 1: Anotações */}
+                <TabsContent value="anotacoes" className="flex-1 overflow-hidden m-0 flex flex-col">
+                  <div className="flex-1 overflow-hidden">
+                    <CommentsSidebar
+                      keyframes={keyframes}
+                      annotations={[]}
+                      feedbackHistory={feedbackHistory}
+                      threads={threads}
+                      selectedThreadId={selectedThreadId}
+                      currentTime={currentTime}
+                      onSeekToTime={seekTo}
+                      onLoadAnnotation={() => {}}
+                      onUpdateKeyframe={handleKeyframeCommentChange}
+                      onDeleteKeyframe={handleRemoveKeyframe}
+                      onUpdateAnnotation={() => {}}
+                      onDeleteAnnotation={() => {}}
+                      onSelectThread={(threadId) => {
+                        setSelectedThreadId(threadId);
+                        const thread = threads.find(t => t.id === threadId);
+                        if (thread) {
+                          seekTo(thread.tStart);
+                          setOpenThreadDetail(thread);
+                        }
+                      }}
+                      onSeekToThread={(time) => seekTo(time)}
+                      formatTime={formatTime}
+                    />
+                  </div>
+                  
+                  {/* Fixed Composer */}
+                  <div className="sticky bottom-0 bg-background border-t border-border p-4 space-y-3">
+                    <Textarea
+                      placeholder="Escreva aqui seu feedback…"
+                      value={composerText}
+                      onChange={(e) => setComposerText(e.target.value)}
+                      className="min-h-[80px] text-sm resize-none"
+                    />
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAttachmentInput(!showAttachmentInput)}
+                        className="text-xs"
+                      >
+                        <Paperclip className="w-3 h-3 mr-1.5" />
+                        Anexar Arquivo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowLinkInput(!showLinkInput)}
+                        className="text-xs"
+                      >
+                        <LinkIcon className="w-3 h-3 mr-1.5" />
+                        Link de Vídeo
+                      </Button>
+                    </div>
+                    
+                    {showAttachmentInput && (
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="URL do arquivo"
+                          value={composerAttachmentUrl}
+                          onChange={(e) => setComposerAttachmentUrl(e.target.value)}
+                          className="text-sm"
                         />
-                      ))}
+                        <Input
+                          placeholder="Nome do arquivo (opcional)"
+                          value={composerAttachmentName}
+                          onChange={(e) => setComposerAttachmentName(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                    )}
+                    
+                    {showLinkInput && (
+                      <Input
+                        placeholder="https://..."
+                        value={composerLinkUrl}
+                        onChange={(e) => setComposerLinkUrl(e.target.value)}
+                        className="text-sm"
+                      />
+                    )}
+                    
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelComment}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveComment}
+                        disabled={!composerText.trim()}
+                      >
+                        Salvar
+                      </Button>
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-3 mb-3">
-                  <div>
-                      <label className={`block font-medium mb-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                        Avalie sua experiência com a plataforma
-                      </label>
-                      <div className="flex justify-center gap-0.5">
+                </TabsContent>
+                
+                {/* Tab 2: Ações e Aprovação */}
+                <TabsContent value="acoes" className="flex-1 overflow-auto m-0 p-6 space-y-6">
+                  {/* Review Status Badge */}
+                  <div className="flex justify-center">
+                    <Badge 
+                      variant="outline"
+                      className={`px-3 py-1.5 text-xs font-medium ${
+                        reviewStatus === 'approved'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : reviewStatus === 'changes_requested'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      <BadgeIcon className="w-3 h-3 mr-1.5" />
+                      {reviewStatus === 'approved' ? 'Aprovado' : reviewStatus === 'changes_requested' ? 'Ajustes solicitados' : 'Em revisão'}
+                    </Badge>
+                  </div>
+
+                  {/* Compact Rating */}
+                  {hasSubmittedRating ? (
+                    <div className="text-center">
+                      <CheckCircle className={`text-green-600 mx-auto mb-1.5 ${isMobile ? 'w-8 h-8' : 'w-9 h-9'}`} />
+                      <p className={`font-semibold text-green-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        Obrigado pela avaliação!
+                      </p>
+                      <div className="flex justify-center gap-0.5 mt-1.5">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <button
+                          <Star
                             key={star}
-                            onClick={() => setRating(star)}
-                            className="transition-transform hover:scale-110 touch-manipulation p-0.5"
-                            disabled={hasSubmittedRating}
-                          >
-                            <Star
-                              className={`cursor-pointer transition-colors ${
-                                isMobile ? 'w-5 h-5' : 'w-6 h-6'
-                              } ${
-                                star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
-                              }`}
-                            />
-                          </button>
+                            className={`${isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${
+                              star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                            }`}
+                          />
                         ))}
                       </div>
                     </div>
-
-                    {/* Campo de comentário aparece quando rating > 0 */}
-                    {rating > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        transition={{ duration: 0.3 }}
-                      >
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
                         <label className={`block font-medium mb-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                          Deixe seu depoimento (opcional)
+                          Avalie sua experiência com a plataforma
                         </label>
-                        <Textarea
-                          value={ratingComment}
-                          onChange={(e) => setRatingComment(e.target.value)}
-                          placeholder="Conte sobre sua experiência usando a plataforma de aprovação..."
-                          className={`w-full resize-none ${isMobile ? 'min-h-[80px] text-sm' : 'min-h-[100px]'}`}
-                          disabled={hasSubmittedRating}
-                        />
-                      </motion.div>
-                    )}
-
-                    {rating === 0 && (
-                      <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md p-1.5">
-                        <p className="text-xs text-yellow-800 dark:text-yellow-200 text-center">
-                          ⚠️ Avaliação obrigatória
-                        </p>
+                        <div className="flex justify-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => setRating(star)}
+                              className="transition-transform hover:scale-110 touch-manipulation p-0.5"
+                              disabled={hasSubmittedRating}
+                            >
+                              <Star
+                                className={`cursor-pointer transition-colors ${
+                                  isMobile ? 'w-5 h-5' : 'w-6 h-6'
+                                } ${
+                                  star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    )}
+
+                      {/* Campo de comentário aparece quando rating > 0 */}
+                      {rating > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <label className={`block font-medium mb-1.5 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                            Deixe seu depoimento (opcional)
+                          </label>
+                          <Textarea
+                            value={ratingComment}
+                            onChange={(e) => setRatingComment(e.target.value)}
+                            placeholder="Conte sobre sua experiência usando a plataforma de aprovação..."
+                            className={`w-full resize-none ${isMobile ? 'min-h-[80px] text-sm' : 'min-h-[100px]'}`}
+                            disabled={hasSubmittedRating}
+                          />
+                        </motion.div>
+                      )}
+
+                      {rating === 0 && (
+                        <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md p-1.5">
+                          <p className="text-xs text-yellow-800 dark:text-yellow-200 text-center">
+                            ⚠️ Avaliação obrigatória
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Compact Action Buttons */}
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={() => handleAction('approved')}
+                      disabled={submitting || !canApprove || rating === 0 || project.status === 'approved'}
+                      className={`w-full bg-green-600 hover:bg-green-700 touch-manipulation ${isMobile ? 'min-h-[44px] text-sm' : 'h-10 text-sm'}`}
+                      title={
+                        rating === 0
+                          ? "Avalie sua experiência antes de aprovar"
+                          : hasFeedback 
+                            ? "Não é possível aprovar com comentários ou anotações visuais pendentes" 
+                            : "Aprovar projeto na íntegra"
+                      }
+                    >
+                      {submitting ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                      )}
+                      Aprovar Projeto
+                    </Button>
+
+                    <Button
+                      onClick={() => handleAction('send_feedback')}
+                      disabled={submitting || !canSendFeedback || rating === 0 || project.status === 'feedback-sent'}
+                      className={`w-full touch-manipulation ${isMobile ? 'min-h-[44px] text-sm' : 'h-10 text-sm'}`}
+                      variant="outline"
+                      title={
+                        rating === 0
+                          ? "Avalie sua experiência antes de enviar feedback"
+                          : !hasFeedback 
+                            ? "Adicione comentários ou anotações visuais antes de enviar feedback" 
+                            : "Enviar todos os comentários e anotações"
+                      }
+                    >
+                      {submitting ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                      )}
+                      Enviar Feedback
+                    </Button>
                   </div>
-                )}
-
-                {/* Compact Action Buttons */}
-                <div className="flex flex-col gap-2">
-                  <Button
-                    onClick={() => handleAction('approved')}
-                    disabled={submitting || !canApprove || rating === 0 || project.status === 'approved'}
-                    className={`w-full bg-green-600 hover:bg-green-700 touch-manipulation ${isMobile ? 'min-h-[44px] text-sm' : 'h-10 text-sm'}`}
-                    title={
-                      rating === 0
-                        ? "Avalie sua experiência antes de aprovar"
-                        : hasFeedback 
-                          ? "Não é possível aprovar com comentários ou anotações visuais pendentes" 
-                          : "Aprovar projeto na íntegra"
-                    }
-                  >
-                    {submitting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                    )}
-                    Aprovar Projeto
-                  </Button>
-
-                  <Button
-                    onClick={() => handleAction('send_feedback')}
-                    disabled={submitting || !canSendFeedback || rating === 0 || project.status === 'feedback-sent'}
-                    className={`w-full touch-manipulation ${isMobile ? 'min-h-[44px] text-sm' : 'h-10 text-sm'}`}
-                    variant="outline"
-                    title={
-                      rating === 0
-                        ? "Avalie sua experiência antes de enviar feedback"
-                        : !hasFeedback 
-                          ? "Adicione comentários ou anotações visuais antes de enviar feedback" 
-                          : "Enviar todos os comentários e anotações"
-                    }
-                  >
-                    {submitting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                    )}
-                    Enviar Feedback
-                  </Button>
-                </div>
-              </div>
-
-              {/* Comments Section Below - Scrollable */}
-              <div className="flex-1 overflow-hidden">
-                <CommentsSidebar
-                  keyframes={keyframes}
-                  annotations={[]}
-                  feedbackHistory={feedbackHistory}
-                  threads={threads}
-                  selectedThreadId={selectedThreadId}
-                  currentTime={currentTime}
-                  onSeekToTime={seekTo}
-                  onLoadAnnotation={() => {}}
-                  onUpdateKeyframe={handleKeyframeCommentChange}
-                  onDeleteKeyframe={handleRemoveKeyframe}
-                  onUpdateAnnotation={() => {}}
-                  onDeleteAnnotation={() => {}}
-                  onSelectThread={(threadId) => {
-                    setSelectedThreadId(threadId);
-                    const thread = threads.find(t => t.id === threadId);
-                    if (thread) {
-                      seekTo(thread.tStart);
-                      setOpenThreadDetail(thread);
-                    }
-                  }}
-                  onSeekToThread={(time) => seekTo(time)}
-                  formatTime={formatTime}
-                />
-              </div>
+                </TabsContent>
+              </Tabs>
             </Card>
           </div>
         </div>
