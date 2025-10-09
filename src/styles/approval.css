@@ -4,21 +4,8 @@
   --video-h: 480px;
 }
 
-/* Card completo com altura fixa igual ao vídeo */
-#adjPanel {
-  height: var(--video-h);
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header permanece no topo */
-#adjPanel > div:first-child {
-  flex-shrink: 0;
-}
-
-/* Scroll interno ocupa espaço restante */
 #adjPanel .adj-scroll {
-  flex: 1;
+  max-height: calc(var(--video-h) - 80px);
   overflow-y: auto;
   overscroll-behavior: contain;
   transition: max-height 0.2s ease-out;
@@ -40,11 +27,4 @@
 
 #adjPanel .adj-scroll::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
-}
-
-/* Mobile: Altura automática */
-@media (max-width: 1023px) {
-  #adjPanel {
-    height: auto;
-  }
 }
