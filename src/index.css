@@ -140,6 +140,7 @@ All colors MUST be HSL.
     --gradient-primary: hsl(22 91% 59%);
     --gradient-secondary: hsl(22 91% 68%);
     --gradient-subtle: linear-gradient(180deg, hsl(220 25% 5%), hsl(220 22% 8%));
+    --gradient-header-dark: hsl(220 22% 10%);  /* Header diferenciado do background */
 
     /* Shadows - Dark Polish */
     --shadow-elegant: 0 4px 6px -1px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
