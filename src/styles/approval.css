@@ -9,6 +9,7 @@
   height: var(--adj-height);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Header fixo */
@@ -16,9 +17,18 @@
   flex-shrink: 0;
 }
 
+/* CardContent ocupa espaço restante */
+#adjPanel > div:last-child {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Área de scroll - cresce para preencher espaço disponível */
 #adjPanel .adj-scroll {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
