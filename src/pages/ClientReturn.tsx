@@ -22,6 +22,7 @@ import { AttachmentList } from "@/components/AttachmentList";
 import { Attachment } from "@/lib/attachmentUtils";
 import { useProjectFeedbackManagement } from "@/hooks/useProjectFeedbackManagement";
 import { FeedbackHistorySection } from "@/components/FeedbackHistorySection";
+import '@/styles/approval.css';
 
 interface Project {
   id: string;
@@ -168,6 +169,23 @@ const ClientReturn = () => {
       setLoading(false);
     }
   };
+
+  // Sync altura do vídeo com painel de ajustes (Asana-style alignment)
+  useEffect(() => {
+    const videoCard = document.getElementById('videoCard');
+    const videoRow = document.getElementById('video-row');
+    
+    if (!videoCard || !videoRow) return;
+
+    const ro = new ResizeObserver(() => {
+      const cardRect = videoCard.getBoundingClientRect();
+      const totalHeight = Math.round(cardRect.height);
+      videoRow.style.setProperty('--video-h', `${totalHeight}px`);
+    });
+
+    ro.observe(videoCard);
+    return () => ro.disconnect();
+  }, [project]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: "default" | "secondary" | "success" | "warning", label: string }> = {
@@ -424,13 +442,13 @@ const ClientReturn = () => {
         )}
 
         {/* Layout em Grid - Vídeo em destaque + Gestão ao lado */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div id="video-row" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* COLUNA ESQUERDA - Vídeo (2/3 da largura) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Vídeo do Projeto */}
             {project.video_url && (
-              <Card>
+              <Card id="videoCard">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
@@ -451,13 +469,15 @@ const ClientReturn = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <VideoPlayerWithKeyframes
-                    ref={videoPlayerRef}
-                    src={project.video_url!}
-                    keyframes={keyframes}
-                    onDurationChange={setVideoDuration}
-                    currentFeedbackRound={currentRound}
-                  />
+                  <div id="videoMeasure">
+                    <VideoPlayerWithKeyframes
+                      ref={videoPlayerRef}
+                      src={project.video_url!}
+                      keyframes={keyframes}
+                      onDurationChange={setVideoDuration}
+                      currentFeedbackRound={currentRound}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -503,7 +523,7 @@ const ClientReturn = () => {
 
             {/* Gestão de Ajustes - Com Scroll */}
             {currentKeyframes.length > 0 ? (
-              <Card>
+              <Card id="adjPanel">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -527,7 +547,7 @@ const ClientReturn = () => {
                   </div>
                 </CardHeader>
                   <CardContent className="p-0">
-                    <ScrollArea className="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] px-6 pb-6">
+                    <div className="adj-scroll px-6 pb-6">
                       <div className="space-y-2.5">
                       {currentKeyframes.map((keyframe) => {
                         const timeInSeconds = keyframe.attachments[0]?.time || 0;
@@ -660,7 +680,7 @@ const ClientReturn = () => {
                         );
                       })}
                     </div>
-                  </ScrollArea>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
