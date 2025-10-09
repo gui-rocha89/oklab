@@ -280,7 +280,7 @@ export default function Dashboard() {
           transition={{ delay: 0.3 }}
           className="bg-card border border-border rounded-2xl p-6 shadow-lg"
         >
-          <h2 className="text-xl font-bold text-foreground mb-6">Ações Rápidas</h2>
+          <h2 className="text-xl font-bold text-foreground mb-6">Escolha qual você quer criar</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <motion.button
               whileHover={{ scale: 1.02 }}
