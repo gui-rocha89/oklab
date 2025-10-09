@@ -444,44 +444,41 @@ const ClientReturn = () => {
         {/* Layout em Grid - Vídeo em destaque + Gestão ao lado */}
         <div id="video-row" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* COLUNA ESQUERDA - Vídeo (2/3 da largura) */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Vídeo do Projeto */}
-            {project.video_url && (
-              <Card id="videoCard">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Video className="w-5 h-5 text-primary" />
-                      Vídeo do Projeto
-                    </CardTitle>
-                    {isApprovedWithoutChanges && (
-                      <Badge variant="success" className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Aprovado na íntegra
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription>
-                    {isApprovedWithoutChanges 
-                      ? "Vídeo aprovado sem comentários ou modificações" 
-                      : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div id="videoMeasure">
-                    <VideoPlayerWithKeyframes
-                      ref={videoPlayerRef}
-                      src={project.video_url!}
-                      keyframes={keyframes}
-                      onDurationChange={setVideoDuration}
-                      currentFeedbackRound={currentRound}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {/* Vídeo do Projeto - Alinhado com painel */}
+          {project.video_url && (
+            <Card id="videoCard" className="lg:col-span-2">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Video className="w-5 h-5 text-primary" />
+                    Vídeo do Projeto
+                  </CardTitle>
+                  {isApprovedWithoutChanges && (
+                    <Badge variant="success" className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Aprovado na íntegra
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription>
+                  {isApprovedWithoutChanges 
+                    ? "Vídeo aprovado sem comentários ou modificações" 
+                    : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div id="videoMeasure">
+                  <VideoPlayerWithKeyframes
+                    ref={videoPlayerRef}
+                    src={project.video_url!}
+                    keyframes={keyframes}
+                    onDurationChange={setVideoDuration}
+                    currentFeedbackRound={currentRound}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           {/* COLUNA DIREITA - Gestão e Comentários (1/3 da largura) */}
           <div className="lg:col-span-1 space-y-6">
