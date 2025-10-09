@@ -237,7 +237,7 @@ export default function Projects() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setIsNewProjectModalOpen(true)}>
                     <FileText className="h-4 w-4 mr-2" />
-                    Aprovação Visual Conteúdos
+                    Aprovação de Posts
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setIsAudiovisualModalOpen(true)}>
                     <Film className="h-4 w-4 mr-2" />
@@ -621,7 +621,7 @@ export default function Projects() {
                 </p>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Aprovação Visual Conteúdos
+                  Aprovação de Posts
                 </Button>
               </div>
             </CardContent>

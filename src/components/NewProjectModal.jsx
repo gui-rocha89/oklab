@@ -285,7 +285,7 @@ const NewProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
               <div className="flex items-center gap-3">
                 <FileSignature className="h-6 w-6 text-orange-500" />
                 <h2 className="text-2xl font-bold text-foreground">
-                  {showSuccess ? "Projeto Criado!" : "Aprovação Visual Conteúdos"}
+                  {showSuccess ? "Projeto Criado!" : "Aprovação de Posts"}
                 </h2>
               </div>
               <Button variant="ghost" size="icon" onClick={handleClose} className="rounded-full">

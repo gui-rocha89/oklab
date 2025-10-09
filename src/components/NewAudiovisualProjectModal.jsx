@@ -250,7 +250,7 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
             <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background rounded-t-2xl z-10">
               <div className="flex items-center gap-3">
                 <Film className="h-6 w-6 text-orange-500" />
-                <h2 className="text-2xl font-bold text-foreground">Aprovação Visual Conteúdos - Audiovisual</h2>
+                <h2 className="text-2xl font-bold text-foreground">Aprovação de Posts - Audiovisual</h2>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
                 <X className="h-5 w-5" />

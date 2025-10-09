@@ -448,7 +448,7 @@ const ProjectList = ({ projects, onProjectAction, onNewProjectClick, setActiveTa
             className="btn-primary"
             onClick={onNewProjectClick}
           >
-            + Aprovação Visual Conteúdos
+            + Aprovação de Posts
           </motion.button>
         </div>
       </motion.div>
