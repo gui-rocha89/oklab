@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, Film, FileText, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useModalBlur } from "@/hooks/useModalBlur";
 import { supabase } from "@/integrations/supabase/client";
 
 const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
@@ -24,9 +23,6 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
   const fileInputRef = useRef(null);
   const uploadAbortRef = useRef(null);
   const { toast } = useToast();
-
-  // Use the layered blur system
-  useModalBlur(isOpen, () => setIsOpen(false));
 
   useEffect(() => {
     if (isOpen) {
@@ -235,190 +231,177 @@ const NewAudiovisualProjectModal = ({ isOpen, setIsOpen, onProjectCreate }) => {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="flex items-center justify-center p-4"
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            zIndex: 1000,
-            pointerEvents: 'none'
-          }}
-        >
-          <div className="lovable-modal-content bg-background rounded-2xl shadow-2xl w-full max-w-4xl mx-4 my-8 flex flex-col pointer-events-auto" style={{ maxHeight: '90vh' }} role="dialog" aria-modal="true">
-            <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background rounded-t-2xl z-10">
-              <div className="flex items-center gap-3">
-                <Film className="h-6 w-6 text-orange-500" />
-                <h2 className="text-2xl font-bold text-foreground">Aprovação de Posts - Audiovisual</h2>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0" aria-labelledby="modal-title" aria-describedby="modal-desc">
+        <div className="flex flex-col h-full max-h-[90vh]">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background z-10">
+            <div className="flex items-center gap-3">
+              <Film className="h-6 w-6 text-orange-500" />
+              <DialogTitle id="modal-title" className="text-2xl font-bold text-foreground">
+                Aprovação de Posts - Audiovisual
+              </DialogTitle>
+            </div>
+            <DialogClose asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
                 <X className="h-5 w-5" />
               </Button>
-            </div>
+            </DialogClose>
+          </div>
 
-            <div className="overflow-y-auto p-8 space-y-8 flex-1">
-              {showSuccess ? (
-                // Tela de Sucesso com Link
-                <div className="flex flex-col items-center justify-center space-y-6 py-12">
-                  <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <CheckCircle className="h-12 w-12 text-green-500" />
-                  </div>
-                  
-                  <div className="text-center space-y-2">
-                    <h3 className="text-2xl font-bold text-foreground">Projeto Criado com Sucesso!</h3>
-                    <p className="text-muted-foreground">
-                      Compartilhe o link abaixo com seu cliente para aprovação do vídeo
-                    </p>
-                  </div>
+          {/* Body com scroll interno */}
+          <div id="modal-desc" className="flex-1 overflow-y-auto p-8 space-y-8">
+            {showSuccess ? (
+              // Tela de Sucesso com Link
+              <div className="flex flex-col items-center justify-center space-y-6 py-12">
+                <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <CheckCircle className="h-12 w-12 text-green-500" />
+                </div>
+                
+                <div className="text-center space-y-2">
+                  <h3 className="text-2xl font-bold text-foreground">Projeto Criado com Sucesso!</h3>
+                  <p className="text-muted-foreground">
+                    Compartilhe o link abaixo com seu cliente para aprovação do vídeo
+                  </p>
+                </div>
 
-                  <div className="w-full max-w-2xl space-y-4">
-                    <div className="p-4 bg-muted/50 rounded-xl border border-border">
-                      <Label className="text-sm font-medium mb-2 block">Link de Aprovação</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={approvalLink}
-                          readOnly
-                          className="font-mono text-sm"
-                        />
-                        <Button
-                          onClick={() => {
-                            navigator.clipboard.writeText(approvalLink);
-                            toast({
-                              title: "✅ Link Copiado!",
-                              description: "O link foi copiado para a área de transferência.",
-                              duration: 3000,
-                            });
-                          }}
-                          className="whitespace-nowrap"
-                        >
-                          Copiar Link
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg">
-                      <p className="font-semibold text-foreground">📌 Próximos Passos:</p>
-                      <ul className="list-disc list-inside space-y-1 ml-2">
-                        <li>Envie este link para o cliente via WhatsApp ou e-mail</li>
-                        <li>O cliente poderá assistir e aprovar o vídeo</li>
-                        <li>Você receberá notificações sobre o status da aprovação</li>
-                      </ul>
+                <div className="w-full max-w-2xl space-y-4">
+                  <div className="p-4 bg-muted/50 rounded-xl border border-border">
+                    <Label className="text-sm font-medium mb-2 block">Link de Aprovação</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={approvalLink}
+                        readOnly
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        onClick={() => {
+                          navigator.clipboard.writeText(approvalLink);
+                          toast({
+                            title: "✅ Link Copiado!",
+                            description: "O link foi copiado para a área de transferência.",
+                            duration: 3000,
+                          });
+                        }}
+                        className="whitespace-nowrap"
+                      >
+                        Copiar Link
+                      </Button>
                     </div>
                   </div>
 
-                  <Button
-                    onClick={() => {
-                      setShowSuccess(false);
-                      setIsOpen(false);
-                    }}
-                    size="lg"
-                    className="mt-4"
-                  >
-                    Fechar
-                  </Button>
-                </div>
-              ) : (
-                // Formulário Normal
-                <>
-              <div className="p-6 bg-muted/50 rounded-xl border border-border space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="av-title">Nome do projeto</Label>
-                  <Input id="av-title" placeholder="Ex: Vídeo Institucional 2025" value={title} onChange={(e) => setTitle(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="av-comment">Descrição do projeto</Label>
-                  <Textarea id="av-comment" placeholder="Adicione uma descrição, observações ou o roteiro do vídeo aqui..." value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="client-name">Nome do cliente</Label>
-                    <Input id="client-name" placeholder="Nome do Cliente" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client-email">E-mail do cliente (opcional)</Label>
-                    <Input type="email" id="client-email" placeholder="email@cliente.com" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
+                  <div className="flex flex-col gap-2 text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg">
+                    <p className="font-semibold text-foreground">📌 Próximos Passos:</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Envie este link para o cliente via WhatsApp ou e-mail</li>
+                      <li>O cliente poderá assistir e aprovar o vídeo</li>
+                      <li>Você receberá notificações sobre o status da aprovação</li>
+                    </ul>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-foreground">Arquivo de Vídeo</h3>
-                {uploadError && (
-                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-                    {uploadError}
-                  </div>
-                )}
-                <div
-                  className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                    uploadError 
-                      ? 'border-destructive/50 bg-destructive/5' 
-                      : 'border-muted-foreground/30 hover:border-orange-500 hover:bg-muted/50'
-                  }`}
-                  onClick={() => fileInputRef.current?.click()}
+                <Button
+                  onClick={() => {
+                    setShowSuccess(false);
+                    setIsOpen(false);
+                  }}
+                  size="lg"
+                  className="mt-4"
                 >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept=".mp4,.mov,video/mp4,video/quicktime"
-                    onChange={handleFileChange}
-                  />
-                  {videoFile ? (
-                    <div className="flex flex-col items-center justify-center text-green-600">
-                      <CheckCircle className="h-12 w-12 mb-3" />
-                      <p className="font-semibold text-lg">Vídeo Carregado!</p>
-                      <p className="text-sm text-muted-foreground">{videoFile.name}</p>
-                      <Button variant="link" size="sm" className="mt-2 text-sm">Trocar arquivo</Button>
+                  Fechar
+                </Button>
+              </div>
+            ) : (
+              // Formulário Normal
+              <>
+                <div className="p-6 bg-muted/50 rounded-xl border border-border space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="av-title">Nome do projeto</Label>
+                    <Input id="av-title" placeholder="Ex: Vídeo Institucional 2025" value={title} onChange={(e) => setTitle(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="av-comment">Descrição do projeto</Label>
+                    <Textarea id="av-comment" placeholder="Adicione uma descrição, observações ou o roteiro do vídeo aqui..." value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="client-name">Nome do cliente</Label>
+                      <Input id="client-name" placeholder="Nome do Cliente" value={clientName} onChange={(e) => setClientName(e.target.value)} />
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <Upload className="h-12 w-12 mb-3 text-muted-foreground" />
-                      <p className="font-semibold text-lg">Arraste ou clique para enviar</p>
-                      <p className="text-sm">Formatos: MP4 ou MOV (máximo 500MB)</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="client-email">E-mail do cliente (opcional)</Label>
+                      <Input type="email" id="client-email" placeholder="email@cliente.com" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-              </>
-              )}
-            </div>
 
-            {!showSuccess && (
-            <div className="flex justify-end p-6 border-t border-border sticky bottom-0 bg-background rounded-b-2xl z-10">
-              <div className="flex gap-4">
-                <Button variant="outline" size="lg" onClick={() => setIsOpen(false)} disabled={isUploading}>
-                  Cancelar
-                </Button>
-                <Button className="btn-primary" onClick={handleSubmit} disabled={isUploading}>
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Criando... {uploadProgress}%
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-5 h-5 mr-2" />
-                      Criar Projeto
-                    </>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-foreground">Arquivo de Vídeo</h3>
+                  {uploadError && (
+                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                      {uploadError}
+                    </div>
                   )}
-                </Button>
-              </div>
-            </div>
+                  <div
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                      uploadError 
+                        ? 'border-destructive/50 bg-destructive/5' 
+                        : 'border-muted-foreground/30 hover:border-orange-500 hover:bg-muted/50'
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept=".mp4,.mov,video/mp4,video/quicktime"
+                      onChange={handleFileChange}
+                    />
+                    {videoFile ? (
+                      <div className="flex flex-col items-center justify-center text-green-600">
+                        <CheckCircle className="h-12 w-12 mb-3" />
+                        <p className="font-semibold text-lg">Vídeo Carregado!</p>
+                        <p className="text-sm text-muted-foreground">{videoFile.name}</p>
+                        <Button variant="link" size="sm" className="mt-2 text-sm">Trocar arquivo</Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <Upload className="h-12 w-12 mb-3 text-muted-foreground" />
+                        <p className="font-semibold text-lg">Arraste ou clique para enviar</p>
+                        <p className="text-sm">Formatos: MP4 ou MOV (máximo 500MB)</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+
+          {/* Footer sticky */}
+          {!showSuccess && (
+            <div className="sticky bottom-0 border-t border-border bg-background p-6 flex gap-2 justify-end">
+              <DialogClose asChild>
+                <Button variant="outline" disabled={isUploading}>Cancelar</Button>
+              </DialogClose>
+              <Button onClick={handleSubmit} disabled={isUploading}>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Criando... {uploadProgress}%
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-5 h-5 mr-2" />
+                    Criar Projeto
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
