@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, CheckCircle2, Clock, Star, MessageSquare, Video, User, Mail, Pencil, Play, Upload, Send, CheckCircle, AlertCircle, Copy, Loader2, ChevronDown } from "lucide-react";
@@ -23,7 +22,6 @@ import { Attachment } from "@/lib/attachmentUtils";
 import { useProjectFeedbackManagement } from "@/hooks/useProjectFeedbackManagement";
 import { FeedbackHistorySection } from "@/components/FeedbackHistorySection";
 import '@/styles/approval.css';
-
 interface Project {
   id: string;
   title: string;
@@ -38,7 +36,6 @@ interface Project {
   share_id: string;
   current_feedback_round?: number;
 }
-
 interface PlatformReview {
   id: string;
   rating: number;
@@ -47,7 +44,6 @@ interface PlatformReview {
   client_email: string;
   created_at: string;
 }
-
 interface Feedback {
   id: string;
   comment: string;
@@ -61,7 +57,6 @@ interface Feedback {
   team_attachments: any[];
   feedback_round: number;
 }
-
 interface Keyframe {
   id: string;
   title: string;
@@ -73,9 +68,10 @@ interface Keyframe {
   feedback_count: number;
   project_feedback: Feedback[];
 }
-
 const ClientReturn = () => {
-  const { projectId } = useParams();
+  const {
+    projectId
+  } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<Project | null>(null);
@@ -90,77 +86,60 @@ const ClientReturn = () => {
   const [generatedShareLink, setGeneratedShareLink] = useState<string | null>(null);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
-
-  const { updateFeedback, resendProject, isUpdating, isResending } = useProjectFeedbackManagement();
-
+  const {
+    updateFeedback,
+    resendProject,
+    isUpdating,
+    isResending
+  } = useProjectFeedbackManagement();
   useEffect(() => {
     fetchProjectReturn();
   }, [projectId]);
 
   // Separar feedbacks históricos de atuais baseado em feedback_round
   const currentRound = project?.current_feedback_round || 1;
-  
+
   // Histórico: feedbacks de rodadas ANTERIORES que foram resolvidos
-  const historicalKeyframes = project ? keyframes
-    .filter(kf => 
-      kf.project_feedback.some(f => f.feedback_round < currentRound && f.resolved)
-    )
-    .map(kf => ({
-      ...kf,
-      project_feedback: kf.project_feedback.filter(f => f.feedback_round < currentRound && f.resolved)
-    })) : [];
+  const historicalKeyframes = project ? keyframes.filter(kf => kf.project_feedback.some(f => f.feedback_round < currentRound && f.resolved)).map(kf => ({
+    ...kf,
+    project_feedback: kf.project_feedback.filter(f => f.feedback_round < currentRound && f.resolved)
+  })) : [];
 
   // Atual: feedbacks da rodada ATUAL
-  const currentKeyframes = project ? keyframes
-    .filter(kf => 
-      kf.project_feedback.some(f => f.feedback_round === currentRound)
-    )
-    .map(kf => ({
-      ...kf,
-      project_feedback: kf.project_feedback.filter(f => f.feedback_round === currentRound)
-    })) : [];
-
+  const currentKeyframes = project ? keyframes.filter(kf => kf.project_feedback.some(f => f.feedback_round === currentRound)).map(kf => ({
+    ...kf,
+    project_feedback: kf.project_feedback.filter(f => f.feedback_round === currentRound)
+  })) : [];
   const totalComments = currentKeyframes.reduce((sum, kf) => sum + kf.project_feedback.length, 0);
-  const resolvedComments = currentKeyframes.reduce(
-    (sum, kf) => sum + kf.project_feedback.filter(f => f.resolved).length, 
-    0
-  );
-
+  const resolvedComments = currentKeyframes.reduce((sum, kf) => sum + kf.project_feedback.filter(f => f.resolved).length, 0);
   const isInNewRound = currentRound > 1;
-
   const fetchProjectReturn = async () => {
     try {
       setLoading(true);
 
       // Buscar projeto
-      const { data: projectData, error: projectError } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("id", projectId)
-        .single();
-
+      const {
+        data: projectData,
+        error: projectError
+      } = await supabase.from("projects").select("*").eq("id", projectId).single();
       if (projectError) throw projectError;
       setProject(projectData);
 
       // Buscar keyframes com feedback
-      const { data: keyframesData } = await supabase
-        .from("project_keyframes")
-        .select("*, project_feedback(*)")
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: true });
-
+      const {
+        data: keyframesData
+      } = await supabase.from("project_keyframes").select("*, project_feedback(*)").eq("project_id", projectId).order("created_at", {
+        ascending: true
+      });
       console.log('📦 Keyframes com feedbacks:', keyframesData);
       setKeyframes(keyframesData || []);
 
       // Buscar review/rating
-      const { data: reviewData } = await supabase
-        .from("platform_reviews")
-        .select("*")
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+      const {
+        data: reviewData
+      } = await supabase.from("platform_reviews").select("*").eq("project_id", projectId).order("created_at", {
+        ascending: false
+      }).limit(1).maybeSingle();
       setReview(reviewData);
     } catch (error: any) {
       console.error("Erro ao buscar retorno do cliente:", error);
@@ -174,134 +153,151 @@ const ClientReturn = () => {
   useEffect(() => {
     const videoCard = document.getElementById('videoCard');
     const videoRow = document.getElementById('video-row');
-    
     if (!videoCard || !videoRow) return;
-
     const ro = new ResizeObserver(() => {
       const cardRect = videoCard.getBoundingClientRect();
       const totalHeight = Math.round(cardRect.height);
       videoRow.style.setProperty('--video-h', `${totalHeight}px`);
     });
-
     ro.observe(videoCard);
     return () => ro.disconnect();
   }, [project]);
-
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "success" | "warning", label: string }> = {
-      pending: { variant: "warning", label: "Aguardando" },
-      approved: { variant: "success", label: "Aprovado" },
-      "feedback-sent": { variant: "secondary", label: "Feedback Enviado" },
-      "in-revision": { variant: "warning", label: "Em Revisão" },
-      "feedback-resent": { variant: "secondary", label: "Reenviado" },
-      completed: { variant: "success", label: "Concluído" },
+    const variants: Record<string, {
+      variant: "default" | "secondary" | "success" | "warning";
+      label: string;
+    }> = {
+      pending: {
+        variant: "warning",
+        label: "Aguardando"
+      },
+      approved: {
+        variant: "success",
+        label: "Aprovado"
+      },
+      "feedback-sent": {
+        variant: "secondary",
+        label: "Feedback Enviado"
+      },
+      "in-revision": {
+        variant: "warning",
+        label: "Em Revisão"
+      },
+      "feedback-resent": {
+        variant: "secondary",
+        label: "Reenviado"
+      },
+      completed: {
+        variant: "success",
+        label: "Concluído"
+      }
     };
-    
-    const config = variants[status] || { variant: "default", label: status };
+    const config = variants[status] || {
+      variant: "default",
+      label: status
+    };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
-
   const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-5 h-5 ${
-              star <= rating ? "fill-warning text-warning" : "text-muted"
-            }`}
-          />
-        ))}
-      </div>
-    );
+    return <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map(star => <Star key={star} className={`w-5 h-5 ${star <= rating ? "fill-warning text-warning" : "text-muted"}`} />)}
+      </div>;
   };
-
   const seekToTime = (timeInSeconds: number) => {
     videoPlayerRef.current?.seekTo(timeInSeconds);
     toast.success(`Pausado em ${formatTime(timeInSeconds)}`);
   };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   const handleResolveToggle = async (feedbackId: string, currentResolved: boolean) => {
     // Optimistic update - atualizar UI imediatamente
     setKeyframes(prev => prev.map(kf => ({
       ...kf,
-      project_feedback: kf.project_feedback.map(f => 
-        f.id === feedbackId ? { ...f, resolved: !currentResolved } : f
-      )
+      project_feedback: kf.project_feedback.map(f => f.id === feedbackId ? {
+        ...f,
+        resolved: !currentResolved
+      } : f)
     })));
 
     // Fazer chamada ao servidor em background
-    const success = await updateFeedback(feedbackId, { resolved: !currentResolved });
-    
+    const success = await updateFeedback(feedbackId, {
+      resolved: !currentResolved
+    });
     if (!success) {
       // Se falhar, reverter estado local
       await fetchProjectReturn();
     }
   };
-
   const handleTeamResponseChange = (feedbackId: string, response: string) => {
-    setTeamResponses(prev => ({ ...prev, [feedbackId]: response }));
-    
+    setTeamResponses(prev => ({
+      ...prev,
+      [feedbackId]: response
+    }));
+
     // Clear existing timer
     if (debounceTimers.current[feedbackId]) {
       clearTimeout(debounceTimers.current[feedbackId]);
     }
-    
+
     // Clear saved indicator
-    setSavedFeedback(prev => ({ ...prev, [feedbackId]: false }));
-    
+    setSavedFeedback(prev => ({
+      ...prev,
+      [feedbackId]: false
+    }));
+
     // Set new timer for auto-save
     debounceTimers.current[feedbackId] = setTimeout(async () => {
       if (response.trim()) {
-        setSavingFeedback(prev => ({ ...prev, [feedbackId]: true }));
-        
-        const success = await updateFeedback(feedbackId, { team_response: response });
-        
-        setSavingFeedback(prev => ({ ...prev, [feedbackId]: false }));
-        
+        setSavingFeedback(prev => ({
+          ...prev,
+          [feedbackId]: true
+        }));
+        const success = await updateFeedback(feedbackId, {
+          team_response: response
+        });
+        setSavingFeedback(prev => ({
+          ...prev,
+          [feedbackId]: false
+        }));
         if (success) {
-          setSavedFeedback(prev => ({ ...prev, [feedbackId]: true }));
+          setSavedFeedback(prev => ({
+            ...prev,
+            [feedbackId]: true
+          }));
           // Clear saved indicator after 3 seconds
           setTimeout(() => {
-            setSavedFeedback(prev => ({ ...prev, [feedbackId]: false }));
+            setSavedFeedback(prev => ({
+              ...prev,
+              [feedbackId]: false
+            }));
           }, 3000);
         }
       }
     }, 2000);
   };
-
   const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     const maxSize = 500 * 1024 * 1024; // 500MB
-    
+
     if (file.size > maxSize) {
       toast.error("Vídeo muito grande! Tamanho máximo: 500MB");
       e.target.value = '';
       return;
     }
-    
     setNewVideoFile(file);
     toast.success(`Vídeo selecionado: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
   };
-
   const handleResendProject = async () => {
     if (!newVideoFile) {
       toast.error("Selecione um vídeo corrigido para enviar");
       return;
     }
-
     if (!projectId) return;
-
     const result = await resendProject(projectId, newVideoFile, resendMessage);
-    
     if (result) {
       setGeneratedShareLink(result.shareUrl);
       setNewVideoFile(null);
@@ -309,29 +305,22 @@ const ClientReturn = () => {
       fetchProjectReturn();
     }
   };
-
   const copyLinkToClipboard = () => {
     if (generatedShareLink) {
       navigator.clipboard.writeText(generatedShareLink);
       toast.success("Link copiado para a área de transferência!");
     }
   };
-
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
+    return <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Carregando retorno do cliente...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!project) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
+    return <div className="flex items-center justify-center min-h-screen">
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Projeto não encontrado</CardTitle>
@@ -346,24 +335,16 @@ const ClientReturn = () => {
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>;
   }
-
   const hasClientReturn = project.completed_at || review;
   const hasKeyframes = keyframes.length > 0;
   const isApprovedWithoutChanges = hasClientReturn && !hasKeyframes;
-
-  return (
-    <>
+  return <>
       <Header title="Retorno do Cliente" />
       
       <div className="container mx-auto px-4 py-8 space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/projetos")}
-          className="mb-2"
-        >
+        <Button variant="ghost" onClick={() => navigate("/projetos")} className="mb-2">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar para Projetos
         </Button>
@@ -388,47 +369,46 @@ const ClientReturn = () => {
                 <div>
                   <p className="font-medium">Criado em</p>
                   <p className="text-muted-foreground">
-                    {format(new Date(project.created_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
+                    {format(new Date(project.created_at), "dd 'de' MMM, yyyy", {
+                    locale: ptBR
+                  })}
                   </p>
                 </div>
               </div>
 
-              {project.completed_at && (
-                <div className="flex items-center gap-2 text-sm">
+              {project.completed_at && <div className="flex items-center gap-2 text-sm">
                   <CheckCircle2 className="w-4 h-4 text-success" />
                   <div>
                     <p className="font-medium">Retorno recebido em</p>
                     <p className="text-muted-foreground">
-                      {format(new Date(project.completed_at), "dd 'de' MMM, yyyy 'às' HH:mm", { locale: ptBR })}
+                      {format(new Date(project.completed_at), "dd 'de' MMM, yyyy 'às' HH:mm", {
+                    locale: ptBR
+                  })}
                     </p>
                   </div>
-                </div>
-              )}
+                </div>}
 
-              {project.approval_date && (
-                <div className="flex items-center gap-2 text-sm">
+              {project.approval_date && <div className="flex items-center gap-2 text-sm">
                   <CheckCircle2 className="w-4 h-4 text-success" />
                   <div>
                     <p className="font-medium">Aprovado em</p>
                     <p className="text-muted-foreground">
-                      {format(new Date(project.approval_date), "dd 'de' MMM, yyyy 'às' HH:mm", { locale: ptBR })}
+                      {format(new Date(project.approval_date), "dd 'de' MMM, yyyy 'às' HH:mm", {
+                    locale: ptBR
+                  })}
                     </p>
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
 
-            {project.description && (
-              <div className="mt-4 pt-4 border-t">
+            {project.description && <div className="mt-4 pt-4 border-t">
                 <p className="text-sm text-muted-foreground">{project.description}</p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
 
         {/* Status sem Retorno */}
-        {!hasClientReturn && (
-          <Card className="border-warning/50 bg-warning/5">
+        {!hasClientReturn && <Card className="border-warning/50 bg-warning/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-warning" />
@@ -438,65 +418,49 @@ const ClientReturn = () => {
                 O cliente ainda não enviou feedback para este projeto.
               </CardDescription>
             </CardHeader>
-          </Card>
-        )}
+          </Card>}
 
         {/* Layout em Grid - Vídeo em destaque + Gestão ao lado */}
         <div id="video-row" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Vídeo do Projeto - Alinhado com painel */}
-          {project.video_url && (
-            <Card id="videoCard" className="lg:col-span-2">
+          {project.video_url && <Card id="videoCard" className="lg:col-span-2 my-[100px] mx-0 px-0 py-0">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Video className="w-5 h-5 text-primary" />
                     Vídeo do Projeto
                   </CardTitle>
-                  {isApprovedWithoutChanges && (
-                    <Badge variant="success" className="flex items-center gap-1">
+                  {isApprovedWithoutChanges && <Badge variant="success" className="flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
                       Aprovado na íntegra
-                    </Badge>
-                  )}
+                    </Badge>}
                 </div>
                 <CardDescription>
-                  {isApprovedWithoutChanges 
-                    ? "Vídeo aprovado sem comentários ou modificações" 
-                    : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
+                  {isApprovedWithoutChanges ? "Vídeo aprovado sem comentários ou modificações" : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div id="videoMeasure">
-                  <VideoPlayerWithKeyframes
-                    ref={videoPlayerRef}
-                    src={project.video_url!}
-                    keyframes={keyframes}
-                    onDurationChange={setVideoDuration}
-                    currentFeedbackRound={currentRound}
-                  />
+                  <VideoPlayerWithKeyframes ref={videoPlayerRef} src={project.video_url!} keyframes={keyframes} onDurationChange={setVideoDuration} currentFeedbackRound={currentRound} />
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
           
           {/* COLUNA DIREITA - Gestão e Comentários (1/3 da largura) */}
           <div className="lg:col-span-1 space-y-6">
             
             {/* Progresso dos Ajustes - Sticky */}
-            {currentKeyframes.length > 0 && totalComments > 0 && (
-              <Card className="border-primary/30 bg-primary/5 sticky top-4">
+            {currentKeyframes.length > 0 && totalComments > 0 && <Card className="border-primary/30 bg-primary/5 sticky top-4">
                 <CardHeader>
                   <div className="flex items-center gap-2 flex-wrap">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <CheckCircle className="w-4 h-4 text-primary" />
                       Progresso
                     </CardTitle>
-                    {isInNewRound && (
-                      <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-400">
+                    {isInNewRound && <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-400">
                         Rodada {currentRound}
-                      </Badge>
-                    )}
+                      </Badge>}
                   </div>
                   <CardDescription className="text-xs">
                     {resolvedComments} de {totalComments} ajustes resolvidos
@@ -505,22 +469,19 @@ const ClientReturn = () => {
                 <CardContent>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="bg-primary h-full transition-all duration-500"
-                        style={{ width: `${totalComments > 0 ? (resolvedComments / totalComments) * 100 : 0}%` }}
-                      />
+                      <div className="bg-primary h-full transition-all duration-500" style={{
+                    width: `${totalComments > 0 ? resolvedComments / totalComments * 100 : 0}%`
+                  }} />
                     </div>
                     <span className="text-xs font-semibold text-primary">
-                      {totalComments > 0 ? Math.round((resolvedComments / totalComments) * 100) : 0}%
+                      {totalComments > 0 ? Math.round(resolvedComments / totalComments * 100) : 0}%
                     </span>
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Gestão de Ajustes - Com Scroll */}
-            {currentKeyframes.length > 0 ? (
-              <Card id="adjPanel">
+            {currentKeyframes.length > 0 ? <Card id="adjPanel">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -546,24 +507,15 @@ const ClientReturn = () => {
                   <CardContent className="p-0">
                     <div className="adj-scroll px-6 pb-6">
                       <div className="space-y-2.5">
-                      {currentKeyframes.map((keyframe) => {
-                        const timeInSeconds = keyframe.attachments[0]?.time || 0;
-                        const commentsCount = keyframe.project_feedback?.length || 0;
-                        
-                        return (
-                          <Card 
-                            key={keyframe.id} 
-                            className="border-l-4 border-l-primary bg-card"
-                          >
+                      {currentKeyframes.map(keyframe => {
+                    const timeInSeconds = keyframe.attachments[0]?.time || 0;
+                    const commentsCount = keyframe.project_feedback?.length || 0;
+                    return <Card key={keyframe.id} className="border-l-4 border-l-primary bg-card">
                             <CardHeader className="pb-2 px-4 py-3">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
                                   <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
-                                    <Badge 
-                                      variant="outline" 
-                                      className="font-mono flex items-center gap-1 cursor-pointer hover:bg-accent text-xs"
-                                      onClick={() => seekToTime(timeInSeconds)}
-                                    >
+                                    <Badge variant="outline" className="font-mono flex items-center gap-1 cursor-pointer hover:bg-accent text-xs" onClick={() => seekToTime(timeInSeconds)}>
                                       <Play className="w-3 h-3" />
                                       {formatTime(timeInSeconds)}
                                     </Badge>
@@ -572,31 +524,14 @@ const ClientReturn = () => {
                                 </div>
                               </div>
                             </CardHeader>
-                            {commentsCount > 0 && (
-                              <CardContent className="pt-0 px-4 pb-3 space-y-1.5">
-                                {keyframe.project_feedback.map((feedback) => (
-                                  <Collapsible 
-                                    key={feedback.id}
-                                    defaultOpen={!feedback.resolved}
-                                  >
-                                    <div 
-                                      className={`rounded-md border transition-all ${
-                                        feedback.resolved 
-                                          ? 'bg-green-50 border-green-200 dark:bg-green-950/20' 
-                                          : 'bg-muted/30 border-border'
-                                      }`}
-                                    >
+                            {commentsCount > 0 && <CardContent className="pt-0 px-4 pb-3 space-y-1.5">
+                                {keyframe.project_feedback.map(feedback => <Collapsible key={feedback.id} defaultOpen={!feedback.resolved}>
+                                    <div className={`rounded-md border transition-all ${feedback.resolved ? 'bg-green-50 border-green-200 dark:bg-green-950/20' : 'bg-muted/30 border-border'}`}>
                                       {/* Header colapsável */}
                                       <CollapsibleTrigger asChild>
                                         <div className="p-2 cursor-pointer hover:bg-muted/20 transition-colors">
                                           <div className="flex items-center gap-2">
-                                            <Checkbox
-                                              checked={feedback.resolved}
-                                              onCheckedChange={() => handleResolveToggle(feedback.id, feedback.resolved)}
-                                              disabled={isUpdating}
-                                              onClick={(e) => e.stopPropagation()}
-                                              className="flex-shrink-0"
-                                            />
+                                            <Checkbox checked={feedback.resolved} onCheckedChange={() => handleResolveToggle(feedback.id, feedback.resolved)} disabled={isUpdating} onClick={e => e.stopPropagation()} className="flex-shrink-0" />
                                             <div className="flex-1 min-w-0">
                                               <p className="text-xs line-clamp-1">{feedback.comment}</p>
                                             </div>
@@ -615,96 +550,71 @@ const ClientReturn = () => {
                                               <p className="text-[10px] font-medium mb-0.5">Comentário:</p>
                                               <p className="text-xs whitespace-pre-wrap">{feedback.comment}</p>
                                               <p className="text-[10px] text-muted-foreground mt-1">
-                                                {format(new Date(feedback.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                                {format(new Date(feedback.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                                        locale: ptBR
+                                      })}
                                               </p>
                                             </div>
                                           </div>
 
-                                          {feedback.resolved && feedback.resolved_at && (
-                                            <div className="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
+                                          {feedback.resolved && feedback.resolved_at && <div className="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
                                               <CheckCircle className="w-2.5 h-2.5" />
-                                              Resolvido em {format(new Date(feedback.resolved_at), "dd/MM/yyyy", { locale: ptBR })}
-                                            </div>
-                                          )}
+                                              Resolvido em {format(new Date(feedback.resolved_at), "dd/MM/yyyy", {
+                                    locale: ptBR
+                                  })}
+                                            </div>}
 
                                           {/* Anexos do Cliente */}
-                                          {feedback.attachments && feedback.attachments.length > 0 && (
-                                            <div>
+                                          {feedback.attachments && feedback.attachments.length > 0 && <div>
                                               <p className="text-[10px] font-medium text-muted-foreground mb-1">
                                                 Anexos ({feedback.attachments.length})
                                               </p>
-                                              <AttachmentList
-                                                attachments={feedback.attachments}
-                                                editable={false}
-                                              />
-                                            </div>
-                                          )}
+                                              <AttachmentList attachments={feedback.attachments} editable={false} />
+                                            </div>}
 
                                           <Separator className="my-1.5" />
 
                                           {/* Resposta da Equipe */}
                                           <div className="space-y-1">
                                             <Label className="text-xs font-medium">Resposta da Equipe:</Label>
-                                            <Textarea
-                                              placeholder="Descreva o que foi ajustado..."
-                                              value={teamResponses[feedback.id] || feedback.team_response || ''}
-                                              onChange={(e) => handleTeamResponseChange(feedback.id, e.target.value)}
-                                              className="min-h-[50px] text-xs"
-                                            />
+                                            <Textarea placeholder="Descreva o que foi ajustado..." value={teamResponses[feedback.id] || feedback.team_response || ''} onChange={e => handleTeamResponseChange(feedback.id, e.target.value)} className="min-h-[50px] text-xs" />
                                             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                              {savingFeedback[feedback.id] && (
-                                                <>
+                                              {savingFeedback[feedback.id] && <>
                                                   <Loader2 className="w-2.5 h-2.5 animate-spin" />
                                                   <span>Salvando...</span>
-                                                </>
-                                              )}
-                                              {savedFeedback[feedback.id] && (
-                                                <>
+                                                </>}
+                                              {savedFeedback[feedback.id] && <>
                                                   <CheckCircle className="w-2.5 h-2.5 text-green-600" />
                                                   <span className="text-green-600">Salvo</span>
-                                                </>
-                                              )}
+                                                </>}
                                             </div>
                                           </div>
                                         </div>
                                       </CollapsibleContent>
                                     </div>
-                                  </Collapsible>
-                                ))}
-                              </CardContent>
-                            )}
-                          </Card>
-                        );
-                      })}
+                                  </Collapsible>)}
+                              </CardContent>}
+                          </Card>;
+                  })}
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-dashed">
+              </Card> : <Card className="border-dashed">
                 <CardContent className="py-8">
                   <div className="text-center space-y-2">
                     <MessageSquare className="w-10 h-10 text-muted-foreground mx-auto opacity-50" />
                     <h3 className="font-semibold text-sm">
-                      {isInNewRound 
-                        ? `Aguardando novos feedbacks - Rodada ${currentRound}`
-                        : 'Nenhum ajuste pendente'
-                      }
+                      {isInNewRound ? `Aguardando novos feedbacks - Rodada ${currentRound}` : 'Nenhum ajuste pendente'}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      {isInNewRound
-                        ? 'Assim que o cliente enviar novos comentários, eles aparecerão aqui.'
-                        : 'Todos os ajustes foram concluídos ou ainda não há feedbacks.'
-                      }
+                      {isInNewRound ? 'Assim que o cliente enviar novos comentários, eles aparecerão aqui.' : 'Todos os ajustes foram concluídos ou ainda não há feedbacks.'}
                     </p>
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Histórico - Colapsável */}
-            {historicalKeyframes.length > 0 && (
-              <Collapsible defaultOpen={false}>
+            {historicalKeyframes.length > 0 && <Collapsible defaultOpen={false}>
                 <Card>
                   <CollapsibleTrigger className="w-full">
                     <CardHeader className="pb-3 hover:bg-accent/50 transition-colors rounded-t-lg">
@@ -723,25 +633,18 @@ const ClientReturn = () => {
                   <CollapsibleContent>
                     <CardContent className="p-0">
                       <ScrollArea className="h-[300px] px-6 pb-6">
-                        <FeedbackHistorySection
-                          keyframes={historicalKeyframes}
-                          roundNumber={1}
-                          formatTime={formatTime}
-                        />
+                        <FeedbackHistorySection keyframes={historicalKeyframes} roundNumber={1} formatTime={formatTime} />
                       </ScrollArea>
                     </CardContent>
                   </CollapsibleContent>
                 </Card>
-              </Collapsible>
-            )}
+              </Collapsible>}
           </div>
         </div>
 
         {/* Seção de Reenvio de Vídeo Corrigido */}
-        {project && (
-          <>
-            {generatedShareLink ? (
-              <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+        {project && <>
+            {generatedShareLink ? <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
                     <CheckCircle2 className="w-5 h-5" />
@@ -755,16 +658,8 @@ const ClientReturn = () => {
                   <div className="space-y-2">
                     <Label>Link de Aprovação:</Label>
                     <div className="flex gap-2">
-                      <Input 
-                        value={generatedShareLink} 
-                        readOnly 
-                        className="font-mono text-sm"
-                      />
-                      <Button
-                        onClick={copyLinkToClipboard}
-                        variant="outline"
-                        size="icon"
-                      >
+                      <Input value={generatedShareLink} readOnly className="font-mono text-sm" />
+                      <Button onClick={copyLinkToClipboard} variant="outline" size="icon">
                         <Copy className="w-4 h-4" />
                       </Button>
                     </div>
@@ -776,57 +671,34 @@ const ClientReturn = () => {
                     </p>
                   </div>
 
-                  <Button
-                    onClick={() => setGeneratedShareLink(null)}
-                    variant="outline"
-                    className="w-full"
-                  >
+                  <Button onClick={() => setGeneratedShareLink(null)} variant="outline" className="w-full">
                     Fazer Novo Reenvio
                   </Button>
                 </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-primary">
+              </Card> : <Card className="border-primary">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Upload className="w-5 h-5 text-primary" />
                     Reenviar Projeto Corrigido
                   </CardTitle>
                   <CardDescription>
-                    {currentKeyframes.length > 0 
-                      ? 'Faça upload do vídeo corrigido e gere um novo link para o cliente.'
-                      : 'Faça upload de uma nova versão do vídeo. Útil para correções adicionais ou melhorias.'
-                    }
+                    {currentKeyframes.length > 0 ? 'Faça upload do vídeo corrigido e gere um novo link para o cliente.' : 'Faça upload de uma nova versão do vídeo. Útil para correções adicionais ou melhorias.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="video-upload">Novo Vídeo Corrigido (máx. 500MB)</Label>
-                    <Input
-                      id="video-upload"
-                      type="file"
-                      accept="video/*"
-                      onChange={handleVideoFileChange}
-                      className="cursor-pointer"
-                    />
-                    {newVideoFile && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Input id="video-upload" type="file" accept="video/*" onChange={handleVideoFileChange} className="cursor-pointer" />
+                    {newVideoFile && <p className="text-sm text-muted-foreground flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
                         {newVideoFile.name} ({(newVideoFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
-                    )}
+                      </p>}
                   </div>
 
 
                   <div className="space-y-2">
                     <Label htmlFor="resend-message">Mensagem para o Cliente (Opcional)</Label>
-                    <Textarea
-                      id="resend-message"
-                      placeholder="Ex: Fizemos todos os ajustes solicitados. Por favor, revise novamente."
-                      value={resendMessage}
-                      onChange={(e) => setResendMessage(e.target.value)}
-                      className="min-h-[80px]"
-                    />
+                    <Textarea id="resend-message" placeholder="Ex: Fizemos todos os ajustes solicitados. Por favor, revise novamente." value={resendMessage} onChange={e => setResendMessage(e.target.value)} className="min-h-[80px]" />
                   </div>
 
                   <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 space-y-2">
@@ -843,32 +715,19 @@ const ClientReturn = () => {
                     </ul>
                   </div>
 
-                  <Button
-                    onClick={handleResendProject}
-                    disabled={!newVideoFile || isResending}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isResending ? (
-                      <>
+                  <Button onClick={handleResendProject} disabled={!newVideoFile || isResending} className="w-full" size="lg">
+                    {isResending ? <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Processando...
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         <Send className="w-4 h-4 mr-2" />
                         Gerar Novo Link para Enviar ao Cliente
-                      </>
-                    )}
+                      </>}
                   </Button>
                 </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+              </Card>}
+          </>}
       </div>
-    </>
-  );
+    </>;
 };
-
 export default ClientReturn;
