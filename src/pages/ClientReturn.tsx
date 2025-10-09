@@ -520,7 +520,7 @@ const ClientReturn = () => {
               </Card>}
 
             {/* Gestão de Ajustes - Com Scroll */}
-            {currentKeyframes.length > 0 ? <Card id="adjPanel">
+            {currentKeyframes.length > 0 ? <Card id="adjPanel" className="overflow-hidden">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
