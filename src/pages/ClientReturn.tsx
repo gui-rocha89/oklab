@@ -151,50 +151,54 @@ const ClientReturn = () => {
 
   // Sync altura do vídeo com painel de ajustes (medição precisa)
   useEffect(() => {
-    const row    = document.getElementById('video-row');
-    const aspect = document.getElementById('videoAspect');      // SOMENTE o player
-    const prog   = document.getElementById('progressCard');     // Card de progresso
+    const row        = document.getElementById('video-row');
+    const videoCard  = document.getElementById('videoCard');      // Card completo do vídeo
+    const progCard   = document.getElementById('progressCard');   // Card de progresso
+    const adjPanel   = document.getElementById('adjPanel');       // Painel de ajustes
 
-    if (!row || !aspect) return;
+    if (!row || !videoCard || !adjPanel) return;
 
     const ro = new ResizeObserver(() => {
-      // 1. Altura exata do player (16:9)
-      const videoH = Math.round(aspect.getBoundingClientRect().height);
+      // 1. Altura total do card de vídeo (incluindo header e padding)
+      const videoH = Math.round(videoCard.getBoundingClientRect().height);
       
-      // 2. Altura do card de progresso + margin-bottom
+      // 2. Altura do card de progresso (se existir)
       let progH = 0;
-      if (prog) {
-        const progRect = prog.getBoundingClientRect();
-        const progStyle = getComputedStyle(prog);
-        const mb = parseFloat(progStyle.marginBottom || '0');
-        progH = Math.round(progRect.height + mb);
+      if (progCard) {
+        progH = Math.round(progCard.getBoundingClientRect().height);
       }
       
-      // 3. Gap vertical do grid (16px no mobile, 24px no desktop)
-      const gapY = window.innerWidth >= 1024 ? 24 : 16;
+      // 3. Gap vertical entre os cards na coluna direita (space-y-4 = 16px)
+      const COLUMN_GAP = 16; // space-y-4 do Tailwind
       
-      // 4. Atualizar CSS variables
-      row.style.setProperty('--video-h', `${videoH}px`);
-      row.style.setProperty('--progress-h', `${progH}px`);
-      row.style.setProperty('--gapY', `${gapY}px`);
+      // 4. Calcular altura disponível para adjPanel
+      // adjPanel precisa ocupar: altura do vídeo - altura do progresso - gap entre eles
+      const MIN_HEIGHT = 300; // Altura mínima de segurança
+      const adjHeight = Math.max(MIN_HEIGHT, videoH - progH - COLUMN_GAP);
       
-      console.log('📐 Medições:', { videoH, progH, gapY });
+      // 5. Atualizar CSS variable
+      row.style.setProperty('--adj-height', `${adjHeight}px`);
+      
+      console.log('📐 Medições Corretas:', { 
+        videoH, 
+        progH, 
+        columnGap: COLUMN_GAP, 
+        adjHeight,
+        formula: `${videoH} - ${progH} - ${COLUMN_GAP} = ${adjHeight}`
+      });
     });
 
-    ro.observe(aspect);
-    if (prog) ro.observe(prog);
+    ro.observe(videoCard);
+    if (progCard) ro.observe(progCard);
     
-    // Re-observar em resize de janela (para atualizar gapY)
-    const handleResize = () => {
-      ro.disconnect();
-      ro.observe(aspect);
-      if (prog) ro.observe(prog);
-    };
-    window.addEventListener('resize', handleResize);
+    // Forçar medição inicial após layout estabilizar
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 150);
     
     return () => {
+      clearTimeout(timer);
       ro.disconnect();
-      window.removeEventListener('resize', handleResize);
     };
   }, [project, currentKeyframes]);
   const getStatusBadge = (status: string) => {
