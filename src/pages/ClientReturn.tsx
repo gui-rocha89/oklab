@@ -149,19 +149,54 @@ const ClientReturn = () => {
     }
   };
 
-  // Sync altura do vídeo com painel de ajustes (Asana-style alignment)
+  // Sync altura do vídeo com painel de ajustes (medição precisa)
   useEffect(() => {
-    const videoCard = document.getElementById('videoCard');
-    const videoRow = document.getElementById('video-row');
-    if (!videoCard || !videoRow) return;
+    const row    = document.getElementById('video-row');
+    const aspect = document.getElementById('videoAspect');      // SOMENTE o player
+    const prog   = document.getElementById('progressCard');     // Card de progresso
+
+    if (!row || !aspect) return;
+
     const ro = new ResizeObserver(() => {
-      const cardRect = videoCard.getBoundingClientRect();
-      const totalHeight = Math.round(cardRect.height);
-      videoRow.style.setProperty('--video-h', `${totalHeight}px`);
+      // 1. Altura exata do player (16:9)
+      const videoH = Math.round(aspect.getBoundingClientRect().height);
+      
+      // 2. Altura do card de progresso + margin-bottom
+      let progH = 0;
+      if (prog) {
+        const progRect = prog.getBoundingClientRect();
+        const progStyle = getComputedStyle(prog);
+        const mb = parseFloat(progStyle.marginBottom || '0');
+        progH = Math.round(progRect.height + mb);
+      }
+      
+      // 3. Gap vertical do grid (16px no mobile, 24px no desktop)
+      const gapY = window.innerWidth >= 1024 ? 24 : 16;
+      
+      // 4. Atualizar CSS variables
+      row.style.setProperty('--video-h', `${videoH}px`);
+      row.style.setProperty('--progress-h', `${progH}px`);
+      row.style.setProperty('--gapY', `${gapY}px`);
+      
+      console.log('📐 Medições:', { videoH, progH, gapY });
     });
-    ro.observe(videoCard);
-    return () => ro.disconnect();
-  }, [project]);
+
+    ro.observe(aspect);
+    if (prog) ro.observe(prog);
+    
+    // Re-observar em resize de janela (para atualizar gapY)
+    const handleResize = () => {
+      ro.disconnect();
+      ro.observe(aspect);
+      if (prog) ro.observe(prog);
+    };
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [project, currentKeyframes]);
   const getStatusBadge = (status: string) => {
     const variants: Record<string, {
       variant: "default" | "secondary" | "success" | "warning";
@@ -440,8 +475,8 @@ const ClientReturn = () => {
                   {isApprovedWithoutChanges ? "Vídeo aprovado sem comentários ou modificações" : `${keyframes.length} momento${keyframes.length !== 1 ? 's' : ''} com feedback do cliente`}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div id="videoMeasure">
+              <CardContent className="p-0">
+                <div id="videoAspect" className="overflow-hidden rounded-lg">
                   <VideoPlayerWithKeyframes ref={videoPlayerRef} src={project.video_url!} keyframes={keyframes} onDurationChange={setVideoDuration} currentFeedbackRound={currentRound} />
                 </div>
               </CardContent>
@@ -451,7 +486,7 @@ const ClientReturn = () => {
           <div className="lg:col-span-1 space-y-4">
             
             {/* Progresso dos Ajustes - Sticky */}
-            {currentKeyframes.length > 0 && totalComments > 0 && <Card className="border-primary/30 bg-primary/5 sticky top-4">
+            {currentKeyframes.length > 0 && totalComments > 0 && <Card id="progressCard" className="border-primary/30 bg-primary/5 sticky top-4">
                 <CardHeader>
                   <div className="flex items-center gap-2 flex-wrap">
                     <CardTitle className="flex items-center gap-2 text-base">

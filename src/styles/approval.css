@@ -1,17 +1,45 @@
 /* Approval Page - Video/Panel Height Sync */
 
 #video-row {
-  --video-h: 480px;
+  --video-h: 480px;      /* fallback */
+  --progress-h: 0px;     /* fallback */
+  --gapY: 16px;          /* fallback */
 }
 
+/* Card "Gestão de Ajustes" - altura exata do vídeo */
+#adjPanel {
+  height: var(--video-h);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header do painel - altura fixa */
+#adjPanel > div:first-child {
+  flex-shrink: 0;
+}
+
+/* Área de scroll - preenche espaço restante */
 #adjPanel .adj-scroll {
-  max-height: calc(var(--video-h) - 80px);
+  flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  transition: max-height 0.2s ease-out;
 }
 
-/* Custom scrollbar (polimento visual) */
+/* Ajuste preciso: subtrair progresso + gap */
+@media (min-width: 1024px) {
+  #adjPanel {
+    height: calc(var(--video-h) - var(--progress-h) - var(--gapY));
+  }
+}
+
+/* Mobile: altura automática (stack vertical) */
+@media (max-width: 1023px) {
+  #adjPanel {
+    height: auto;
+  }
+}
+
+/* Custom scrollbar (polish visual) */
 #adjPanel .adj-scroll::-webkit-scrollbar {
   width: 6px;
 }
