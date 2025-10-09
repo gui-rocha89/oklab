@@ -421,10 +421,10 @@ const ClientReturn = () => {
           </Card>}
 
         {/* Layout em Grid - Vídeo em destaque + Gestão ao lado */}
-        <div id="video-row" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div id="video-row" className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
           
           {/* Vídeo do Projeto - Alinhado com painel */}
-          {project.video_url && <Card id="videoCard" className="lg:col-span-2 my-[100px] mx-0 px-0 py-0">
+          {project.video_url && <Card id="videoCard" className="lg:col-span-2">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
@@ -448,7 +448,7 @@ const ClientReturn = () => {
             </Card>}
           
           {/* COLUNA DIREITA - Gestão e Comentários (1/3 da largura) */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4">
             
             {/* Progresso dos Ajustes - Sticky */}
             {currentKeyframes.length > 0 && totalComments > 0 && <Card className="border-primary/30 bg-primary/5 sticky top-4">
